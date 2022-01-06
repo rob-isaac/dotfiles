@@ -1,0 +1,19 @@
+[push]
+	recurseSubmodules = check
+[fetch]
+	recurseSubmodules = on-demand
+[submodule]
+	recurse = true
+[core]
+	editor = vim
+[alias]
+	graph = log --graph --all --oneline --decorate --color
+	st = status -sb
+	cl = log --oneline --name-status
+[url "git@github.com:"]
+	insteadOf = https://github.com/
+
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
+[user]
+	name = rob@katanagraph.com
