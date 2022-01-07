@@ -355,7 +355,8 @@ function! RunCurBuf()
 	endfor
   echom "starting job"
   let path = expand('%:p')
-  let s:job = job_start(['/bin/bash','-c',path], {'out_io': 'buffer', 'out_name': 'dummy'})
+  let s:job = job_start(['/bin/bash','-c',path],
+        \ {'out_io': 'buffer','err_io': 'out', 'out_name': 'dummy'})
   botright vnew | buffer dummy
   let w:dummy = 1
 	setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile
