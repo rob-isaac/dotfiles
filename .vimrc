@@ -149,7 +149,15 @@ call one#highlight('Normal','','101010','none')
 let g:slime_target = "vimterminal"
 let g:slime_vimterminal_cmd = "ipython3"
 let g:slime_python_ipython = 1
-let g:slime_vimterminal_config = {"term_finish": "close"}
+" TODO: Figure out how to exit terminal on :qa
+let g:slime_vimterminal_config = {"term_finish": "close", "vertical": 1, "stoponexit":"term"}
+" TODO: Change by filetype
+let g:slime_cell_delimiter = "#%%"
+let g:slime_no_mappings = 1
+" TODO: Send cell and jump to next
+nmap <c-c><c-c> <Plug>SlimeSendCell
+nmap <c-c>v <Plug>SlimeConfig
+xmap <c-c><c-c> <Plug>SlimeRegionSend
 " COC Settings
 
 " Set internal encoding of vim, not needed on neovim, since coc.nvim using some
