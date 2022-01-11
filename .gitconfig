@@ -17,3 +17,5 @@
 	insteadOf = https://github.com/
 [user]
 	name = rob@katanagraph.com
+[merge]
+	tool = vimdiff

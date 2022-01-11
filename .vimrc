@@ -1,5 +1,5 @@
 " reload vimrc on save
-au! BufWritePost $MYVIMRC source $MYVIMRC
+" au! BufWritePost $MYVIMRC source $MYVIMRC
 
 " disable compatibility with vi
 set nocompatible
@@ -121,6 +121,7 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'jackguo380/vim-lsp-cxx-highlight'
 Plug 'vim-airline/vim-airline'
 Plug 'rakr/vim-one'
+Plug 'jpalardy/vim-slime'
 call plug#end()
 
 " Run PlugInstall if there are missing plugins
@@ -144,6 +145,11 @@ highlight Comment cterm=italic
 call one#highlight('VertSplit','777777','','none')
 call one#highlight('Normal','','101010','none')
 
+" Slime settings
+let g:slime_target = "vimterminal"
+let g:slime_vimterminal_cmd = "ipython3"
+let g:slime_python_ipython = 1
+let g:slime_vimterminal_config = {"term_finish": "close"}
 " COC Settings
 
 " Set internal encoding of vim, not needed on neovim, since coc.nvim using some
