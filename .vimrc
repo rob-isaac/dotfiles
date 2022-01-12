@@ -1,18 +1,17 @@
-" reload vimrc on save
-" au! BufWritePost $MYVIMRC source $MYVIMRC
-
 " disable compatibility with vi
 set nocompatible
 
 " get rid of that annoying ass bell
 set visualbell
 
+" basic settings
 filetype plugin on
 filetype indent on
 set expandtab
 set tabstop=2
 set softtabstop=2
 set shiftwidth=2
+set splitright
 
 " vertical highlight of cursorline
 set cursorline
@@ -25,13 +24,14 @@ set scrolloff=5
 set hlsearch
 
 " This will ignore case unless specifically searching for case
-" set ignorecase
-" set smartcase
+" Note: can force lowercase search with \C
+set ignorecase
+set smartcase
 
 " add numbers to lefthand side
 set number
 
-" fix namespace indenting
+" fix namespace indenting for C/C++
 set cino=N-s
 
 " Prevent accidental writes to buffers that shouldn't be edited
@@ -103,15 +103,15 @@ let g:polyglot_disabled = ['c/c++', 'c++11']
 
 call plug#begin()
 Plug 'tpope/vim-sensible'
-Plug 'tpope/vim-abolish'
-Plug 'tpope/vim-dispatch'
-Plug 'tpope/vim-commentary' " maybe replace with nerd commenter?
+" Plug 'tpope/vim-abolish'
+" Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-surround'
-Plug 'tpope/vim-tbone'
-Plug 'ap/vim-css-color'
+" Plug 'tpope/vim-tbone'
+" Plug 'ap/vim-css-color'
 Plug 'preservim/nerdtree'
 Plug 'preservim/tagbar'
-Plug 'terryma/vim-multiple-cursors'
+Plug 'preservim/nerdcommenter'
+" Plug 'terryma/vim-multiple-cursors'
 Plug 'chiel92/vim-autoformat'
 Plug 'Raimondi/delimitMate'
 Plug 'edkolev/tmuxline.vim'
@@ -122,6 +122,8 @@ Plug 'jackguo380/vim-lsp-cxx-highlight'
 Plug 'vim-airline/vim-airline'
 Plug 'rakr/vim-one'
 Plug 'jpalardy/vim-slime'
+Plug 'rob-isaac/vim-slime-cells'
+Plug 'christoomey/vim-tmux-navigator'
 call plug#end()
 
 " Run PlugInstall if there are missing plugins
@@ -141,23 +143,36 @@ let g:one_allow_italics=1
 let g:tmuxline_powerline_separators = 0 " maybe re-enable at somepoint
 set background=dark
 colorscheme one
-highlight Comment cterm=italic
+highlight Comment cterm=italic gui=italic
 call one#highlight('VertSplit','777777','','none')
 call one#highlight('Normal','','101010','none')
 
-" Slime settings
+"------------------------------------------------------------------------------
+" slime configuration
+"------------------------------------------------------------------------------
+
 let g:slime_target = "vimterminal"
 let g:slime_vimterminal_cmd = "ipython3"
-let g:slime_python_ipython = 1
 " TODO: Figure out how to exit terminal on :qa
-let g:slime_vimterminal_config = {"term_finish": "close", "vertical": 1, "stoponexit":"term"}
-" TODO: Change by filetype
+let g:slime_vimterminal_config = {"term_finish": "close", "vertical": 1}
+
+" fix paste issues in ipython
+let g:slime_python_ipython = 1
+
+" set cell delimiter
 let g:slime_cell_delimiter = "#%%"
+let g:slime_braketed_paste = 1
 let g:slime_no_mappings = 1
-" TODO: Send cell and jump to next
-nmap <c-c><c-c> <Plug>SlimeSendCell
-nmap <c-c>v <Plug>SlimeConfig
+
+" slime-cells config
+let g:slime_cells_highlight_from = "SpecialComment"
+
+nmap <c-c><c-c> <Plug>SlimeCellsSendAndGoToNext
+nmap <c-c><c-x> <Plug>SlimeSendCell
+nmap <c-c><c-j> <Plug>SlimeCellsNext
+nmap <c-c><c-k> <Plug>SlimeCellsPrev
 xmap <c-c><c-c> <Plug>SlimeRegionSend
+
 " COC Settings
 
 " Set internal encoding of vim, not needed on neovim, since coc.nvim using some
@@ -247,17 +262,6 @@ autocmd CursorHold * silent call CocActionAsync('highlight')
 " Symbol renaming.
 nmap <leader>rn <Plug>(coc-rename)
 
-" Map function and class text objects
-" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
-xmap if <Plug>(coc-funcobj-i)
-omap if <Plug>(coc-funcobj-i)
-xmap af <Plug>(coc-funcobj-a)
-omap af <Plug>(coc-funcobj-a)
-xmap ic <Plug>(coc-classobj-i)
-omap ic <Plug>(coc-classobj-i)
-xmap ac <Plug>(coc-classobj-a)
-omap ac <Plug>(coc-classobj-a)
-
 " Remap <C-f> and <C-b> for scroll float windows/popups.
 if has('nvim-0.4.0') || has('patch-8.2.0750')
   nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
@@ -267,11 +271,6 @@ if has('nvim-0.4.0') || has('patch-8.2.0750')
   vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
   vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
 endif
-
-" Use CTRL-S for selections ranges.
-" Requires 'textDocument/selectionRange' support of language server.
-nmap <silent> <C-s> <Plug>(coc-range-select)
-xmap <silent> <C-s> <Plug>(coc-range-select)
 
 " Add `:Format` command to format current buffer.
 command! -nargs=0 Format :call CocAction('format')
@@ -309,7 +308,7 @@ nnoremap cc :CocCommand clangd.switchSourceHeader<CR>
 
 " NERDTree specific mappings.
 " Map tn to toggle NERDTree open and close.
-" nnoremap tn :NERDTreeToggle<cr>
+nnoremap tn :NERDTreeToggle<cr>
 
 nnoremap tn :tabnext<cr>
 nnoremap tp :tabprevious<cr>
