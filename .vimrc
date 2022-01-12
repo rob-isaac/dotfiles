@@ -111,6 +111,7 @@ Plug 'tpope/vim-surround'
 Plug 'preservim/nerdtree'
 Plug 'preservim/tagbar'
 Plug 'preservim/nerdcommenter'
+Plug 'preservim/vimux'
 " Plug 'terryma/vim-multiple-cursors'
 Plug 'chiel92/vim-autoformat'
 Plug 'Raimondi/delimitMate'
@@ -124,6 +125,7 @@ Plug 'rakr/vim-one'
 Plug 'jpalardy/vim-slime'
 Plug 'rob-isaac/vim-slime-cells'
 Plug 'christoomey/vim-tmux-navigator'
+" Plug 'julienr/vim-cellmode'
 call plug#end()
 
 " Run PlugInstall if there are missing plugins
@@ -151,27 +153,37 @@ call one#highlight('Normal','','101010','none')
 " slime configuration
 "------------------------------------------------------------------------------
 
-let g:slime_target = "vimterminal"
-let g:slime_vimterminal_cmd = "ipython3"
-" TODO: Figure out how to exit terminal on :qa
-let g:slime_vimterminal_config = {"term_finish": "close", "vertical": 1}
+" always use tmux
+let g:slime_target = 'tmux'
 
 " fix paste issues in ipython
 let g:slime_python_ipython = 1
 
+" always send text to the top-right pane in the current tmux tab without asking
+let g:slime_default_config = {
+            \ 'socket_name': get(split($TMUX, ','), 0),
+            \ 'target_pane': '{top-right}' }
+let g:slime_dont_ask_default = 1
+
 " set cell delimiter
-let g:slime_cell_delimiter = "#%%"
+let g:slime_cell_delimiter = "^\\s*##"
 let g:slime_braketed_paste = 1
 let g:slime_no_mappings = 1
 
 " slime-cells config
 let g:slime_cells_highlight_from = "SpecialComment"
 
+let g:VimuxOrientation = "h"
+let g:VimuxCloseOnExit = 1
+
+nnoremap <leader>s :call VimuxRunCommand("clear; ipython3")<CR>
+" TODO: Detect whether a Tmux pane is already open and
+" if not, don't send cell
 nmap <c-c><c-c> <Plug>SlimeCellsSendAndGoToNext
 nmap <c-c><c-x> <Plug>SlimeSendCell
 nmap <c-c><c-j> <Plug>SlimeCellsNext
 nmap <c-c><c-k> <Plug>SlimeCellsPrev
-xmap <c-c><c-c> <Plug>SlimeRegionSend
+xmap <c-c><c-c> <Plug>SlimeRegionSend]
 
 " COC Settings
 
