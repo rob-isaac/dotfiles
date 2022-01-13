@@ -176,10 +176,10 @@ let g:slime_cells_highlight_from = "SpecialComment"
 let g:VimuxOrientation = "h"
 let g:VimuxCloseOnExit = 1
 
+let conda_env = $CONDA_DEFAULT_ENV
+let vimux_command = "conda activate "  . conda_env . "; clear; ipython3"
 func! EnsureIPython()
   if !exists('g:VimuxRunnerIndex')
-    let conda_env = $CONDA_DEFAULT_ENV
-    let vimux_command = "conda activate "  . conda_env . "; clear; ipython3"
     call VimuxRunCommand(vimux_command)
   endif
 endfunc
