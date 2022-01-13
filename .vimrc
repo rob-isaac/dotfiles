@@ -176,14 +176,23 @@ let g:slime_cells_highlight_from = "SpecialComment"
 let g:VimuxOrientation = "h"
 let g:VimuxCloseOnExit = 1
 
-nnoremap <leader>s :call VimuxRunCommand("clear; ipython3")<CR>
-" TODO: Detect whether a Tmux pane is already open and
-" if not, don't send cell
-nmap <c-c><c-c> <Plug>SlimeCellsSendAndGoToNext
-nmap <c-c><c-x> <Plug>SlimeSendCell
-nmap <c-c><c-j> <Plug>SlimeCellsNext
-nmap <c-c><c-k> <Plug>SlimeCellsPrev
-xmap <c-c><c-c> <Plug>SlimeRegionSend]
+func! EnsureIPython()
+  if !exists('g:VimuxRunnerIndex')
+    let conda_env = $CONDA_DEFAULT_ENV
+    let vimux_command = "conda activate "  . conda_env . "; clear; ipython3"
+    call VimuxRunCommand(vimux_command)
+  endif
+endfunc
+
+nnoremap <silent><expr> <leader>s exists('g:VimuxRunnerIndex')
+    \ ? ":call VimuxCloseRunner()\<CR>"
+    \ : ":call VimuxRunCommand(vimux_command)\<CR>"
+
+nmap <c-c><c-c> :call EnsureIPython()<CR><Plug>SlimeCellsSendAndGoToNext
+nmap <c-c><c-x> :call EnsureIPython()<CR><Plug>SlimeSendCell
+nmap <c-c><c-j> :call EnsureIPython()<CR><Plug>SlimeCellsNext
+nmap <c-c><c-k> :call EnsureIPython()<CR><Plug>SlimeCellsPrev
+xmap <c-c><c-c> :call EnsureIPython()<CR><Plug>SlimeRegionSend
 
 " COC Settings
 
