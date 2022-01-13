@@ -173,26 +173,33 @@ let g:slime_no_mappings = 1
 " slime-cells config
 let g:slime_cells_highlight_from = "SpecialComment"
 
-let g:VimuxOrientation = "h"
+let g:VimuxOrientation = "v"
 let g:VimuxCloseOnExit = 1
 
-let conda_env = $CONDA_DEFAULT_ENV
-let vimux_command = "conda activate "  . conda_env . "; clear; ipython3"
+let s:conda_env = $CONDA_DEFAULT_ENV
+let s:ipy_start = "conda activate "  . conda_env . "; clear; ipython3"
+" TODO: Make sure the runner is running ipython
 func! EnsureIPython()
   if !exists('g:VimuxRunnerIndex')
-    call VimuxRunCommand(vimux_command)
+    call VimuxRunCommand(s:ipy_start)
   endif
 endfunc
 
-nnoremap <silent><expr> <leader>s exists('g:VimuxRunnerIndex')
+autocmd FileType python 
+  \ nnoremap <silent><expr> <leader>s exists('g:VimuxRunnerIndex')
     \ ? ":call VimuxCloseRunner()\<CR>"
-    \ : ":call VimuxRunCommand(vimux_command)\<CR>"
+    \ : ":call VimuxRunCommand(s:ipy_start)\<CR>"
 
-nmap <c-c><c-c> :call EnsureIPython()<CR><Plug>SlimeCellsSendAndGoToNext
-nmap <c-c><c-x> :call EnsureIPython()<CR><Plug>SlimeSendCell
-nmap <c-c><c-j> :call EnsureIPython()<CR><Plug>SlimeCellsNext
-nmap <c-c><c-k> :call EnsureIPython()<CR><Plug>SlimeCellsPrev
-xmap <c-c><c-c> :call EnsureIPython()<CR><Plug>SlimeRegionSend
+autocmd FileType python 
+    \ nmap <c-c><c-c> :call EnsureIPython()<CR><Plug>SlimeCellsSendAndGoToNext
+autocmd FileType python 
+    \ nmap <c-c><c-x> :call EnsureIPython()<CR><Plug>SlimeSendCell
+autocmd FileType python 
+    \ nmap <c-c><c-j> :call EnsureIPython()<CR><Plug>SlimeCellsNext
+autocmd FileType python 
+    \ nmap <c-c><c-k> :call EnsureIPython()<CR><Plug>SlimeCellsPrev
+autocmd FileType python 
+    \ xmap <c-c><c-c> :call EnsureIPython()<CR><Plug>SlimeRegionSend
 
 " COC Settings
 
