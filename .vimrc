@@ -177,7 +177,7 @@ let g:VimuxOrientation = "v"
 let g:VimuxCloseOnExit = 1
 
 let s:conda_env = $CONDA_DEFAULT_ENV
-let s:ipy_start = "conda activate "  . conda_env . "; clear; ipython3"
+let s:ipy_start = "conda activate "  . s:conda_env . "; clear; ipython3"
 " TODO: Make sure the runner is running ipython
 func! EnsureIPython()
   if !exists('g:VimuxRunnerIndex')
