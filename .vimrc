@@ -185,6 +185,15 @@ func! EnsureIPython()
   endif
 endfunc
 
+func! CallMake(...)
+  let threads = get(a:, 1, 4)
+  VimuxRunCommand("make -j " . threads)
+endfunc
+
+command -bar -nargs=? Make :call CallMake(<args>)
+command -bar StopMake :call VimuxInterruptRunner()
+command -bar Inspect :call VimuxInspectRunner()
+
 autocmd FileType python 
   \ nnoremap <silent><expr> <leader>s exists('g:VimuxRunnerIndex')
     \ ? ":call VimuxCloseRunner()\<CR>"
