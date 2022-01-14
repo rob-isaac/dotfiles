@@ -51,10 +51,15 @@ unset env
 # <<< start ssh-agent
 
 # >>> start tmux session and export some variables
-conda activate katana-dev
-alias config='/usr/bin/git --git-dir=/home/rob/.cfg/ --work-tree=/home/rob'
-export GRAPH_QUERY_DIR=~/katana-enterprise/lonestar/querying/distributed/graph-query
 [ -z "$TMUX"  ] && { tmux attach || exec tmux new-session;} # can use exec tmux new-session to exit after
+alias config='/usr/bin/git --git-dir=/home/rob/.cfg/ --work-tree=/home/rob'
+conda activate katana-dev
+export CXXFLAGS="$CXXFLAGS -Wfatal-errors"
+export SRC_DIR=~/katana-enterprise
+export BUILD_DIR=~/Builds/current
+export GRAPH_QUERY_DIR=$SRC_DIR/lonestar/querying/distributed/graph-query
+export CMAKE_ARGS="-DCMAKE_BUILD_TYPE=DEBUG -DKATANA_LANG_BINDINGS=python \
+  -DKATANA_COMPONENTS='rdkit;gnn'"
 export AWS_EC2_METADATA_DISABLED=true
 # start docker
 # sudo service docker status || sudo service docker start
