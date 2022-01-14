@@ -159,10 +159,10 @@ let g:slime_target = 'tmux'
 " fix paste issues in ipython
 let g:slime_python_ipython = 1
 
-" always send text to the top-right pane in the current tmux tab without asking
+" always send text to the bottom-right pane in the current tmux tab without asking
 let g:slime_default_config = {
             \ 'socket_name': get(split($TMUX, ','), 0),
-            \ 'target_pane': '{top-right}' }
+            \ 'target_pane': '{bottom-right}' }
 let g:slime_dont_ask_default = 1
 
 " set cell delimiter
@@ -176,14 +176,6 @@ let g:slime_cells_highlight_from = "SpecialComment"
 let g:VimuxOrientation = "v"
 let g:VimuxCloseOnExit = 1
 
-let s:conda_env = $CONDA_DEFAULT_ENV
-let s:ipy_start = "conda activate "  . s:conda_env . "; clear; ipython3"
-" TODO: Make sure the runner is running ipython
-func! EnsureIPython()
-  if !exists('g:VimuxRunnerIndex')
-    call VimuxRunCommand(s:ipy_start)
-  endif
-endfunc
 
 func! CallMake(...)
   let threads = get(a:, 1, 4)
@@ -193,22 +185,30 @@ endfunc
 command -bar -nargs=? Make :call CallMake(<args>)
 command -bar StopMake :call VimuxInterruptRunner()
 command -bar Inspect :call VimuxInspectRunner()
+command -bar Expand :call VimuxZoomRunner()
 
+let conda_env = $CONDA_DEFAULT_ENV
+let ipy_start = "conda activate "  . conda_env . "; clear; ipython3"
 autocmd FileType python 
   \ nnoremap <silent><expr> <leader>s exists('g:VimuxRunnerIndex')
     \ ? ":call VimuxCloseRunner()\<CR>"
-    \ : ":call VimuxRunCommand(s:ipy_start)\<CR>"
+    \ : ":call VimuxRunCommand(ipy_start)\<CR>"
+
+autocmd FileType cpp
+  \ nnoremap <silent><expr> <leader>s exists('g:VimuxRunnerIndex')
+    \ ? ":call VimuxCloseRunner()\<CR>"
+    \ : ":call VimuxOpenRunner()\<CR>"
 
 autocmd FileType python 
-    \ nmap <c-c><c-c> :call EnsureIPython()<CR><Plug>SlimeCellsSendAndGoToNext
+    \ nmap <c-c><c-c> <Plug>SlimeCellsSendAndGoToNext
 autocmd FileType python 
-    \ nmap <c-c><c-x> :call EnsureIPython()<CR><Plug>SlimeSendCell
+    \ nmap <c-c><c-x> <Plug>SlimeSendCell
 autocmd FileType python 
-    \ nmap <c-c><c-j> :call EnsureIPython()<CR><Plug>SlimeCellsNext
+    \ nmap <c-c><c-j> <Plug>SlimeCellsNext
 autocmd FileType python 
-    \ nmap <c-c><c-k> :call EnsureIPython()<CR><Plug>SlimeCellsPrev
+    \ nmap <c-c><c-k> <Plug>SlimeCellsPrev
 autocmd FileType python 
-    \ xmap <c-c><c-c> :call EnsureIPython()<CR><Plug>SlimeRegionSend
+    \ xmap <c-c><c-c> <Plug>SlimeRegionSend
 
 " COC Settings
 
