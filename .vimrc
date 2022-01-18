@@ -106,7 +106,7 @@ Plug 'tpope/vim-sensible'
 " Plug 'tpope/vim-abolish'
 " Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-surround'
-" Plug 'tpope/vim-tbone'
+Plug 'tpope/vim-tbone'
 " Plug 'ap/vim-css-color'
 Plug 'preservim/nerdtree'
 Plug 'preservim/tagbar'
@@ -209,6 +209,14 @@ autocmd FileType python
     \ nmap <c-c><c-k> <Plug>SlimeCellsPrev
 autocmd FileType python 
     \ xmap <c-c><c-c> <Plug>SlimeRegionSend
+
+func! Scratch()
+  vnew
+  setlocal buftype=nofile
+  setlocal bufhidden=hide
+  setlocal noswapfile
+endfunc
+command -bar Scratch :call Scratch()
 
 " COC Settings
 
