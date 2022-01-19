@@ -54,7 +54,8 @@ unset env
 [ -z "$TMUX"  ] && { tmux attach || exec tmux new-session;} # can use exec tmux new-session to exit after
 alias config='/usr/bin/git --git-dir=/home/rob/.cfg/ --work-tree=/home/rob'
 conda activate katana-dev
-export CXXFLAGS="$CXXFLAGS -Wfatal-errors"
+export CXXFLAGS="$CXXFLAGS -Wfatal-errors -Wno-unused-local-typedef"
+export CFLAGS="$CFLAGS -Wfatal-errors -Wno-unused-local-typedef"
 export SRC_DIR=~/katana-enterprise
 export BUILD_DIR=~/Builds/current
 export GRAPH_QUERY_DIR=$SRC_DIR/lonestar/querying/distributed/graph-query
