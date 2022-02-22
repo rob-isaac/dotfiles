@@ -118,7 +118,7 @@ Plug 'preservim/vimux'
 " Plug 'terryma/vim-multiple-cursors'
 Plug 'chiel92/vim-autoformat'
 Plug 'Raimondi/delimitMate'
-Plug 'edkolev/tmuxline.vim'
+" Plug 'edkolev/tmuxline.vim'
 " Plug 'sheerun/vim-polyglot'
 Plug 'prabirshrestha/vim-lsp'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
