@@ -4,6 +4,9 @@ set nocompatible
 " get rid of that annoying ass bell
 set visualbell
 
+" add spellcheck
+set spell spelllang=en_us
+
 " basic settings
 filetype plugin on
 filetype indent on
@@ -134,7 +137,8 @@ autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
       \| endif
 
 " Run Autoformat on save (e.g. clang-format)
-au BufWrite *.py,*.cpp,*.h,*.hpp,*.c :Autoformat
+" TODO: Add back in .py files
+au BufWrite *.cpp,*.h,*.hpp,*.c :Autoformat
 
 " Theme/coloring settings
 if (has("termguicolors"))
@@ -145,9 +149,11 @@ let g:one_allow_italics=1
 let g:tmuxline_powerline_separators = 0 " maybe re-enable at somepoint
 set background=dark
 colorscheme one
-highlight Comment cterm=italic gui=italic
+hi Comment cterm=italic gui=italic
 call one#highlight('VertSplit','777777','','none')
 call one#highlight('Normal','','101010','none')
+hi clear SpellBad
+hi SpellBad cterm=underline ctermfg=red
 
 "------------------------------------------------------------------------------
 " slime configuration
@@ -197,7 +203,7 @@ autocmd FileType python
 autocmd FileType cpp
   \ nnoremap <silent><expr> <leader>s exists('g:VimuxRunnerIndex')
     \ ? ":call VimuxCloseRunner()\<CR>"
-    \ : ":call VimuxOpenRunner()\<CR>"
+    \ : ":call VimuxRunCommand('cd $BUILD_DIR; clear')\<CR>"
 
 autocmd FileType python 
     \ nmap <c-c><c-c> <Plug>SlimeCellsSendAndGoToNext
@@ -353,7 +359,7 @@ nnoremap cc :CocCommand clangd.switchSourceHeader<CR>
 
 " NERDTree specific mappings.
 " Map tn to toggle NERDTree open and close.
-nnoremap tn :NERDTreeToggle<cr>
+" nnoremap tn :NERDTreeToggle<cr>
 
 nnoremap tn :tabnext<cr>
 nnoremap tp :tabprevious<cr>

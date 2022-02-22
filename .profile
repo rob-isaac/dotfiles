@@ -53,15 +53,21 @@ unset env
 # >>> start tmux session and export some variables
 [ -z "$TMUX"  ] && { tmux attach || exec tmux new-session;} # can use exec tmux new-session to exit after
 alias config='/usr/bin/git --git-dir=/home/rob/.cfg/ --work-tree=/home/rob'
-conda activate katana-dev
-export CXXFLAGS="$CXXFLAGS -Wfatal-errors -Wno-unused-local-typedef"
-export CFLAGS="$CFLAGS -Wfatal-errors -Wno-unused-local-typedef"
-export SRC_DIR=~/katana-enterprise
-export BUILD_DIR=~/Builds/current
-export GRAPH_QUERY_DIR=$SRC_DIR/lonestar/querying/distributed/graph-query
-export CMAKE_ARGS="-DCMAKE_BUILD_TYPE=DEBUG -DKATANA_LANG_BINDINGS=python \
-  -DKATANA_COMPONENTS='rdkit;gnn'"
-export AWS_EC2_METADATA_DISABLED=true
+alias lspg='KATANA_ENABLE_EXPERIMENTAL=UseLogStructuredForUpdates'
+if command -v conda &> /dev/null; then
+  if conda env list | grep katana-dev &> /dev/null; then
+    conda activate katana-dev
+    export SRC_DIR=~/katana-enterprise
+    export BUILD_DIR=~/Builds/current
+    export GRAPH_QUERY_DIR=$SRC_DIR/lonestar/querying/distributed/graph-query
+    export MY_CMAKE_ARGS="-DCMAKE_BUILD_TYPE=DEBUG -DKATANA_LANG_BINDINGS=python \
+      -DKATANA_COMPONENTS='rdkit;gnn' -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+      -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
+    # TODO: Add -Wfatal-errors to compile flags
+    export AWS_EC2_METADATA_DISABLED=true
+  fi
+fi
+# conda activate katana-dev
 # start docker
 # sudo service docker status || sudo service docker start
 # cd to home in case we are starting wsl from another directory
