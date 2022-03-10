@@ -16,6 +16,7 @@
 [url "ssh://git@github.com/"]
 	insteadOf = https://github.com/
 [user]
-	name = rob@katanagraph.com
+	name = Rob Isaac
+	email = rob@katanagraph.com
 [merge]
 	tool = vimdiff
