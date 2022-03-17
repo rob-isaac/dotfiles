@@ -47,15 +47,15 @@ if has("autocmd")
 endif
 
 " We can enable the mouse if we want
-" if has('mouse')
-"   set mouse=a
-" endif
+if has('mouse')
+  set mouse=a
+endif
 
 " If linux then set ttymouse
-" let s:uname = system("echo -n \"$(uname)\"")
-" if !v:shell_error && s:uname == "Linux" && !has('nvim')
-"   set ttymouse=xterm
-" endif
+let s:uname = system("echo -n \"$(uname)\"")
+if !v:shell_error && s:uname == "Linux" && !has('nvim')
+  set ttymouse=xterm
+endif
 
 " map jj to escape when in insert mode
 inoremap jj <Esc>
@@ -436,3 +436,11 @@ endfunction
 inoremap <silent> <F5> :call RunCurBuf()<CR>
 nnoremap <silent> <F5> :call RunCurBuf()<CR>
 
+" WSL yank support
+let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
+if executable(s:clip)
+    augroup WSLYank
+        autocmd!
+        autocmd TextYankPost * if v:event.operator ==# 'y' | call system(s:clip, @0) | endif
+    augroup END
+endif
