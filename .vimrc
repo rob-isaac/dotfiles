@@ -60,8 +60,8 @@ endif
 " map jj to escape when in insert mode
 inoremap jj <Esc>
 
-" yank to end of line
-nnoremap Y y$
+" yank to system clipboard
+nnoremap Y "+y
 
 " better window switching
 nnoremap <c-j> <c-w>j
