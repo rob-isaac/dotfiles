@@ -48,7 +48,7 @@ elif [ "$SSH_AUTH_SOCK" ] && [ $agent_run_state = 1 ]; then
 fi
 
 unset env
-# <<< start ssh-agent
+# <<< end ssh-agent
 
 # >>> start tmux session and export some variables
 [ -z "$TMUX"  ] && { tmux attach || exec tmux new-session;} # can use exec tmux new-session to exit after
@@ -65,27 +65,7 @@ if command -v conda &> /dev/null; then
       -DKATANA_COMPONENTS='rdkit' -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
       -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
     export ADDITIONAL_PACKAGES='numactl-devel-cos6-x86_64 pynvim'
-    # TODO: Add -Wfatal-errors to compile flags
     export AWS_EC2_METADATA_DISABLED=true
   fi
 fi
-# conda activate katana-dev
-# start docker
-# sudo service docker status || sudo service docker start
-# cd to home in case we are starting wsl from another directory
-cd
-if [[ -n "$IS_WSL" || -n "$WSL_DISTRO_NAME" ]]; then
-    echo "This is WSL"
-    # setup the X11 server for GUI apps
-    # requires Xlaunch with defaults + DISABLE ACCESS CONTROL
-    # https://stackoverflow.com/questions/61110603/how-to-set-up-working-x11-forwarding-on-wsl2
-    export DISPLAY=$(ip route list default | awk '{print $3}'):0
-    export LIBGL_ALWAYS_INDIRECT=1
-    # TODO(Rob): use auth instead of open access to X11
-    # https://stackoverflow.com/questions/66768148/how-to-setup-vcxsrv-for-use-with-wsl2
-    # export DISPLAY=host.docker.internal:0
-else
-    echo "This is not WSL"
-fi
-
-# <<< start tmux session and export some variables
+# <<< end tmux session and export some variables
