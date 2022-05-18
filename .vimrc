@@ -109,7 +109,7 @@ let g:python3_host_prog = exepath("python3")
 " TODO: Re-enable polyglot and figure out how to disable c/c++ highlighting
 let g:polyglot_disabled = ['c/c++', 'c++11']
 
-call plug#begin()
+call plug#begin('~/.vim/plugged')
 Plug 'tpope/vim-sensible'
 " Plug 'tpope/vim-abolish'
 " Plug 'tpope/vim-dispatch'
