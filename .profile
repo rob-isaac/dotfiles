@@ -54,6 +54,7 @@ unset env
 [ -z "$TMUX"  ] && { tmux attach || exec tmux new-session;} # can use exec tmux new-session to exit after
 alias config='/usr/bin/git --git-dir=/home/rob/.cfg/ --work-tree=/home/rob'
 alias lspg='KATANA_ENABLE_EXPERIMENTAL=UseLogStructuredForUpdates'
+alias dev='$HOME/katana-enterprise/scripts/dev'
 if command -v conda &> /dev/null; then
   if conda env list | grep katana-dev &> /dev/null; then
     conda activate katana-dev
@@ -61,8 +62,9 @@ if command -v conda &> /dev/null; then
     export BUILD_DIR=~/Builds/current
     export GRAPH_QUERY_DIR=$SRC_DIR/lonestar/querying/distributed/graph-query
     export MY_CMAKE_ARGS="-DCMAKE_BUILD_TYPE=DEBUG -DKATANA_LANG_BINDINGS=python \
-      -DKATANA_COMPONENTS='rdkit;gnn' -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+      -DKATANA_COMPONENTS='rdkit' -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
       -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++"
+    export ADDITIONAL_PACKAGES='numactl-devel-cos6-x86_64 pynvim'
     # TODO: Add -Wfatal-errors to compile flags
     export AWS_EC2_METADATA_DISABLED=true
   fi

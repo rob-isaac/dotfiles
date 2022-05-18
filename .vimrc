@@ -134,6 +134,7 @@ Plug 'jpalardy/vim-slime'
 Plug 'rob-isaac/vim-slime-cells'
 Plug 'christoomey/vim-tmux-navigator'
 " Plug 'julienr/vim-cellmode'
+Plug 'dhruvasagar/vim-table-mode'
 call plug#end()
 
 " Run PlugInstall if there are missing plugins
