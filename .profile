@@ -68,4 +68,5 @@ if command -v conda &> /dev/null; then
     export AWS_EC2_METADATA_DISABLED=true
   fi
 fi
+cd $HOME
 # <<< end tmux session and export some variables
