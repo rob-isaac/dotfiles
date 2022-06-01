@@ -31,6 +31,9 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
   eval `ssh-agent -s`
   ssh-add
 fi
+function reloadssh() {
+  eval "$(tmux show-env -s |grep '^SSH_')"
+}
 # <<< end ssh-agent
 
 # >>> start tmux session and export some variables
