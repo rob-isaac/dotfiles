@@ -35,13 +35,54 @@ end)
 wezterm.on("ActivatePaneDirection-down", function(window, pane)
 	conditionalActivatePane(window, pane, "Down", "j")
 end)
--- Show which key table is active in the status area
-wezterm.on("update-right-status", function(window, pane)
-	local name = window:active_key_table()
-	if name then
-		name = "TABLE: " .. name
+
+local function capture(cmd)
+	local f = io.popen(cmd, "r")
+	if not f then
+		return "ERROR"
 	end
-	window:set_right_status(name or "")
+	local s = f:read("*a")
+	f:close()
+	if not s then
+		return "ERROR"
+	end
+	s = string.gsub(s, "^%s+", "")
+	s = string.gsub(s, "%s+$", "")
+	s = string.gsub(s, "[\n\r]+", " ")
+	return s
+end
+
+-- Status configuration
+local num_cpus = capture("nproc")
+local time = 0
+local cpu_load = ""
+local cpu_usage = ""
+local mem_usage = ""
+wezterm.on("update-status", function(window, pane)
+	local table_name = window:active_key_table() or ""
+	if table_name ~= "" then
+		table_name = "TABLE: " .. table_name
+	end
+
+	local date = wezterm.strftime("%a %b %-d %H:%M ")
+
+	local bat = ""
+	for _, b in ipairs(wezterm.battery_info()) do
+		bat = "🔋 " .. string.format("%.0f%%", b.state_of_charge * 100)
+	end
+
+	-- only update cpu usage stats every 2 seconds
+	local tmp_time = math.floor(os.time() / 2)
+	if tmp_time ~= time then
+		time = tmp_time
+		cpu_load = capture("ps -aux | awk '{print $3}' | tail -n+2 | awk '{s+=$1} END {print s}'")
+		cpu_usage = "CPU: " .. math.floor(tonumber(cpu_load) / tonumber(num_cpus)) .. "%"
+		mem_usage = "MEM: " .. capture("free | awk -v format='%3.1f%%' '$1 ~ /Mem/ {printf(format, 100*$3/$2)}'")
+	end
+
+	window:set_right_status(wezterm.format({
+		{ Text = table_name .. "   " .. cpu_usage .. "   " .. mem_usage .. "   " .. bat .. "   " .. date },
+	}))
 end)
 
 -- This is where you actually apply your config choices

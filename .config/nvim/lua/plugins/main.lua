@@ -156,7 +156,14 @@ return {
       },
     },
   },
+  -- TODO(Rob): lazy load on commands
+  {
+    "sindrets/diffview.nvim",
+    config = true,
+  },
 
   -- TODO: Add and configure
   -- {"kevinhwang91/nvim-ufo"}
+  -- TODO(Rob): https://github.com/chipsenkbeil/distant.nvim
+  -- TODO(Rob): https://github.com/mrjones2014/legendary.nvim
 }
