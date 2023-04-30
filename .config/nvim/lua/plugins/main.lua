@@ -124,7 +124,7 @@ return {
   {
     "nvim-treesitter/nvim-treesitter",
     opts = {
-      ensure_installed = { "c", "lua", "vim", "vimdoc", "query" },
+      ensure_installed = { "c", "lua", "vim", "vimdoc", "query", "cpp" },
     },
     dependencies = {
       { "nvim-treesitter/nvim-treesitter-context", config = true },

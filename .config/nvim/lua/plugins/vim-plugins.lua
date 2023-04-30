@@ -23,4 +23,18 @@ return {
       ]])
     end,
   },
+  {
+    "segeljakt/vim-silicon",
+    init = function()
+      vim.g.silicon = {
+        theme = "gruvbox-dark",
+        font = "JetBrainsMono Nerd Font",
+        ["pad-vert"] = 0,
+        ["pad-horiz"] = 0,
+        ["line-number"] = false,
+        ["round-corner"] = false,
+        ["window-controls"] = false,
+      }
+    end,
+  },
 }
