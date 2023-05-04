@@ -29,3 +29,5 @@
 [user]
 	name = Rob Isaac
 	email = rob@katanagraph.com
+[init]
+	defaultBranch = main

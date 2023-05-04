@@ -5,4 +5,3 @@ vim.keymap.set("n", "<leader>tw", function()
 end, { desc = "Taskwarrior TUI" })
 
 vim.keymap.del("c", "<S-CR>")
-vim.keymap.set("i", "<S-CR>", "<CR>", { remap = true })

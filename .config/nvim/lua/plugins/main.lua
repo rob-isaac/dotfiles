@@ -161,6 +161,31 @@ return {
     "sindrets/diffview.nvim",
     config = true,
   },
+  {
+    "echasnovski/mini.pairs",
+    config = function()
+      -- Note: would be nice to conditionally add these mappings on filetype but there is
+      -- an issue with running vim with args and running the mapping via FileType autocmd
+      require("mini.pairs").setup({
+        mappings = {
+          ["<"] = { action = "open", pair = "<>", neigh_pattern = "[%a%d].", register = { cr = false } },
+          [">"] = { action = "close", pair = "<>", register = { cr = false } },
+        },
+      })
+      vim.api.nvim_set_keymap(
+        "i",
+        "<S-CR>",
+        "v:lua.MiniPairs.cr()",
+        { noremap = true, expr = true, desc = "MiniPairs <CR>" }
+      )
+      vim.api.nvim_set_keymap(
+        "i",
+        "<S-BS>",
+        "v:lua.MiniPairs.bs()",
+        { noremap = true, expr = true, desc = "MiniPairs <BS>" }
+      )
+    end,
+  },
 
   -- TODO: Add and configure
   -- {"kevinhwang91/nvim-ufo"}
