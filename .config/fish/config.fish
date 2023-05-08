@@ -8,7 +8,7 @@ if status is-interactive
     abbr --add dot git --git-dir=$HOME/.dotfiles --work-tree=$HOME
     abbr --add cmake cmake -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
     abbr --add make ninja
-    abbr --add fd fd-find
+    abbr --add fd fdfind
     abbr --add ls exa
 
     # Add bin locations to path
@@ -53,6 +53,8 @@ end
 # TODO(Rob): would be nice if we could speed this up a bit
 if test -f $HOME/miniconda3/bin/conda
     eval $HOME/miniconda3/bin/conda "shell.fish" hook $argv | source
+    # activate dev environment if availible (will print error if not found)
+    conda activate dev
 end
 
 # Activate asdf environment if available
