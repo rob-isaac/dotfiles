@@ -35,13 +35,9 @@ return {
           return false
         end
         local context = require("cmp.config.context")
-        -- TODO: Would be nice to enable buffer-completion-source-only for these
-        return not (
-          context.in_treesitter_capture("comment")
-          or context.in_treesitter_capture("string")
-          or context.in_syntax_group("Comment")
-          or context.in_syntax_group("String")
-        )
+        -- TODO: Would be nice to use a subset of the completion sources
+        -- rather than fully disabling
+        return not (context.in_treesitter_capture("comment") or context.in_syntax_group("Comment"))
       end
 
       -- UI configuration
@@ -80,8 +76,6 @@ return {
       opts.mapping = {
         ["<C-k>"] = cmp.mapping.scroll_docs(-4),
         ["<C-j>"] = cmp.mapping.scroll_docs(4),
-        ["<C-p>"] = cmp.mapping.scroll_docs(-4),
-        ["<C-n>"] = cmp.mapping.scroll_docs(4),
         ["<C-e>"] = cmp.mapping.abort(),
         ["<CR>"] = cmp.mapping.confirm({ select = true }),
         ["<Tab>"] = cmp.mapping(function(fallback)

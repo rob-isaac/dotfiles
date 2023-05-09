@@ -1,47 +1,14 @@
 return {
   { "LazyVim/LazyVim", opts = { colorscheme = "gruvbox-material" } },
-  { "NvChad/nvim-colorizer.lua", config = true },
   { import = "lazyvim.plugins.extras.lang.typescript" },
   { import = "lazyvim.plugins.extras.lang.json" },
-  -- there are some issues with lazy-loading + async-runner so just eagerly load for now
-  { "b0o/incline.nvim", config = true },
-  { "lukas-reineke/indent-blankline.nvim", lazy = false },
-  { "folke/twilight.nvim", cmd = { "Twilight" }, config = true },
-  { "folke/zen-mode.nvim", cmd = { "ZenMode" }, config = true },
-  -- TODO(Rob): figure out why using `mode = {"n","i","t"}` didn't work
-  {
-    "numToStr/Navigator.nvim",
-    config = true,
-    keys = {
-      {
-        "<C-h>",
-        "<CMD>NavigatorLeft<CR>",
-      },
-      {
-        "<C-l>",
-        "<CMD>NavigatorRight<CR>",
-      },
-      {
-        "<C-k>",
-        "<CMD>NavigatorUp<CR>",
-      },
-      {
-        "<C-j>",
-        "<CMD>NavigatorDown<CR>",
-      },
-    },
-  },
-  {
-    "lukas-reineke/headlines.nvim",
-    config = true,
-    ft = {
-      "markdown",
-      "org",
-      "norg",
-    },
-  },
+  { import = "lazyvim.plugins.extras.dap.core" },
+  { import = "lazyvim.plugins.extras.util.project" },
+
+  { "lukas-reineke/headlines.nvim", config = true, ft = { "markdown", "org", "norg" } },
   { "max397574/better-escape.nvim", config = true },
   { "smjonas/inc-rename.nvim", config = true },
+  { "folke/noice.nvim", opts = { presets = { inc_rename = true, lsp_doc_border = true } } },
   {
     "SmiteshP/nvim-navbuddy",
     opts = { lsp = { auto_attach = true } },
@@ -53,64 +20,7 @@ return {
   { "danymat/neogen", config = true },
   { "karb94/neoscroll.nvim", config = true },
   { "kevinhwang91/nvim-bqf", ft = "qf", config = true },
-  {
-    "ThePrimeagen/refactoring.nvim",
-    config = true,
-    keys = {
-      {
-        "<leader>re",
-        [[ <Esc><Cmd>lua require('refactoring').refactor('Extract Function')<CR>]],
-        mode = "v",
-      },
-      {
-        "<leader>rf",
-        [[ <Esc><Cmd>lua require('refactoring').refactor('Extract Function To File')<CR>]],
-        mode = "v",
-      },
-      {
-        "<leader>rv",
-        [[ <Esc><Cmd>lua require('refactoring').refactor('Extract Variable')<CR>]],
-        mode = "v",
-      },
-      {
-        "<leader>ri",
-        [[ <Esc><Cmd>lua require('refactoring').refactor('Inline Variable')<CR>]],
-        mode = "v",
-      },
-      {
-        "<leader>rb",
-        [[ <Cmd>lua require('refactoring').refactor('Extract Block')<CR>]],
-      },
-      {
-        "<leader>rbf",
-        [[ <Cmd>lua require('refactoring').refactor('Extract Block To File')<CR>]],
-      },
-      {
-        "<leader>ri",
-        [[ <Cmd>lua require('refactoring').refactor('Inline Variable')<CR>]],
-      },
-    },
-  },
   { "chentoast/marks.nvim", config = true },
-  { "abecodes/tabout.nvim", config = true, event = "InsertEnter" },
-  {
-    "ThePrimeagen/harpoon",
-    keys = {
-      {
-        "<leader>hm",
-        function()
-          require("harpoon.mark").add_file()
-        end,
-      },
-      {
-        "<leader>hh",
-        function()
-          require("harpoon.ui").toggle_quick_menu()
-        end,
-      },
-    },
-    config = true,
-  },
   {
     "akinsho/toggleterm.nvim",
     keys = { [[<C-\>]] },
@@ -119,8 +29,33 @@ return {
       direction = "float",
     },
   },
-  { "mrjones2014/smart-splits.nvim", config = true },
-  { "kwkarlwang/bufresize.nvim", config = true },
+  {
+    "mrjones2014/smart-splits.nvim",
+    dependencies = { { "kwkarlwang/bufresize.nvim", config = true } },
+    event = "BufReadPre",
+    config = function()
+      local ss = require("smart-splits")
+      ss.setup({
+        resize_mode = {
+          hooks = {
+            on_leave = require("bufresize").register,
+          },
+        },
+      })
+      vim.keymap.set("n", "<A-h>", ss.resize_left)
+      vim.keymap.set("n", "<A-j>", ss.resize_down)
+      vim.keymap.set("n", "<A-k>", ss.resize_up)
+      vim.keymap.set("n", "<A-l>", ss.resize_right)
+      vim.keymap.set("n", "<C-h>", ss.move_cursor_left)
+      vim.keymap.set("n", "<C-j>", ss.move_cursor_down)
+      vim.keymap.set("n", "<C-k>", ss.move_cursor_up)
+      vim.keymap.set("n", "<C-l>", ss.move_cursor_right)
+      vim.keymap.set("n", "<leader><C-h>", ss.swap_buf_left)
+      vim.keymap.set("n", "<leader><C-j>", ss.swap_buf_down)
+      vim.keymap.set("n", "<leader><C-k>", ss.swap_buf_up)
+      vim.keymap.set("n", "<leader><C-l>", ss.swap_buf_right)
+    end,
+  },
   {
     "nvim-treesitter/nvim-treesitter",
     opts = {

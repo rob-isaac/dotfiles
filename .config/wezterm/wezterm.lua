@@ -3,38 +3,44 @@ local wezterm = require("wezterm")
 local act = wezterm.action
 
 -- This table will hold the configuration.
-local config = {}
+local config = wezterm.config_builder and wezterm.config_builder() or {}
 
--- In newer versions of wezterm, use the config_builder which will
--- help provide clearer error messages
-if wezterm.config_builder then
-	config = wezterm.config_builder()
+local function is_vim(pane)
+	-- this is set in smart-splits.nvim
+	return pane:get_user_vars().IS_NVIM == "true"
 end
 
-local function isViProcess(pane)
-	return pane:get_foreground_process_name():find("n?vim") ~= nil
-end
+local direction_keys = {
+	Left = "h",
+	Down = "j",
+	Up = "k",
+	Right = "l",
+	h = "Left",
+	j = "Down",
+	k = "Up",
+	l = "Right",
+}
 
-local function conditionalActivatePane(window, pane, pane_direction, vim_direction)
-	if isViProcess(pane) then
-		window:perform_action(act.SendKey({ key = vim_direction, mods = "CTRL" }), pane)
-	else
-		window:perform_action(act.ActivatePaneDirection(pane_direction), pane)
-	end
+local function split_nav(resize_or_move, key)
+	local mod = resize_or_move == "resize" and "META" or "CTRL"
+	return {
+		key = key,
+		mods = mod,
+		action = wezterm.action_callback(function(win, pane)
+			if is_vim(pane) then
+				win:perform_action({
+					SendKey = { key = key, mods = mod },
+				}, pane)
+			else
+				if resize_or_move == "resize" then
+					win:perform_action({ AdjustPaneSize = { direction_keys[key], 3 } }, pane)
+				else
+					win:perform_action({ ActivatePaneDirection = direction_keys[key] }, pane)
+				end
+			end
+		end),
+	}
 end
-
-wezterm.on("ActivatePaneDirection-right", function(window, pane)
-	conditionalActivatePane(window, pane, "Right", "l")
-end)
-wezterm.on("ActivatePaneDirection-left", function(window, pane)
-	conditionalActivatePane(window, pane, "Left", "h")
-end)
-wezterm.on("ActivatePaneDirection-up", function(window, pane)
-	conditionalActivatePane(window, pane, "Up", "k")
-end)
-wezterm.on("ActivatePaneDirection-down", function(window, pane)
-	conditionalActivatePane(window, pane, "Down", "j")
-end)
 
 local function capture(cmd)
 	local f = io.popen(cmd, "r")
@@ -58,7 +64,7 @@ local time = 0
 local cpu_load = ""
 local cpu_usage = ""
 local mem_usage = ""
-wezterm.on("update-status", function(window, pane)
+wezterm.on("update-status", function(window, _)
 	local table_name = window:active_key_table() or ""
 	if table_name ~= "" then
 		table_name = "TABLE: " .. table_name
@@ -94,6 +100,16 @@ config.window_decorations = "RESIZE"
 
 config.leader = { key = "a", mods = "CTRL" }
 config.keys = {
+	-- move between split panes
+	split_nav("move", "h"),
+	split_nav("move", "j"),
+	split_nav("move", "k"),
+	split_nav("move", "l"),
+	-- resize panes
+	split_nav("resize", "h"),
+	split_nav("resize", "j"),
+	split_nav("resize", "k"),
+	split_nav("resize", "l"),
 	{
 		key = "\\",
 		mods = "LEADER",
@@ -140,10 +156,6 @@ config.keys = {
 		mods = "LEADER",
 		action = act.CloseCurrentTab({ confirm = false }),
 	},
-	{ key = "h", mods = "CTRL", action = act.EmitEvent("ActivatePaneDirection-left") },
-	{ key = "j", mods = "CTRL", action = act.EmitEvent("ActivatePaneDirection-down") },
-	{ key = "k", mods = "CTRL", action = act.EmitEvent("ActivatePaneDirection-up") },
-	{ key = "l", mods = "CTRL", action = act.EmitEvent("ActivatePaneDirection-right") },
 	-- Send "CTRL-A" to the terminal when pressing CTRL-A, CTRL-A
 	{
 		key = "a",
