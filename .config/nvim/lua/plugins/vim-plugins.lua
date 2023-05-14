@@ -1,6 +1,7 @@
 return {
   "sainnhe/gruvbox-material",
   "goerz/jupytext.vim",
+  "lervag/vimtex",
   { "itchyny/calendar.vim", cmd = { "Calendar" } },
   { "dhruvasagar/vim-table-mode", ft = { "markdown", "org", "norg" } },
   {
