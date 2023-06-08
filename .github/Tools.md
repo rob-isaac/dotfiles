@@ -45,6 +45,7 @@ A list of cli tools to try
  - https://github.com/ralphbean/bugwarrior
  - https://github.com/GothenburgBitFactory/timewarrior
  - https://github.com/mkchoi212/fac
+ - https://github.com/zellij-org/zellij
 
 # wezterm [#](https://github.com/wez/wezterm)
 A GPU-accelerated terminal emulator, configuable in lua. Supports kitty image protocol.

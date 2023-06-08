@@ -82,28 +82,37 @@ local map = function(mode, key, mapping, opts)
   vim.keymap.set(mode, key, mapping, opts or {})
 end
 
+-- Handle moving through wrap better
 map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
-map({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", { desc = "Escape and clear hlsearch" })
+
+-- Double-escape in terminal window to enter normal mode
 map("t", "<esc><esc>", "<C-\\><C-n>")
+
+-- Escape to clear highlights
+map({ "i", "n" }, "<esc>", "<cmd>noh<cr><esc>", { desc = "Escape and clear hlsearch" })
+
+-- Better buffer switching
 map("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
 
--- https://github.com/mhinz/vim-galore#saner-behavior-of-n-and-n
+-- Make n and N consistent regardless of search direction
 map({ "n", "x", "o" }, "n", "'Nn'[v:searchforward]", { expr = true, desc = "Next search result" })
 map({ "n", "x", "o" }, "N", "'nN'[v:searchforward]", { expr = true, desc = "Prev search result" })
 
--- Add undo break-points
+-- C-n and C-p for command line history
+map("c", "<c-n>", [[wildmenumode() ? "\<down>" : "\<c-n>"]])
+map("c", "<c-p>", [[wildmenumode() ? "\<up>" : "\<c-p>"]])
+
+-- Add undo break-points at punctuation
 map("i", ",", ",<c-g>u")
 map("i", ".", ".<c-g>u")
 map("i", ";", ";<c-g>u")
 
--- better indenting
+-- better visual indenting
 map("v", "<", "<gv")
 map("v", ">", ">gv")
 
--- new file
-map("n", "<leader>fn", "<cmd>enew<cr>", { desc = "New File" })
-
+-- easier opening of loc/qf lists
 map("n", "<leader>xl", "<cmd>lopen<cr>", { desc = "Location List" })
 map("n", "<leader>xq", "<cmd>copen<cr>", { desc = "Quickfix List" })
 
@@ -217,7 +226,7 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 })
 
 -- close some filetypes with <q>
-vim.api.nvim_create_autocmd("FileType", {
+autocmd("FileType", {
   group = augroup("close_with_q"),
   pattern = {
     "PlenaryTestPopup",
@@ -299,7 +308,6 @@ require("lazy").setup({
       require("mini.basics").setup()
       require("mini.bracketed").setup()
       require("mini.bufremove").setup()
-      map("n", "<leader>bd", MiniBufremove.delete)
       require("mini.comment").setup()
       require("mini.cursorword").setup()
       require("mini.indentscope").setup()
@@ -314,18 +322,9 @@ require("lazy").setup({
       require("mini.starter").setup()
       require("mini.trailspace").setup()
 
-      vim.api.nvim_set_keymap(
-        "i",
-        "<S-CR>",
-        "v:lua.MiniPairs.cr()",
-        { noremap = true, expr = true, desc = "MiniPairs <CR>" }
-      )
-      vim.api.nvim_set_keymap(
-        "i",
-        "<S-BS>",
-        "v:lua.MiniPairs.bs()",
-        { noremap = true, expr = true, desc = "MiniPairs <BS>" }
-      )
+      map("n", "<leader>bd", MiniBufremove.delete)
+      map("i", "<S-CR>", "v:lua.MiniPairs.cr()", { noremap = true, expr = true, desc = "MiniPairs <CR>" })
+      map("i", "<S-BS>", "v:lua.MiniPairs.bs()", { noremap = true, expr = true, desc = "MiniPairs <BS>" })
     end,
   },
   {
@@ -383,9 +382,9 @@ require("lazy").setup({
               ["as"] = { query = "@scope", query_group = "locals", desc = "Select language scope" },
             },
             selection_modes = {
-              ["@parameter.outer"] = "v", -- charwise
-              ["@function.outer"] = "V", -- linewise
-              ["@class.outer"] = "<c-v>", -- blockwise
+              ["@parameter.outer"] = "v",
+              ["@function.outer"] = "V",
+              ["@class.outer"] = "<c-v>",
             },
           },
           swap = {
@@ -455,35 +454,41 @@ require("lazy").setup({
       { "saadparwaiz1/cmp_luasnip" },
       { "onsails/lspkind.nvim" },
       { "SmiteshP/nvim-navic" },
-      -- TODO(Rob): do I need this? And should I use neoconf.nvim?
+      { "nvim-tree/nvim-web-devicons" },
+      { "nvim-telescope/telescope.nvim" },
       { "folke/neodev.nvim", opts = {} },
+      { "rmagatti/goto-preview", opts = {} },
       {
         "jose-elias-alvarez/null-ls.nvim",
-        dependencies = { "nvim-lua/plenary.nvim" },
+        dependencies = { "nvim-lua/plenary.nvim", "jay-babu/mason-null-ls.nvim" },
         config = function()
           local null_ls = require("null-ls")
-          -- TODO(Rob): Ensure installed on all these sources
           null_ls.setup({
             sources = {
-              null_ls.builtins.formatting.stylua,
               null_ls.builtins.formatting.black,
+              null_ls.builtins.formatting.clang_format,
+              null_ls.builtins.formatting.fish_indent,
+              null_ls.builtins.formatting.gofmt,
               null_ls.builtins.formatting.isort,
               null_ls.builtins.formatting.latexindent,
-              null_ls.builtins.formatting.clang_format,
-              null_ls.builtins.formatting.gofmt,
-              null_ls.builtins.formatting.fish_indent,
+              null_ls.builtins.formatting.rustfmt,
               null_ls.builtins.formatting.shfmt,
+              null_ls.builtins.formatting.stylua,
               null_ls.builtins.completion.spell,
               null_ls.builtins.code_actions.gomodifytags,
               null_ls.builtins.code_actions.impl,
               null_ls.builtins.code_actions.gitsigns.with({
                 config = {
                   filter_actions = function(title)
-                    return title:lower():match("blame") == nil -- filter out blame actions
+                    return title:lower():match("blame") == nil
                   end,
                 },
               }),
             },
+          })
+          require("mason-null-ls").setup({
+            ensure_installed = nil,
+            automatic_installation = true,
           })
         end,
       },
@@ -522,24 +527,46 @@ require("lazy").setup({
         },
       }))
 
-      lsp.format_on_save({
+      local format_opts = {
         format_opts = {
           async = false,
           timeout_ms = 5000,
         },
         servers = {
-          ["null-ls"] = { "javascript", "typescript", "python", "cpp", "lua", "go" },
+          ["null-ls"] = { "javascript", "typescript", "python", "cpp", "lua", "go", "rust" },
         },
-      })
+      }
+      lsp.format_on_save(format_opts)
+      lsp.format_mapping("<leader>cf", format_opts)
 
       lsp.on_attach(function(client, bufnr)
-        lsp.default_keymaps({ buffer = bufnr })
-        map("n", "[e", function()
-          vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
-        end, { buffer = bufnr })
+        local builtin = require("telescope.builtin")
+
+        -- Goto keymaps
+        map("n", "gd", builtin.lsp_definitions, { desc = "[G]oto [D]efinition" })
+        map("n", "gp", require("goto-preview").goto_preview_definition, { desc = "[G]oto [P]review" })
+        map("n", "gP", require("goto-preview").close_all_win, { desc = "Close Preview Windows" })
+        map("n", "gt", require("goto-preview").goto_preview_type_definition, { desc = "[G]oto [T]ypedef" })
+        map("n", "]d", vim.diagnostic.goto_next, { desc = "Diagnostic forward" })
+        map("n", "[d", vim.diagnostic.goto_prev, { desc = "Diagnostic backward" })
         map("n", "]e", function()
           vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
-        end, { buffer = bufnr })
+        end, { desc = "Error forward" })
+        map("n", "[e", function()
+          vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
+        end, { desc = "Error backward" })
+
+        -- Lsp behavior
+        map("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "[C]ode [A]ction" })
+        map("n", "<leader>cr", vim.lsp.buf.rename, { desc = "[C]ode [R]ename" })
+        map("n", "<leader>cs", builtin.lsp_document_symbols, { desc = "[C]ode [S]ymbols" })
+        map("n", "<leader>cS", builtin.lsp_workspace_symbols, { desc = "[C]ode Workspace [S]ymbols" })
+        map("n", "<Leader>ci", builtin.lsp_incoming_calls, { desc = "[C]ode [I]ncoming calls" })
+        map("n", "<Leader>co", builtin.lsp_outgoing_calls, { desc = "[C]ode [O]utgoing calls" })
+
+        -- Hover
+        map("n", "K", vim.lsp.buf.hover, { desc = "Hover" })
+
         if client.supports_method("documentSymbols") then
           require("nvim-navic").attach(client, bufnr)
         end
@@ -615,8 +642,10 @@ require("lazy").setup({
           ["<CR>"] = cmp.mapping.confirm({ select = true }),
           ["<Tab>"] = cmp_action.luasnip_supertab(),
           ["<S-Tab>"] = cmp_action.luasnip_shift_supertab(),
-          ["<C-f>"] = cmp_action.luasnip_jump_forward(),
-          ["<C-b>"] = cmp_action.luasnip_jump_backward(),
+          ["<C-f>"] = cmp.mapping.scroll_docs(5),
+          ["<C-b>"] = cmp.mapping.scroll_docs(-5),
+          ["<C-j>"] = cmp_action.luasnip_jump_forward(),
+          ["<C-k>"] = cmp_action.luasnip_jump_backward(),
         },
         enabled = function()
           return vim.api.nvim_buf_get_option(0, "buftype") ~= "prompt"
@@ -649,8 +678,8 @@ require("lazy").setup({
     dependencies = {
       "nvim-lua/plenary.nvim",
       { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
-      "nvim-telescope/telescope-file-browser.nvim",
       "folke/noice.nvim",
+      "nvim-telescope/telescope-ui-select.nvim",
     },
     config = function()
       local function is_git_repo()
@@ -682,17 +711,23 @@ require("lazy").setup({
             },
           },
         },
+        extensions = {
+          ["ui-select"] = {
+            require("telescope.themes").get_dropdown({}),
+          },
+        },
       })
       require("telescope").load_extension("fzf")
-      require("telescope").load_extension("file_browser")
       require("telescope").load_extension("noice")
+      require("telescope").load_extension("ui-select")
+
       local builtin = require("telescope.builtin")
       vim.keymap.set("n", "<leader>ff", function()
         builtin.find_files(get_picker_opts())
-      end, {})
+      end, { desc = "[F]ind [F]iles" })
       vim.keymap.set("n", "<leader>fg", function()
         builtin.live_grep(get_picker_opts())
-      end, {})
+      end, { desc = "[F]ind [G]rep" })
       vim.keymap.set("n", "<leader>fw", builtin.grep_string, { desc = "[F]ind [W]ord under cursor" })
       vim.keymap.set("n", "<leader>fo", builtin.oldfiles, { desc = "[F]ind [O]ld files" })
       vim.keymap.set("n", "<leader>fm", builtin.marks, { desc = "[F]ind [M]arks" })
@@ -700,8 +735,7 @@ require("lazy").setup({
       vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "[F]ind [B]uffers" })
       vim.keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "[F]ind [H]elp tags" })
       vim.keymap.set("n", "<leader>fs", builtin.treesitter, { desc = "[F]ind [S]ymbols (from treesitter)" })
-      vim.keymap.set("n", "<leader>fe", "<cmd>Telescope file_browser<cr>", { desc = "[F]ile [E]xplorer" })
-      vim.keymap.set("n", "<leader>e", "<cmd>Telescope file_browser<cr>", { desc = "File [E]xplorer" })
+      vim.keymap.set("n", "<leader>/", builtin.current_buffer_fuzzy_find, { desc = "Fuzzy Search Buffer" })
     end,
   },
   {
@@ -753,17 +787,8 @@ require("lazy").setup({
       ]])
     end,
   },
-  {
-    "tpope/vim-fugitive",
-    init = function()
-      vim.cmd([[
-        command! -bang -bar -nargs=* Gpush execute 'AsyncRun<bang> -cwd=' .
-                  \ fnameescape(FugitiveGitDir()) 'git push' <q-args>
-        command! -bang -bar -nargs=* Gfetch execute 'AsyncRun<bang> -cwd=' .
-                  \ fnameescape(FugitiveGitDir()) 'git fetch' <q-args>
-      ]])
-    end,
-  },
+  "tpope/vim-fugitive",
+  "tpope/vim-abolish",
   {
     "segeljakt/vim-silicon",
     init = function()
@@ -812,15 +837,41 @@ require("lazy").setup({
   { "SmiteshP/nvim-navbuddy", opts = { lsp = { auto_attach = true } } },
   { "pwntester/octo.nvim", config = true, cmd = { "Octo" } },
   { "danymat/neogen", config = true },
-  { "karb94/neoscroll.nvim", config = true },
+  {
+    "karb94/neoscroll.nvim",
+    opts = { mappings = { "<C-u>", "<C-d>", "<C-y>", "<C-e>", "zt", "zz", "zb" } },
+  },
   { "chentoast/marks.nvim", config = true },
   {
     "akinsho/toggleterm.nvim",
-    keys = { [[<C-\>]] },
-    opts = {
-      open_mapping = [[<C-\>]],
-      direction = "float",
-    },
+    config = function()
+      require("toggleterm").setup({
+        open_mapping = [[<C-\>]],
+        direction = "float",
+      })
+      local Terminal = require("toggleterm.terminal").Terminal
+      local lazygit = Terminal:new({ cmd = "lazygit", hidden = true })
+      map("n", "<leader>gg", function()
+        lazygit:toggle()
+      end, { desc = "Lazygit" })
+
+      -- TODO(Rob): should avoid closing on exit and instead reuse the terminal
+      map("n", "<leader>e", function()
+        local prev_win = vim.api.nvim_get_current_win()
+        local tmpname = os.tmpname()
+        Terminal:new({
+          cmd = "xplr > " .. tmpname,
+          hidden = true,
+          on_exit = function()
+            vim.api.nvim_set_current_win(prev_win)
+            for line in io.lines(tmpname) do
+              vim.cmd("edit " .. line)
+            end
+            os.remove(tmpname)
+          end,
+        }):open()
+      end, { desc = "File [E]xplorer" })
+    end,
   },
   { "sindrets/diffview.nvim", config = true },
   {
@@ -897,12 +948,15 @@ require("lazy").setup({
       require("flit").setup({})
     end,
   },
-  -- TODO: Add and configure
-  -- kevinhwang91/nvim-ufo
-  -- AckslD/muren.nvim or spectre
-  -- mg979/vim-visual-multi
-  -- chipsenkbeil/distant.nvim
-  -- mrjones2014/legendary.nvim
+  -- { "mg979/vim-visual-multi", branch = "master" },
+  -- { "kevinhwang91/nvim-ufo" },
+  -- { "AckslD/muren.nvim" },
+  -- { "mg979/vim-visual-multi" },
+  -- { "nvim-pack/nvim-spectre" },
+  -- { "chipsenkbeil/distant.nvim" },
+  -- { "mrjones2014/legendary.nvim" },
+  -- { "Konfekt/FastFold" }
+  -- { "mbbill/undotree" }
 
   install = { colorscheme = { "gruvbox-material", "tokyonight", "habamax" } },
   checker = { enabled = true },
