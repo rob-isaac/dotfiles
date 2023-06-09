@@ -26,6 +26,7 @@ vim.o.splitright = true
 vim.o.splitbot = true
 vim.o.signcolumn = "yes"
 vim.o.makeprg = "ninja"
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
@@ -318,7 +319,6 @@ require("lazy").setup({
           [">"] = { action = "close", pair = "<>", register = { cr = false } },
         },
       })
-      require("mini.sessions").setup()
       require("mini.starter").setup()
       require("mini.trailspace").setup()
 
@@ -720,6 +720,7 @@ require("lazy").setup({
       require("telescope").load_extension("fzf")
       require("telescope").load_extension("noice")
       require("telescope").load_extension("ui-select")
+      require("telescope").load_extension("session-lens")
 
       local builtin = require("telescope.builtin")
       vim.keymap.set("n", "<leader>ff", function()
@@ -947,6 +948,29 @@ require("lazy").setup({
       vim.api.nvim_set_hl(0, "LeapBackdrop", { link = "Comment" })
       require("flit").setup({})
     end,
+  },
+  {
+    "rmagatti/auto-session",
+    config = function()
+      require("auto-session").setup({
+        log_level = vim.log.levels.ERROR,
+        auto_session_suppress_dirs = { "~/Projects", "~/Downloads", "/" },
+        auto_session_use_git_branch = false,
+        auto_session_enable_last_session = vim.loop.cwd() == vim.loop.os_homedir(),
+        session_lens = {
+          load_on_setup = true,
+          theme_conf = { border = true },
+          previewer = false,
+        },
+      })
+      map(
+        "n",
+        "<leader>fp",
+        require("auto-session.session-lens").search_session,
+        { desc = "[F]ind [P]roject (Session)" }
+      )
+    end,
+    dependencies = { "nvim-telescope/telescope.nvim" },
   },
   -- { "mg979/vim-visual-multi", branch = "master" },
   -- { "kevinhwang91/nvim-ufo" },
