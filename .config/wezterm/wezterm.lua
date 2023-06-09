@@ -94,6 +94,7 @@ end)
 -- This is where you actually apply your config choices
 
 config.color_scheme = "Gruvbox Material (Gogh)"
+config.force_reverse_video_cursor = true
 config.font = wezterm.font("JetBrainsMono Nerd Font")
 config.window_padding = { left = 0, right = 0, bottom = 0, top = 0 }
 config.window_decorations = "RESIZE"
