@@ -547,6 +547,7 @@ require("lazy").setup({
         map("n", "gp", require("goto-preview").goto_preview_definition, { desc = "[G]oto [P]review" })
         map("n", "gP", require("goto-preview").close_all_win, { desc = "Close Preview Windows" })
         map("n", "gt", require("goto-preview").goto_preview_type_definition, { desc = "[G]oto [T]ypedef" })
+        map("n", "gr", builtin.lsp_references, { desc = "[G]oto [R]eferences" })
         map("n", "]d", vim.diagnostic.goto_next, { desc = "Diagnostic forward" })
         map("n", "[d", vim.diagnostic.goto_prev, { desc = "Diagnostic backward" })
         map("n", "]e", function()
@@ -832,7 +833,14 @@ require("lazy").setup({
       },
     },
   },
-  { "folke/trouble.nvim", opts = {} },
+  {
+    "folke/trouble.nvim",
+    config = function()
+      require("trouble").setup()
+      map("n", "<leader>xx", "<cmd>TroubleToggle<cr>", { desc = "Trouble Toggle" })
+      map("n", "<leader>xX", "<cmd>TroubleToggle workspace_diagnostics<cr>", { desc = "Trouble Toggle (Workspace)" })
+    end,
+  },
   { "kevinhwang91/nvim-bqf", opts = {} },
   { "lukas-reineke/headlines.nvim", opts = {}, ft = { "markdown", "org", "norg" } },
   { "SmiteshP/nvim-navbuddy", opts = { lsp = { auto_attach = true } } },
