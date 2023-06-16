@@ -1,150 +1,68 @@
-A list of my favorite cli tools:
- - [wezterm](#wezterm)
- - [fish](#fish)
- - [neovim](#neovim)
- - [ninja](#ninja)
- - [bear](#bear)
- - [taskwarrior-tui](#taskwarrior-tui)
- - [ripgrep](#ripgrep)
- - [fdfind](#fdfind)
- - [bat](#bat)
- - [lazygit](#lazygit)
- - [git-delta](#git-delta)
- - [github-cli](#github-cli)
- - [exa](#exa)
- - [silicon](#silicon)
- - [lf](#lf)
- - [ctpv](#ctpv)
- - [btop](#btop)
- - [fzf](#fzf)
- - [gdu](#gdu)
- - [tldr](#tldr)
- - [glow](#glow)
+# Tools List
 
-A list of cli tools to try
- - [wuzz](#wuzz)
- - [httpie](#httpie)
- - [lazydocker](#lazydocker)
- - [ctop](#ctop)
- - [tv](#tv)
- - [viu](#viu)
- - [zoxide](#zoxide)
- - https://github.com/samtay/so
- - https://github.com/kraanzu/dooit
- - https://github.com/noisrucer/girok
- - https://github.com/awesomeWM/awesome
- - https://github.com/dlvhdr/gh-dash
- - https://github.com/veeso/termscp
- - https://github.com/joouha/euporie
- - https://github.com/sayanarijit/xplr
- - https://github.com/Rigellute/spotify-tui
- - https://github.com/extrawurst/gitui
- - https://github.com/sachaos/todoist/
- - https://github.com/anufrievroman/calcure
- - https://github.com/CarlosNihelton/todoist-taskwarrior
- - https://github.com/ralphbean/bugwarrior
- - https://github.com/GothenburgBitFactory/timewarrior
- - https://github.com/mkchoi212/fac
- - https://github.com/zellij-org/zellij
+ - [wezterm](https://github.com/wez/wezterm): A GPU-accelerated terminal emulator, configuable in lua. Supports kitty image protocol.
+ - [fish](https://github.com/fish-shell/fish-shell): A user-friendly shell with out-of-the-box completion-suggestions and command highlighting.
+ - [neovim](https://github.com/neovim/neovim): A fork of vim which supports lua configuration.
+ - [ninja](https://github.com/ninja-build/ninja): A build-system alternative to `make`. Generally has better performance.
+ - [bear](https://github.com/rizsotto/Bear): A tool for generating `compile-commands.json` files for projects which either (1) are lacking a generator for the file or (2) have complex header dependencies which can cause the LSP to have issues in some files when using the default `compile-commands.json`.
+ - [fzf](https://github.com/junegunn/fzf): Terminal fuzzy-finder
+ - Rust Tools
+   - [ripgrep](https://github.com/BurntSushi/ripgrep): Like `grep` but better
+   - [fd-find](https://github.com/sharkdp/fd): Like `find` but better
+   - [bat](https://github.com/sharkdp/bat): Like `cat` but better
+   - [git-delta](https://github.com/dandavison/delta): Better viewing of git deltas (requires setup in .gitconfig)
+   - [github-cli](https://github.com/cli/cli): Allows interacting with github (managing pull-requests, etc) over commandline
+   - [exa](https://github.com/ogham/exa): Like `ls` but better
+   - [silicon](https://github.com/Aloxaf/silicon): A tool for generating code-snippets
+   - [xplr](https://github.com/sayanarijit/xplr): A TUI file file-explorer
+   - [spotify-tui](https://github.com/Rigellute/spotify-tui): A TUI client for spotify
+   - [bottom](https://github.com/ClementTsang/bottom): System visualization TUI like htop
+   - [dua-cli](https://github.com/Byron/dua-cli): Interactive disk-usage analyzer similar to ncdu
+   - [du-dust](https://github.com/bootandy/dust): Quick non-interactive disk usage visualizer
+   - [gitui](https://github.com/extrawurst/gitui): Git TUI client
+   - [procs](https://github.com/dalance/procs): Modern replacement for ps
+   - [tealdeer](https://github.com/dbrgn/tealdeer): TLDR pages
+   - [zoxide](https://github.com/ajeetdsouza/zoxide): Smarter cd. Depends on fzf and init with `zoxide init fish | source`
+   - [so](https://github.com/samtay/so): Terminal interface for stack overflow
+   - [viu](https://github.com/atanunq/viu): Terminal image viewer
+ 
+## Other tools to try
 
-# wezterm [#](https://github.com/wez/wezterm)
-A GPU-accelerated terminal emulator, configuable in lua. Supports kitty image protocol.
+ - [wuzz](https://github.com/asciimoo/wuzz): TUI for analyzing http requests/responses
+ - [httpie](https://github.com/httpie/httpie): CLI tool for analyzing http requests/responses (alternative to curl)
+ - [lazydocker](https://github.com/jesseduffield/lazydocker): TUI for managing docker
+ - [ctop](https://github.com/bcicen/ctop): Like `top` for docker containers
+ - [glow](https://github.com/charmbracelet/glow): Cli markdown viewer
+ - [zellij](https://github.com/zellij-org/zellij): Modern terminal workspace manager (alternative to tmux)
+ - [calcure](https://github.com/anufrievroman/calcure): Terminal callendar. Can sync with google callendar
+ - [euporie](https://github.com/joouha/euporie): Termainal jupyter notebook viewer/runner
+ - [termscp](https://github.com/veeso/termscp): Terminal UI for file transfer
+ - [gh-dash](https://github.com/dlvhdr/gh-dash): UI for `gh` (github CLI)
+ - [awesome-wm](https://github.com/awesomeWM/awesome): Modern window manager
+ - [kdash](https://github.com/kdash-rs/kdash): Kubernetes dashboard TUI
+ - [gpg-tui](https://github.com/orhun/gpg-tui): GPG key management TUI
+# Installation
 
-# fish [#](https://github.com/fish-shell/fish-shell)
-A user-friendly shell with out-of-the-box completion-suggestions and command highlighting.
+Many of the tools are available via `cargo install`
 
-# neovim [#](https://github.com/neovim/neovim)
-A fork of vim which supports lua configuration.
-
-# ninja [#](https://github.com/ninja-build/ninja)
-A build-system alternative to `make`. Generally has better performance.
-
-# bear [#](https://github.com/rizsotto/Bear)
-A tool for generating `compile-commands.json` files for projects which either (1) are lacking
-a generator for the file or (2) have complex header dependencies which can cause the LSP
-to have issues in some files when using the default `compile-commands.json`.
-
-# taskwarrior-tui [#](https://github.com/kdheepak/taskwarrior-tui)
-A task-management system + a tui interface for it
-
-# ripgrep [#](https://github.com/BurntSushi/ripgrep)
-
-Like `grep` but better
-
-# fd-find [#](https://github.com/sharkdp/fd)
-
-Like `find` but better
-
-# bat [#](https://github.com/sharkdp/bat)
-
-Like `cat` but better
-
-# lazygit [#](https://github.com/jesseduffield/lazygit)
-TUI interface for git
-
-# git-delta [#](https://github.com/dandavison/delta)
-Better viewing of git deltas (requires setup in .gitconfig)
-
-# github-cli [#](https://github.com/cli/cli)
-
-Allows interacting with github (managing pull-requests, etc) over commandline
-
-# exa [#](https://github.com/ogham/exa)
-
-Like `ls` but better
-
-# silicon [#](https://github.com/Aloxaf/silicon)
-
-A tool for generating code-snippets
-
-# lf [#](https://github.com/gokcehan/lf)
-
-A TUI file-explorer
-
-# ctpv [#](https://github.com/NikitaIvanovV/ctpv)
-A file previewer for lf
-# btop [#](https://github.com/aristocratos/btop)
-
-Like `htop` but more configuable (and can easily support vim bindings).
-
-# fzf [#](https://github.com/junegunn/fzf)
-
-General purpose fuzzy finder
-
-# gdu [#](https://github.com/dundee/gdu)
-
-TUI for managing disk-usage.
-
-# tldr [#](https://github.com/tldr-pages/tldr)
-
-Faster alternative to browsing man pages.
-
-# glow [#](https://github.com/charmbracelet/glow)
-Cli markdown viewer
-
-# wuzz [#](https://github.com/asciimoo/wuzz)
-TUI for analyzing http requests/responses.
-
-# httpie [#](https://github.com/httpie/httpie)
-
-CLI tool for analyzing http requests/responses (alternative to curl).
-
-# lazydocker [#](https://github.com/jesseduffield/lazydocker)
-TUI for managing docker.
-
-# ctop [#](https://github.com/bcicen/ctop)
-
-Like `top` for docker containers.
-
-# tv [#](https://github.com/alexhallam/tv)
-CLI csv viewer.
-
-# viu [#](https://github.com/atanunq/viu)
-
-CLI image viewer.
-
-# zoxide [#](https://github.com/ajeetdsouza/zoxide)
-
-Smarter `cd` command
-
-
+```
+cargo install \
+  ripgrep \
+  fd-find \
+  bat \
+  git-delta \
+  exa \
+  silicon \
+  bottom \
+  dua-cli \
+  du-dust \
+  gitui \
+  procs \
+  tealdeer \
+  zoxide \
+  so \
+  viu \
+  tidy-viewer \
+  spotify-tui
+cargo install --locked --force xplr
+```

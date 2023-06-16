@@ -33,14 +33,14 @@ if status is-interactive
 
     # Convenience function to move the most recently downloaded file
     function dmv -d "move the most-recent download to pwd"
-        set __fname "$(ls -t ~/Downloads | head -n 1)"
+        set __fname (ls -t ~/Downloads | head -n 1)
         set __fpath "$HOME/Downloads/"$__fname""
         mv "$__fpath" \.
     end
 
     # Convenience function to copy the most recently downloaded file
     function dcp -d "copy the most-recent download to pwd"
-        set __fname "$(ls -t ~/Downloads | head -n 1)"
+        set __fname (ls -t ~/Downloads | head -n 1)
         set __fpath "$HOME/Downloads/"$__fname""
         cp -a "$__fpath" \.
     end
