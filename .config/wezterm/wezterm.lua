@@ -1,6 +1,7 @@
 -- Pull in the wezterm API
 local wezterm = require("wezterm")
 local act = wezterm.action
+local mux = wezterm.mux
 
 -- This table will hold the configuration.
 local config = wezterm.config_builder and wezterm.config_builder() or {}
@@ -57,6 +58,12 @@ local function capture(cmd)
 	s = string.gsub(s, "[\n\r]+", " ")
 	return s
 end
+
+-- Start in maximized mode
+wezterm.on('gui-startup', function(cmd)
+  local _, _, window = mux.spawn_window(cmd or {})
+  window:gui_window():maximize()
+end)
 
 -- Status configuration
 local num_cpus = capture("nproc")
