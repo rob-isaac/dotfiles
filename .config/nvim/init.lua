@@ -458,44 +458,41 @@ require("lazy").setup({
       { "nvim-telescope/telescope.nvim" },
       { "folke/neodev.nvim", opts = {} },
       { "rmagatti/goto-preview", opts = {} },
-      {
-        "jose-elias-alvarez/null-ls.nvim",
-        dependencies = { "nvim-lua/plenary.nvim", "jay-babu/mason-null-ls.nvim" },
-        config = function()
-          local null_ls = require("null-ls")
-          null_ls.setup({
-            sources = {
-              null_ls.builtins.formatting.black,
-              null_ls.builtins.formatting.clang_format,
-              null_ls.builtins.formatting.fish_indent,
-              null_ls.builtins.formatting.gofmt,
-              null_ls.builtins.formatting.isort,
-              null_ls.builtins.formatting.latexindent,
-              null_ls.builtins.formatting.rustfmt,
-              null_ls.builtins.formatting.shfmt,
-              null_ls.builtins.formatting.stylua,
-              null_ls.builtins.completion.spell,
-              null_ls.builtins.code_actions.gomodifytags,
-              null_ls.builtins.code_actions.impl,
-              null_ls.builtins.code_actions.gitsigns.with({
-                config = {
-                  filter_actions = function(title)
-                    return title:lower():match("blame") == nil
-                  end,
-                },
-              }),
-            },
-          })
-          require("mason-null-ls").setup({
-            ensure_installed = nil,
-            automatic_installation = true,
-          })
-        end,
-      },
+      { "nvim-lua/plenary.nvim" },
+      { "jay-babu/mason-null-ls.nvim" },
+      { "jose-elias-alvarez/null-ls.nvim" },
       { "p00f/clangd_extensions.nvim" },
     },
     config = function()
       local lsp = require("lsp-zero").preset({})
+
+      local null_ls = require("null-ls")
+      null_ls.setup({
+        sources = {
+          null_ls.builtins.formatting.black,
+          null_ls.builtins.formatting.clang_format,
+          null_ls.builtins.formatting.fish_indent,
+          null_ls.builtins.formatting.gofmt,
+          null_ls.builtins.formatting.isort,
+          null_ls.builtins.formatting.latexindent,
+          null_ls.builtins.formatting.rustfmt,
+          null_ls.builtins.formatting.shfmt,
+          null_ls.builtins.formatting.stylua,
+          null_ls.builtins.completion.spell,
+          null_ls.builtins.code_actions.gomodifytags,
+          null_ls.builtins.code_actions.impl,
+          null_ls.builtins.code_actions.gitsigns.with({
+            config = {
+              filter_actions = function(title)
+                return title:lower():match("blame") == nil
+              end,
+            },
+          }),
+        },
+      })
+      require("mason-null-ls").setup({
+        automatic_installation = true,
+      })
 
       lsp.ensure_installed({ "lua_ls", "gopls", "clangd", "rust_analyzer", "pyright" })
 
