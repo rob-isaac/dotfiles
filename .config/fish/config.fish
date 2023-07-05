@@ -45,6 +45,10 @@ if status is-interactive
         cp -a "$__fpath" \.
     end
 
+    # Setup the GPG agent
+    set -gx GPG_TTY (tty)
+    gpgconf --launch gpg-agent
+
     # Set my pwd to $HOME
     cd $HOME
 end

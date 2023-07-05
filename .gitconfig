@@ -1,33 +1,37 @@
-[push]
-	recurseSubmodules = check
-[fetch]
-	recurseSubmodules = on-demand
-[submodule]
-	recurse = true
 [core]
 	editor = nvim
   pager = delta
+[user]
+	name = Rob Isaac
+	email = robert.a.isaac@gmail.com
+[fetch]
+	recurseSubmodules = on-demand
+[push]
+	recurseSubmodules = check
+[submodule]
+	recurse = true
+[interactive]
+  diffFilter = delta --color-only
+[delta]
+  navigate = true    # use n and N to move between diff sections
+  light = false
+[merge]
+	tool = nvimdiff
+  conflictstyle = diff3
+[diff]
+  colorMoved = default
+
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
+[init]
+	defaultBranch = main
+
 [alias]
 	graph = log --graph --all --oneline --decorate --color
 	st = status -sb
 	cl = log --oneline --name-status
   fetch-rob = fetch origin 'refs/heads/users/rob*:refs/remotes/origin/users/rob*'
   br = branch --sort=committerdate
-[interactive]
-    diffFilter = delta --color-only
-[delta]
-    navigate = true    # use n and N to move between diff sections
-    light = false      # set to true if you're in a terminal w/ a light background color (e.g. the default macOS terminal)
-[merge]
-	tool = nvimdiff
-    conflictstyle = diff3
-[diff]
-  colorMoved = default
 
-[url "ssh://git@github.com/"]
-	insteadOf = https://github.com/
-[user]
-	name = Rob Isaac
-	email = rob@katanagraph.com
-[init]
-	defaultBranch = main
+[include]
+  path = "~/.gitconfig-secret" # for adding a signingkey
