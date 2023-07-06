@@ -25,7 +25,7 @@
    - [zoxide](https://github.com/ajeetdsouza/zoxide): Smarter cd. Depends on fzf and init with `zoxide init fish | source`
    - [so](https://github.com/samtay/so): Terminal interface for stack overflow
    - [viu](https://github.com/atanunq/viu): Terminal image viewer
- 
+
 ## Other tools to try
 
  - [wuzz](https://github.com/asciimoo/wuzz): TUI for analyzing http requests/responses
@@ -41,6 +41,8 @@
  - [awesome-wm](https://github.com/awesomeWM/awesome): Modern window manager
  - [kdash](https://github.com/kdash-rs/kdash): Kubernetes dashboard TUI
  - [gpg-tui](https://github.com/orhun/gpg-tui): GPG key management TUI
+ - [asdf](https://github.com/asdf-vm/asdf): Version manager for many different languages
+ - [mosh](https://mosh.org/): Alternative to ssh with better support for laggy networks
 # Installation
 
 Many of the tools are available via `cargo install`
