@@ -1,6 +1,8 @@
 local map = require("utils").map
 
 return {
+  "goerz/jupytext.vim",
+  "lervag/vimtex",
   {
     "sainnhe/gruvbox-material",
     priority = 10000,
@@ -9,32 +11,6 @@ return {
     end,
   },
   { "max397574/better-escape.nvim", opts = {} },
-  {
-    "mrjones2014/smart-splits.nvim",
-    dependencies = { { "kwkarlwang/bufresize.nvim", config = true } },
-    config = function()
-      local ss = require("smart-splits")
-      ss.setup({
-        resize_mode = {
-          hooks = {
-            on_leave = require("bufresize").register,
-          },
-        },
-      })
-      vim.keymap.set("n", "<A-h>", ss.resize_left)
-      vim.keymap.set("n", "<A-j>", ss.resize_down)
-      vim.keymap.set("n", "<A-k>", ss.resize_up)
-      vim.keymap.set("n", "<A-l>", ss.resize_right)
-      vim.keymap.set("n", "<C-h>", ss.move_cursor_left)
-      vim.keymap.set("n", "<C-j>", ss.move_cursor_down)
-      vim.keymap.set("n", "<C-k>", ss.move_cursor_up)
-      vim.keymap.set("n", "<C-l>", ss.move_cursor_right)
-      vim.keymap.set("n", "<leader><C-h>", ss.swap_buf_left)
-      vim.keymap.set("n", "<leader><C-j>", ss.swap_buf_down)
-      vim.keymap.set("n", "<leader><C-k>", ss.swap_buf_up)
-      vim.keymap.set("n", "<leader><C-l>", ss.swap_buf_right)
-    end,
-  },
   {
     "echasnovski/mini.nvim",
     config = function()
@@ -60,45 +36,6 @@ return {
       map("i", "<S-BS>", "v:lua.MiniPairs.bs()", { noremap = true, expr = true, desc = "MiniPairs <BS>" })
     end,
   },
-  {
-    "folke/noice.nvim",
-    config = function()
-      require("noice").setup({
-        lsp = {
-          override = {
-            ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
-            ["vim.lsp.util.stylize_markdown"] = true,
-            ["cmp.entry.get_documentation"] = true,
-          },
-        },
-        presets = {
-          bottom_search = true,
-          command_palette = true,
-          long_message_to_split = true,
-          inc_rename = true,
-          lsp_doc_border = true,
-        },
-      })
-      vim.keymap.set({ "n", "i", "s" }, "<c-f>", function()
-        if not require("noice.lsp").scroll(4) then
-          return "<c-f>"
-        end
-      end, { silent = true, expr = true })
-
-      vim.keymap.set({ "n", "i", "s" }, "<c-b>", function()
-        if not require("noice.lsp").scroll(-4) then
-          return "<c-b>"
-        end
-      end, { silent = true, expr = true })
-    end,
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-      "rcarriga/nvim-notify",
-      { "smjonas/inc-rename.nvim", opts = {} },
-    },
-  },
-  "goerz/jupytext.vim",
-  "lervag/vimtex",
   { "dhruvasagar/vim-table-mode", ft = { "markdown", "org", "norg" } },
   {
     "skywind3000/asyncrun.vim",
@@ -171,45 +108,6 @@ return {
     opts = { mappings = { "<C-u>", "<C-d>", "<C-y>", "<C-e>", "zt", "zz", "zb" } },
   },
   { "chentoast/marks.nvim", config = true },
-  {
-    "akinsho/toggleterm.nvim",
-    config = function()
-      require("toggleterm").setup({
-        open_mapping = [[<C-\>]],
-        direction = "float",
-      })
-      local Terminal = require("toggleterm.terminal").Terminal
-      local lazygit = Terminal:new({ cmd = "lazygit", hidden = true })
-      map("n", "<leader>gg", function()
-        lazygit:toggle()
-      end, { desc = "Lazygit" })
-
-      -- TODO(Rob): should avoid closing on exit and instead reuse the terminal
-      local function xplr_term(dir)
-        local prev_win = vim.api.nvim_get_current_win()
-        local tmpname = os.tmpname()
-        Terminal:new({
-          cmd = "xplr " .. dir .. "> " .. tmpname,
-          hidden = true,
-          on_exit = function()
-            vim.api.nvim_set_current_win(prev_win)
-            for line in io.lines(tmpname) do
-              vim.cmd("edit " .. line)
-            end
-            os.remove(tmpname)
-          end,
-        }):open()
-      end
-
-      map("n", "<leader>e", function()
-        xplr_term(".")
-      end, { desc = "File [E]xplorer" })
-
-      map("n", "<leader>E", function()
-        xplr_term(vim.fn.expand("%:p:h"))
-      end, { desc = "File [E]xplorer (Buffer Path)" })
-    end,
-  },
   { "sindrets/diffview.nvim", config = true },
   {
     "nvim-lualine/lualine.nvim",
@@ -324,6 +222,7 @@ return {
   -- { "gbprod/yanky.nvim" }
   -- { "justinmk/vim-dirvish" }
   -- { "jbyuki/instant.nvim" }
+  -- { "stevearc/dressing.nvim" }
   -- Look at other plugins included in lazyvim
   -- Setup DAP stuff
   -- Notes for remote dev:
