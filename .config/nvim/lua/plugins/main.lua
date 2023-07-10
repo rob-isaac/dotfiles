@@ -162,25 +162,26 @@ return {
       end,
     },
   },
+  { "kylechui/nvim-surround", version = "*", event = "VeryLazy", opts = {} },
   {
-    "kylechui/nvim-surround",
-    version = "*",
-    event = "VeryLazy",
+    "folke/flash.nvim",
     config = function()
-      -- don't use S b/c need it for leap.nvim
-      require("nvim-surround").setup({
-        keymaps = { visual = "Y", visual_line = "gY" },
-      })
-    end,
-  },
-  {
-    "ggandor/flit.nvim",
-    dependencies = { "ggandor/leap.nvim", "tpope/vim-repeat" },
-    config = function()
-      require("leap").setup({})
-      require("leap").add_default_mappings()
-      vim.api.nvim_set_hl(0, "LeapBackdrop", { link = "Comment" })
-      require("flit").setup({})
+      require("flash").setup()
+      map({ "n", "x", "o" }, "s", function()
+        require("flash").jump()
+      end, { desc = "Flash" })
+      map({ "n", "o", "x" }, "S", function()
+        require("flash").treesitter()
+      end, { desc = "Flash Treesitter" })
+      map("o", "r", function()
+        require("flash").remote()
+      end, { desc = "Remote Flash" })
+      map({ "o", "x" }, "R", function()
+        require("flash").treesitter_search()
+      end, { desc = "Flash Treesitter Search" })
+      map({ "c" }, "<c-s>", function()
+        require("flash").toggle()
+      end, { desc = "Toggle Flash Search" })
     end,
   },
   {
@@ -206,6 +207,23 @@ return {
     end,
     dependencies = { "nvim-telescope/telescope.nvim" },
   },
+  {
+    "Wansmer/treesj",
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+      require("treesj").setup({ use_default_keymaps = false })
+      map("n", "<leader>j", require("treesj").toggle)
+    end,
+  },
+  -- {
+  --   "monaqa/dial.nvim",
+  --   config = function()
+  --     map("n", "<C-f>", require("dial.map").inc_normal())
+  --     map("n", "<C-b>", require("dial.map").dec_normal())
+  --     map("v", "<C-f>", require("dial.map").inc_visual())
+  --     map("v", "<C-b>", require("dial.map").dec_visual())
+  --   end,
+  -- },
   -- { "mg979/vim-visual-multi", branch = "master" },
   -- { "kevinhwang91/nvim-ufo" },
   -- { "AckslD/muren.nvim" },
@@ -217,7 +235,6 @@ return {
   -- { "mbbill/undotree" }
   -- { "miversen33/netman.nvim" }
   -- { "folke/edgy.nvim" }
-  -- { "folke/flash.nvim" }
   -- { "rafamadriz/friendly-snippets" }
   -- { "gbprod/yanky.nvim" }
   -- { "justinmk/vim-dirvish" }
