@@ -39,10 +39,12 @@
  - [termscp](https://github.com/veeso/termscp): Terminal UI for file transfer
  - [gh-dash](https://github.com/dlvhdr/gh-dash): UI for `gh` (github CLI)
  - [awesome-wm](https://github.com/awesomeWM/awesome): Modern window manager
+   - [awesome-wm-widgets](https://github.com/streetturtle/awesome-wm-widgets/tree/a808ead3c74d57a7ccdb7f9e55cfa10a136d488c): Widgets for awesome-wm
  - [kdash](https://github.com/kdash-rs/kdash): Kubernetes dashboard TUI
  - [gpg-tui](https://github.com/orhun/gpg-tui): GPG key management TUI
  - [asdf](https://github.com/asdf-vm/asdf): Version manager for many different languages
  - [mosh](https://mosh.org/): Alternative to ssh with better support for laggy networks
+ - [ast-grep](https://github.com/ast-grep/ast-grep): Like grep but for AST
 # Installation
 
 Many of the tools are available via `cargo install`

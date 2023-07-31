@@ -215,6 +215,29 @@ return {
       map("n", "<leader>j", require("treesj").toggle)
     end,
   },
+  "romainl/vim-cool",
+  {
+    "nvim-neorg/neorg",
+    build = ":Neorg sync-parsers",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      require("neorg").setup({
+        load = {
+          ["core.defaults"] = {},
+          ["core.concealer"] = {},
+          ["core.dirman"] = {
+            config = {
+              workspaces = {
+                notes = "~/notes",
+              },
+              default_workspace = "notes",
+            },
+          },
+        },
+      })
+    end,
+  },
+
   -- {
   --   "monaqa/dial.nvim",
   --   config = function()
@@ -240,6 +263,7 @@ return {
   -- { "justinmk/vim-dirvish" }
   -- { "jbyuki/instant.nvim" }
   -- { "stevearc/dressing.nvim" }
+  -- "git-blame-nvim"
   -- Look at other plugins included in lazyvim
   -- Setup DAP stuff
   -- Notes for remote dev:
