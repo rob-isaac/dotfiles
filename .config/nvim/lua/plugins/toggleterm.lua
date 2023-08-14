@@ -32,12 +32,12 @@ return {
       end
 
       map("n", "<leader>e", function()
-        xplr_term(".")
+        xplr_term(vim.fn.expand("%:p:h"))
       end, { desc = "File [E]xplorer" })
 
       map("n", "<leader>E", function()
-        xplr_term(vim.fn.expand("%:p:h"))
-      end, { desc = "File [E]xplorer (Buffer Path)" })
+        xplr_term(".")
+      end, { desc = "File [E]xplorer (Root Dir)" })
     end,
   },
 }

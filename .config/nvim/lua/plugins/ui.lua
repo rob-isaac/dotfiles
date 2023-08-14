@@ -32,6 +32,7 @@ return {
         end
       end, { silent = true, expr = true })
     end,
+    event = "VeryLazy",
     dependencies = {
       "MunifTanjim/nui.nvim",
       "rcarriga/nvim-notify",

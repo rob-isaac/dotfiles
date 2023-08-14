@@ -49,6 +49,8 @@ return {
             enable = true,
             lookahead = true,
             keymaps = {
+              ["aa"] = { query = "@parameter.outer", desc = "Select outer part of parameter" },
+              ["aa"] = { query = "@parameter.inner", desc = "Select inner part of parameter" },
               ["af"] = { query = "@function.outer", desc = "Select outer part of a function" },
               ["if"] = { query = "@function.inner", desc = "Select inner part of a function" },
               ["ac"] = { query = "@class.outer", desc = "Select outer part of a class region" },
@@ -58,7 +60,7 @@ return {
             selection_modes = {
               ["@parameter.outer"] = "v",
               ["@function.outer"] = "V",
-              ["@class.outer"] = "<c-v>",
+              ["@class.outer"] = "V",
             },
           },
           swap = {
@@ -76,31 +78,38 @@ return {
             goto_next_start = {
               ["]m"] = { query = "@function.outer", desc = "Next method start" },
               ["]]"] = { query = "@class.outer", desc = "Next class start" },
+              ["]c"] = { query = "@class.outer", desc = "Next class start" },
               ["]s"] = { query = "@scope", query_group = "locals", desc = "Next scope" },
               ["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
             },
             goto_next_end = {
               ["]M"] = "@function.outer",
               ["]["] = "@class.outer",
+              ["]C"] = "@class.outer",
             },
             goto_previous_start = {
               ["[m"] = "@function.outer",
               ["[["] = "@class.outer",
+              ["[c"] = "@class.outer",
               ["[s"] = { query = "@scope", query_group = "locals", desc = "Prev scope" },
               ["[z"] = { query = "@fold", query_group = "folds", desc = "Prev fold" },
             },
             goto_previous_end = {
               ["[M"] = "@function.outer",
               ["[]"] = "@class.outer",
+              ["[C"] = "@class.outer",
             },
           },
           lsp_interop = {
             enable = true,
-            border = "none",
-            floating_preview_opts = {},
+            floating_preview_opts = {
+              max_height = 20,
+              max_width = 50,
+              border = "single",
+            },
             peek_definition_code = {
-              ["<leader>df"] = "@function.outer",
-              ["<leader>dF"] = "@class.outer",
+              ["gp"] = "@function.outer",
+              ["gP"] = "@class.outer",
             },
           },
         },

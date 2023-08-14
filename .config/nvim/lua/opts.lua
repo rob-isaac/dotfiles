@@ -12,6 +12,10 @@ vim.o.splitbot = true
 vim.o.signcolumn = "yes"
 vim.o.makeprg = "ninja"
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
+vim.o.foldlevel = 99
+if vim.fn.executable("fish") then
+  vim.o.shell = "fish"
+end
 
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "

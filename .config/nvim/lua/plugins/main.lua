@@ -48,6 +48,8 @@ return {
   },
   "tpope/vim-fugitive",
   "tpope/vim-abolish",
+  "tpope/vim-rhubarb",
+  "tpope/vim-sleuth",
   {
     "segeljakt/vim-silicon",
     init = function()
@@ -109,24 +111,7 @@ return {
   },
   { "chentoast/marks.nvim", config = true },
   { "sindrets/diffview.nvim", config = true },
-  {
-    "nvim-lualine/lualine.nvim",
-    dependencies = { "SmiteshP/nvim-navic" },
-    config = function()
-      require("lualine").setup({
-        options = {
-          globalstatus = true,
-        },
-        sections = {
-          lualine_c = {
-            "navic",
-            color_correction = nil,
-            navic_opts = nil,
-          },
-        },
-      })
-    end,
-  },
+  { "nvim-lualine/lualine.nvim", opts = { options = { globalstatus = true, } } },
   {
     "akinsho/bufferline.nvim",
     config = function()

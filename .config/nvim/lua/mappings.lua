@@ -1,5 +1,8 @@
 local map = require("utils").map
 
+-- Don't do anyting for space in normal mode
+map({ "n", "v" }, "<Space>", "<Nop>", { silent = true })
+
 -- Handle moving through wrap better
 map("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
 map("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })

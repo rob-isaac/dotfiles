@@ -1,7 +1,9 @@
+local map = require("utils").map
+
 return {
   {
     "nvim-telescope/telescope.nvim",
-    tag = "0.1.1",
+    branch = "0.1.x",
     dependencies = {
       "nvim-lua/plenary.nvim",
       { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
@@ -50,20 +52,24 @@ return {
       require("telescope").load_extension("session-lens")
 
       local builtin = require("telescope.builtin")
-      vim.keymap.set("n", "<leader>ff", function()
+      map("n", "<leader>ff", function()
         builtin.find_files(get_picker_opts())
-      end, { desc = "[F]ind [F]iles" })
-      vim.keymap.set("n", "<leader>fg", function()
+      end, { desc = "[F]ind [F]iles (detect git repo)" })
+      map("n", "<leader>fg", function()
         builtin.live_grep(get_picker_opts())
-      end, { desc = "[F]ind [G]rep" })
-      vim.keymap.set("n", "<leader>fw", builtin.grep_string, { desc = "[F]ind [W]ord under cursor" })
-      vim.keymap.set("n", "<leader>fo", builtin.oldfiles, { desc = "[F]ind [O]ld files" })
-      vim.keymap.set("n", "<leader>fm", builtin.marks, { desc = "[F]ind [M]arks" })
-      vim.keymap.set("n", "<leader>fk", builtin.keymaps, { desc = "[F]ind [K]eymaps" })
-      vim.keymap.set("n", "<leader>fb", builtin.buffers, { desc = "[F]ind [B]uffers" })
-      vim.keymap.set("n", "<leader>fh", builtin.help_tags, { desc = "[F]ind [H]elp tags" })
-      vim.keymap.set("n", "<leader>fs", builtin.treesitter, { desc = "[F]ind [S]ymbols (from treesitter)" })
-      vim.keymap.set("n", "<leader>/", builtin.current_buffer_fuzzy_find, { desc = "Fuzzy Search Buffer" })
+      end, { desc = "[F]ind [G]rep (detect git repo)" })
+      map("n", "<leader>fF", builtin.find_files, { desc = "[F]ind [F]iles" })
+      map("n", "<leader>fG", builtin.live_grep, { desc = "[F]ind [G]rep" })
+      map("n", "<leader>fw", builtin.grep_string, { desc = "[F]ind [W]ord under cursor" })
+      map("n", "<leader>fo", builtin.oldfiles, { desc = "[F]ind [O]ld files" })
+      map("n", "<leader>fm", builtin.marks, { desc = "[F]ind [M]arks" })
+      map("n", "<leader>fk", builtin.keymaps, { desc = "[F]ind [K]eymaps" })
+      map("n", "<leader>fb", builtin.buffers, { desc = "[F]ind Open [B]uffers" })
+      map("n", "<leader><space>", builtin.buffers, { desc = "Find Open Buffers" })
+      map("n", "<leader>fh", builtin.help_tags, { desc = "[F]ind [H]elp tags" })
+      map("n", "<leader>fs", builtin.treesitter, { desc = "[F]ind [S]ymbols (from treesitter)" })
+      map("n", "<leader>fd", builtin.diagnostics, { desc = "[F]ind [D]iagnostics" })
+      map("n", "<leader>/", builtin.current_buffer_fuzzy_find, { desc = "Fuzzy Search Buffer" })
     end,
   },
 }
