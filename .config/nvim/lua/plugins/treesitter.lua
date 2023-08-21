@@ -5,10 +5,13 @@ return {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     dependencies = {
-      { "nvim-treesitter/nvim-treesitter-context" },
-      { "mrjones2014/nvim-ts-rainbow" },
-      { "JoosepAlviste/nvim-ts-context-commentstring" },
-      { "nvim-treesitter/nvim-treesitter-textobjects" },
+      "nvim-treesitter/nvim-treesitter-context",
+      "mrjones2014/nvim-ts-rainbow",
+      "JoosepAlviste/nvim-ts-context-commentstring",
+      "nvim-treesitter/nvim-treesitter-textobjects",
+      "nvim-treesitter/playground",
+      "windwp/nvim-ts-autotag",
+      "andymass/vim-matchup",
     },
     config = function()
       require("nvim-treesitter.configs").setup({
@@ -23,8 +26,10 @@ return {
           "python",
           "markdown",
           "markdown_inline",
+          "query",
         },
         auto_install = true,
+        autotag = { enable = true },
         highlight = { enable = true, additional_vim_regex_highlighting = false },
         indent = { enable = true },
         incremental_selection = {
@@ -43,22 +48,25 @@ return {
         },
         context_commentstring = {
           enable = true,
+          enable_autocmd = false,
         },
         textobjects = {
           select = {
             enable = true,
             lookahead = true,
             keymaps = {
-              ["aa"] = { query = "@parameter.outer", desc = "Select outer part of parameter" },
-              ["aa"] = { query = "@parameter.inner", desc = "Select inner part of parameter" },
-              ["af"] = { query = "@function.outer", desc = "Select outer part of a function" },
-              ["if"] = { query = "@function.inner", desc = "Select inner part of a function" },
-              ["ac"] = { query = "@class.outer", desc = "Select outer part of a class region" },
-              ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
-              ["as"] = { query = "@scope", query_group = "locals", desc = "Select language scope" },
+              ["aa"] = { query = "@parameter.outer", desc = "around parameter" },
+              ["ia"] = { query = "@parameter.inner", desc = "inside parameter" },
+              ["af"] = { query = "@function.outer", desc = "around function" },
+              ["if"] = { query = "@function.inner", desc = "inside function" },
+              ["ac"] = { query = "@class.outer", desc = "around class" },
+              ["ic"] = { query = "@class.inner", desc = "inside class" },
+              ["al"] = { query = "@loop.outer", desc = "around loop" },
+              ["il"] = { query = "@loop.inner", desc = "inside loop" },
+              ["a?"] = { query = "@conditional.outer", desc = "around conditional" },
+              ["i?"] = { query = "@conditional.inner", desc = "inside conditional" },
             },
             selection_modes = {
-              ["@parameter.outer"] = "v",
               ["@function.outer"] = "V",
               ["@class.outer"] = "V",
             },
@@ -67,35 +75,37 @@ return {
             enable = true,
             swap_next = {
               ["<leader>a"] = "@parameter.inner",
+              [">a"] = "@parameter.inner",
             },
             swap_previous = {
               ["<leader>A"] = "@parameter.inner",
+              ["<a"] = "@parameter.inner",
             },
           },
           move = {
             enable = true,
             set_jumps = true,
             goto_next_start = {
-              ["]m"] = { query = "@function.outer", desc = "Next method start" },
+              ["]f"] = { query = "@function.outer", desc = "Next function start" },
               ["]]"] = { query = "@class.outer", desc = "Next class start" },
               ["]c"] = { query = "@class.outer", desc = "Next class start" },
               ["]s"] = { query = "@scope", query_group = "locals", desc = "Next scope" },
               ["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
             },
             goto_next_end = {
-              ["]M"] = "@function.outer",
+              ["]F"] = "@function.outer",
               ["]["] = "@class.outer",
               ["]C"] = "@class.outer",
             },
             goto_previous_start = {
-              ["[m"] = "@function.outer",
+              ["[f"] = "@function.outer",
               ["[["] = "@class.outer",
               ["[c"] = "@class.outer",
               ["[s"] = { query = "@scope", query_group = "locals", desc = "Prev scope" },
               ["[z"] = { query = "@fold", query_group = "folds", desc = "Prev fold" },
             },
             goto_previous_end = {
-              ["[M"] = "@function.outer",
+              ["[F"] = "@function.outer",
               ["[]"] = "@class.outer",
               ["[C"] = "@class.outer",
             },
@@ -112,6 +122,12 @@ return {
               ["gP"] = "@class.outer",
             },
           },
+        },
+        playground = {
+          enable = true,
+        },
+        matchup = {
+          enable = true,
         },
       })
       require("treesitter-context").setup()

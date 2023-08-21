@@ -18,7 +18,13 @@ return {
       require("mini.basics").setup()
       require("mini.bracketed").setup()
       require("mini.bufremove").setup()
-      require("mini.comment").setup()
+      require("mini.comment").setup({
+        options = {
+          custom_commentstring = function()
+            return require("ts_context_commentstring.internal").calculate_commentstring() or vim.bo.commentstring
+          end,
+        },
+      })
       require("mini.cursorword").setup()
       require("mini.indentscope").setup()
       require("mini.map").setup()
@@ -28,7 +34,6 @@ return {
           [">"] = { action = "close", pair = "<>", register = { cr = false } },
         },
       })
-      require("mini.starter").setup()
       require("mini.trailspace").setup()
 
       map("n", "<leader>bd", MiniBufremove.delete)
@@ -104,14 +109,43 @@ return {
   { "lukas-reineke/headlines.nvim", opts = {}, ft = { "markdown", "org", "norg" } },
   { "SmiteshP/nvim-navbuddy", opts = { lsp = { auto_attach = true } } },
   { "pwntester/octo.nvim", config = true, cmd = { "Octo" } },
-  { "danymat/neogen", config = true },
+  {
+    "danymat/neogen",
+    config = function()
+      local i = require("neogen.types.template").item
+      local cpp_annotation_convention = {
+        { nil, "/// @file", { no_results = true, type = { "file" } } },
+        { nil, "/// @brief $1", { no_results = true, type = { "func", "file", "class" } } },
+        { nil, "", { no_results = true, type = { "file" } } },
+
+        { i.ClassName, "/// @class %s", { type = { "class" } } },
+        { i.Type, "/// @typedef %s", { type = { "type" } } },
+        { nil, "/// @brief $1", { type = { "func", "class", "type" } } },
+        { i.Tparam, "/// @tparam %s $1" },
+        { i.Parameter, "/// @param %s $1" },
+        { i.Return, "/// @return $1" },
+      }
+      require("neogen").setup({
+        snippet_engine = "luasnip",
+        languages = {
+          cpp = {
+            template = {
+              annotation_convention = "cpp_annotation_convention",
+              cpp_annotation_convention = cpp_annotation_convention,
+            },
+          },
+        },
+      })
+    end,
+  },
+  { "ThePrimeagen/refactoring.nvim", opts = {} },
   {
     "karb94/neoscroll.nvim",
     opts = { mappings = { "<C-u>", "<C-d>", "<C-y>", "<C-e>", "zt", "zz", "zb" } },
   },
   { "chentoast/marks.nvim", config = true },
   { "sindrets/diffview.nvim", config = true },
-  { "nvim-lualine/lualine.nvim", opts = { options = { globalstatus = true, } } },
+  { "nvim-lualine/lualine.nvim", opts = { options = { globalstatus = true } } },
   {
     "akinsho/bufferline.nvim",
     config = function()
@@ -147,50 +181,20 @@ return {
       end,
     },
   },
-  { "kylechui/nvim-surround", version = "*", event = "VeryLazy", opts = {} },
+  { "kylechui/nvim-surround", version = "*", event = "VeryLazy", opts = { keymaps = { visual = "Y" } } },
   {
     "folke/flash.nvim",
-    config = function()
-      require("flash").setup()
-      map({ "n", "x", "o" }, "s", function()
-        require("flash").jump()
-      end, { desc = "Flash" })
-      map({ "n", "o", "x" }, "S", function()
-        require("flash").treesitter()
-      end, { desc = "Flash Treesitter" })
-      map("o", "r", function()
-        require("flash").remote()
-      end, { desc = "Remote Flash" })
-      map({ "o", "x" }, "R", function()
-        require("flash").treesitter_search()
-      end, { desc = "Flash Treesitter Search" })
-      map({ "c" }, "<c-s>", function()
-        require("flash").toggle()
-      end, { desc = "Toggle Flash Search" })
-    end,
-  },
-  {
-    "rmagatti/auto-session",
-    config = function()
-      require("auto-session").setup({
-        log_level = vim.log.levels.ERROR,
-        auto_session_suppress_dirs = { "~/Projects", "~/Downloads", "/" },
-        auto_session_use_git_branch = false,
-        auto_session_enable_last_session = vim.loop.cwd() == vim.loop.os_homedir(),
-        session_lens = {
-          load_on_setup = true,
-          theme_conf = { border = true },
-          previewer = false,
-        },
-      })
-      map(
-        "n",
-        "<leader>fp",
-        require("auto-session.session-lens").search_session,
-        { desc = "[F]ind [P]roject (Session)" }
-      )
-    end,
-    dependencies = { "nvim-telescope/telescope.nvim" },
+    event = "VeryLazy",
+    ---@type Flash.Config
+    opts = { modes = { search = { enabled = false } } },
+    -- stylua: ignore
+    keys = {
+      { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
+      { "S", mode = { "n", "o", "x" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+      { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+    },
   },
   {
     "Wansmer/treesj",
@@ -222,16 +226,24 @@ return {
       })
     end,
   },
-
-  -- {
-  --   "monaqa/dial.nvim",
-  --   config = function()
-  --     map("n", "<C-f>", require("dial.map").inc_normal())
-  --     map("n", "<C-b>", require("dial.map").dec_normal())
-  --     map("v", "<C-f>", require("dial.map").inc_visual())
-  --     map("v", "<C-b>", require("dial.map").dec_visual())
-  --   end,
-  -- },
+  {
+    "ecthelionvi/NeoComposer.nvim",
+    dependencies = { "kkharji/sqlite.lua" },
+    opts = {},
+  },
+  {
+    "monaqa/dial.nvim",
+    config = function()
+      map("n", "<C-f>", require("dial.map").inc_normal())
+      map("n", "<C-b>", require("dial.map").dec_normal())
+      map("v", "<C-f>", require("dial.map").inc_visual())
+      map("v", "<C-b>", require("dial.map").dec_visual())
+    end,
+  },
+  {
+    "stevearc/stickybuf.nvim",
+    opts = {},
+  },
   -- { "mg979/vim-visual-multi", branch = "master" },
   -- { "kevinhwang91/nvim-ufo" },
   -- { "AckslD/muren.nvim" },
@@ -243,12 +255,21 @@ return {
   -- { "mbbill/undotree" }
   -- { "miversen33/netman.nvim" }
   -- { "folke/edgy.nvim" }
-  -- { "rafamadriz/friendly-snippets" }
   -- { "gbprod/yanky.nvim" }
   -- { "justinmk/vim-dirvish" }
   -- { "jbyuki/instant.nvim" }
   -- { "stevearc/dressing.nvim" }
-  -- "git-blame-nvim"
+  -- { "Borwe/wasm_nvim" }
+  -- {"stevearc/oil.nvim"}
+  -- {"stevearc/overseer.nvim"}
+  -- {"Zeioth/compiler.nvim"}
+  -- {"stevearc/aerial.nvim"}
+  -- {"iamcco/markdown-preview.nvim"}
+  -- { "AckslD/nvim-neoclip.lua" }
+  -- {"nvim-neotest/neotest"}
+  -- {"lewis6991/hover.nvim"}
+  -- { "git-blame-nvim" }
+  -- 
   -- Look at other plugins included in lazyvim
   -- Setup DAP stuff
   -- Notes for remote dev:

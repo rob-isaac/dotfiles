@@ -1,4 +1,5 @@
 local map = require("utils").map
+local format_augroup = vim.api.nvim_create_augroup("LspFormatting", {})
 
 ---@diagnostic disable-next-line: unused-local
 local function on_attach(client, bufnr)
@@ -30,6 +31,25 @@ local function on_attach(client, bufnr)
   -- Hover
   map_buf("n", "K", vim.lsp.buf.hover, { desc = "Hover" })
   map_buf("n", "<M-k>", vim.lsp.buf.signature_help, { desc = "Signature Help" })
+
+  if client.supports_method("textDocument/formatting") then
+    local format = function()
+      vim.lsp.buf.format({
+        async = false,
+        buffer = bufnr,
+        filter = function(c)
+          return c.name == "null-ls"
+        end,
+      })
+    end
+    vim.api.nvim_clear_autocmds({ group = format_augroup, buffer = bufnr })
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      group = format_augroup,
+      buffer = bufnr,
+      callback = format,
+    })
+    map_buf("n", "<leader>cf", format, { desc = "[C]ode [F]ormat" })
+  end
 end
 
 return {
@@ -40,11 +60,10 @@ return {
       { "williamboman/mason.nvim", opts = {}, build = ":MasonUpdate" },
 
       -- formatting/linting
-      { "nvimdev/guard.nvim" },
+      { "jose-elias-alvarez/null-ls.nvim" },
 
       -- icons
       { "nvim-tree/nvim-web-devicons" },
-      { "j-hui/fidget.nvim", tag = "legacy", opts = {} },
 
       -- winbar location info
       { "SmiteshP/nvim-navic" },
@@ -64,8 +83,11 @@ return {
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
 
-      local servers = {
-        lua_ls = {
+      local lspconfig = require("lspconfig")
+      lspconfig["lua_ls"].setup({
+        capabilities = capabilities,
+        on_attach = on_attach,
+        settings = {
           Lua = {
             completion = {
               callSnippet = "Replace",
@@ -76,37 +98,30 @@ return {
             telemetry = { enable = false },
           },
         },
-        gopls = {},
-        clangd = {
-          server = { capabilities = { offsetEncoding = { "utf-16" } } },
-        },
-        -- Note: auto-setup by rust-tools
-        -- rust_analyzer = {},
-        pyright = {},
-      }
-
-      for server_name, settings in pairs(servers) do
-        require("lspconfig")[server_name].setup({
-          capabilities = capabilities,
-          on_attach = on_attach,
-          settings = settings,
-          filetypes = settings.filetypes,
-        })
-      end
-
-      local ft = require("guard.filetype")
-      ft("cpp"):fmt("clang-format")
-      ft("go"):fmt("gofmt")
-      ft("rust"):fmt("rustfmt")
-      ft("lua"):fmt("stylua")
-      ft("fish"):fmt("fish_indent")
-      ft("sh,bash,zsh"):fmt("shfmt")
-      ft("python"):fmt("isort"):append("black")
-      require("guard").setup({
-        fmt_on_save = true,
-        lsp_as_default_formatter = false,
       })
-      map("n", "<leader>cf", "<cmd>GuardFmt<cr>", { desc = "[C]ode [F]ormat" })
+      lspconfig["clangd"].setup({
+        capabilities = vim.tbl_extend("force", capabilities, { offsetEncoding = { "utf-16" } }),
+        on_attach = on_attach,
+      })
+      lspconfig["pyright"].setup({ capabilities = capabilities, on_attach = on_attach })
+      lspconfig["gopls"].setup({ capabilities = capabilities, on_attach = on_attach })
+
+      local null_ls = require("null-ls")
+      null_ls.setup({
+        sources = {
+          null_ls.builtins.diagnostics.codespell,
+          null_ls.builtins.diagnostics.shellcheck,
+          null_ls.builtins.formatting.black,
+          null_ls.builtins.formatting.clang_format,
+          null_ls.builtins.formatting.fish_indent,
+          null_ls.builtins.formatting.gofmt,
+          null_ls.builtins.formatting.isort,
+          null_ls.builtins.formatting.rustfmt,
+          null_ls.builtins.formatting.shfmt,
+          null_ls.builtins.formatting.stylua,
+          null_ls.builtins.formatting.trim_whitespace,
+        },
+      })
     end,
   },
 }
