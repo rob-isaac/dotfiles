@@ -32,24 +32,22 @@ local function on_attach(client, bufnr)
   map_buf("n", "K", vim.lsp.buf.hover, { desc = "Hover" })
   map_buf("n", "<M-k>", vim.lsp.buf.signature_help, { desc = "Signature Help" })
 
-  if client.supports_method("textDocument/formatting") then
-    local format = function()
-      vim.lsp.buf.format({
-        async = false,
-        buffer = bufnr,
-        filter = function(c)
-          return c.name == "null-ls"
-        end,
-      })
-    end
-    vim.api.nvim_clear_autocmds({ group = format_augroup, buffer = bufnr })
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      group = format_augroup,
+  local format = function()
+    vim.lsp.buf.format({
+      async = false,
       buffer = bufnr,
-      callback = format,
+      filter = function(c)
+        return c.name == "null-ls"
+      end,
     })
-    map_buf("n", "<leader>cf", format, { desc = "[C]ode [F]ormat" })
   end
+  vim.api.nvim_clear_autocmds({ group = format_augroup, buffer = bufnr })
+  vim.api.nvim_create_autocmd("BufWritePre", {
+    group = format_augroup,
+    buffer = bufnr,
+    callback = format,
+  })
+  map_buf("n", "<leader>cf", format, { desc = "[C]ode [F]ormat" })
 end
 
 return {
@@ -77,14 +75,14 @@ return {
       -- filetype-specific plugins
       { "folke/neodev.nvim", opts = {} },
       { "p00f/clangd_extensions.nvim" },
-      { "simrat39/rust-tools.nvim", opts = { server = { on_attach = on_attach } } },
     },
     config = function()
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = require("cmp_nvim_lsp").default_capabilities(capabilities)
 
       local lspconfig = require("lspconfig")
-      lspconfig["lua_ls"].setup({
+
+      lspconfig.lua_ls.setup({
         capabilities = capabilities,
         on_attach = on_attach,
         settings = {
@@ -99,12 +97,13 @@ return {
           },
         },
       })
-      lspconfig["clangd"].setup({
+      lspconfig.clangd.setup({
         capabilities = vim.tbl_extend("force", capabilities, { offsetEncoding = { "utf-16" } }),
         on_attach = on_attach,
       })
-      lspconfig["pyright"].setup({ capabilities = capabilities, on_attach = on_attach })
-      lspconfig["gopls"].setup({ capabilities = capabilities, on_attach = on_attach })
+      lspconfig.pyright.setup({ capabilities = capabilities, on_attach = on_attach })
+      lspconfig.gopls.setup({ capabilities = capabilities, on_attach = on_attach })
+      lspconfig.rust_analyzer.setup({ capabilities = capabilities, on_attach = on_attach })
 
       local null_ls = require("null-ls")
       null_ls.setup({
@@ -116,7 +115,7 @@ return {
           null_ls.builtins.formatting.fish_indent,
           null_ls.builtins.formatting.gofmt,
           null_ls.builtins.formatting.isort,
-          null_ls.builtins.formatting.rustfmt,
+          null_ls.builtins.formatting.rustfmt.with({ extra_args = { "--edition", "2021" } }),
           null_ls.builtins.formatting.shfmt,
           null_ls.builtins.formatting.stylua,
           null_ls.builtins.formatting.trim_whitespace,

@@ -244,6 +244,28 @@ return {
     "stevearc/stickybuf.nvim",
     opts = {},
   },
+  {
+    "stevearc/overseer.nvim",
+    opts = {},
+  },
+  {
+    "Vigemus/iron.nvim",
+    config = function()
+      local iron = require("iron.core")
+      iron.setup({
+        config = {repl_open_cmd = require("iron.view").split("20%")},
+        keymaps = {
+          send_motion = "<space>ss",
+          visual_send = "<space>ss",
+          send_file = "<space>sf",
+          send_line = "<space>sl",
+          interrupt = "<space>s<space>",
+          exit = "<space>sq",
+          clear = "<space>sc",
+        },
+      })
+    end,
+  },
   -- { "mg979/vim-visual-multi", branch = "master" },
   -- { "kevinhwang91/nvim-ufo" },
   -- { "AckslD/muren.nvim" },
@@ -261,15 +283,17 @@ return {
   -- { "stevearc/dressing.nvim" }
   -- { "Borwe/wasm_nvim" }
   -- {"stevearc/oil.nvim"}
-  -- {"stevearc/overseer.nvim"}
   -- {"Zeioth/compiler.nvim"}
   -- {"stevearc/aerial.nvim"}
   -- {"iamcco/markdown-preview.nvim"}
   -- { "AckslD/nvim-neoclip.lua" }
   -- {"nvim-neotest/neotest"}
   -- {"lewis6991/hover.nvim"}
+  -- {"dccsillag/magma-nvim"}
+  -- {"Olical/conjure"}
+  -- {"michaelb/sniprun"}
   -- { "git-blame-nvim" }
-  -- 
+  --
   -- Look at other plugins included in lazyvim
   -- Setup DAP stuff
   -- Notes for remote dev:

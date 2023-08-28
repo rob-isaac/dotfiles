@@ -1,6 +1,6 @@
 local map = require("utils").map
 
--- Don't do anyting for space in normal mode
+-- Don't do anything for space in normal mode
 map({ "n", "v" }, "<Space>", "<Nop>", { silent = true })
 
 -- Handle moving through wrap better
