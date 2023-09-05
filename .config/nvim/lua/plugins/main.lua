@@ -96,21 +96,17 @@ return {
       require("mini.splitjoin").setup()
       -- trailspace marking and trimming
       require("mini.trailspace").setup()
+      -- file explorer
+      require("mini.files").setup()
 
       map("n", "<leader>bd", MiniBufremove.delete)
       map("i", "<S-CR>", "v:lua.MiniPairs.cr()", { expr = true, replace_keycodes = false, desc = "MiniPairs <CR>" })
       map("i", "<S-BS>", "v:lua.MiniPairs.bs()", { expr = true, replace_keycodes = false, desc = "MiniPairs <BS>" })
       map("n", "<leader>m", MiniMap.toggle, { desc = "[M]inimap Toggle" })
-    end,
-  },
-  -- Async code runner
-  {
-    "skywind3000/asyncrun.vim",
-    init = function()
-      vim.g["asyncrun_open"] = 8
-      vim.cmd([[
-        command! -bang -nargs=* -complete=file Make AsyncRun -program=make @ <args>
-      ]])
+      map("n", "<leader>e", MiniFiles.open, { desc = "File [E]xplorer" })
+      map("n", "<leader>E", function()
+        MiniFiles.open(vim.api.nvim_buf_get_name(0), false)
+      end, { desc = "File [E]xplorer (Cur-Buf)" })
     end,
   },
   -- Code Screenshots
@@ -323,14 +319,6 @@ return {
       vim.g.slime_default_config = { pane_direction = "Down" }
     end,
   },
-  -- Buffer-like file explorer
-  {
-    "stevearc/oil.nvim",
-    config = function()
-      require("oil").setup()
-      map("n", "<leader>e", require("oil").toggle_float, { desc = "File [E]xplorer" })
-    end,
-  },
   -- Open jupyter files as py files
   "goerz/jupytext.vim",
   -- Latex integration
@@ -341,73 +329,10 @@ return {
   "tpope/vim-abolish",
   -- Automatic detection of file indentation
   "tpope/vim-sleuth",
+  -- Unix commands
+  "tpope/vim-eunuch",
   -- Automatically stop highlighting search results
   "romainl/vim-cool",
   -- Adds mode for easy creation of ascii tables
   "dhruvasagar/vim-table-mode",
-  -- { "mg979/vim-visual-multi", branch = "master", opts = {} },
-  -- { "Borwe/wasm_nvim" },
-  -- { "CKolkey/ts-node-action" },
-  -- { "Konfekt/FastFold" },
-  -- { "Olical/conjure" },
-  -- { "RRethy/nvim-treesitter-textsubjects" },
-  -- { "Zeioth/compiler.nvim" },
-  -- { "akinsho/git-conflict.nvim" },
-  -- { "chipsenkbeil/distant.nvim" },
-  -- { "bennypowers/nvim-regexplainer" },
-  -- { "AckslD/muren.nvim", opts = {} },
-  -- { "chrisgrieser/nvim-early-retirement", opts = {} },
-  -- { "cbochs/grapple.nvim", dependencies = "nvim-lua/plenary.nvim" },
-  -- { "chrisgrieser/nvim-spider" },
-  -- { "chrisgrieser/nvim-various-textobjs" },
-  -- { "dccsillag/magma-nvim" },
-  -- { "debugloop/telescope-undo.nvim" },
-  -- { "f-person/git-blame.nvim" },
-  -- { "folke/edgy.nvim" },
-  -- { "frabjous/knap" },
-  -- { "gbprod/substitute.nvim" },
-  -- { "gbprod/yanky.nvim" },
-  -- { "ghillb/cybu.nvim" },
-  -- { "gorbit99/codewindow.nvim" },
-  -- { "haya14busa/vim-asterisk" },
-  -- { "iamcco/markdown-preview.nvim" },
-  -- { "jamestthompson3/nvim-remote-containers" },
-  -- { "jbyuki/instant.nvim" },
-  -- { "justinmk/vim-dirvish" },
-  -- { "kevinhwang91/nvim-hlslens" },
-  -- { "kevinhwang91/nvim-ufo" },
-  -- { "lewis6991/hover.nvim" },
-  -- { "linty-org/readline.nvim" },
-  -- { "luukvbaal/statuscol.nvim" },
-  -- { "mbbill/undotree" },
-  -- { "michaelb/sniprun" },
-  -- { "miversen33/netman.nvim" },
-  -- { "mrjones2014/legendary.nvim" },
-  -- { "nacro90/numb.nvim" },
-  -- { "nvim-neotest/neotest" },
-  -- { "nvim-pack/nvim-spectre" },
-  -- { "p00f/godbolt.nvim" },
-  -- { "petertriho/nvim-scrollbar" },
-  -- { "roobert/search-replace.nvim" },
-  -- { "smjonas/live-command.nvim" },
-  -- { "stevearc/aerial.nvim" },
-  -- { "stevearc/dressing.nvim" },
-  -- { "sunjon/Shade.nvim" },
-  -- { "tomiis4/hypersonic.nvim" },
-  -- { "willothy/flatten.nvim" },
-  -- { "ziontee113/syntax-tree-surfer" },
-  -- { "ThePrimeagen/refactoring.nvim", opts = {} },
-  -- { "Bekaboo/dropbar.nvim" },
-  -- { "neovim-remote" },
-  -- { "telekasten.nvim" },
-  -- { "neo-tree.nvim" },
-  -- { "portal.nvim" },
-  --
-  -- Look at other plugins included in lazyvim
-  -- Setup DAP stuff
-  -- Notes for remote dev:
-  --   On remote machine: nvim --headless --listen 0.0.0.0:6666
-  --   On local machine: neovide --remote-tcp=<host name>:6666
-  --                     or
-  --                     nvim --server <host name>:6666 --remote-ui
 }
