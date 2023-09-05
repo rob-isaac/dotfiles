@@ -20,17 +20,21 @@ return {
     branch = "0.1.x",
     dependencies = {
       "folke/noice.nvim",
+      "folke/trouble.nvim",
       "kkharji/sqlite.lua",
       "nvim-lua/plenary.nvim",
       "nvim-telescope/telescope-frecency.nvim",
       "nvim-tree/nvim-web-devicons",
       "ecthelionvi/NeoComposer.nvim",
       { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+      { "AckslD/nvim-neoclip.lua", opts = {} },
     },
     config = function()
       local actions = require("telescope.actions")
+      local trouble_telescope = require("trouble.providers.telescope")
       require("telescope").setup({
         defaults = {
+          path_display = { "smart" },
           mappings = {
             i = {
               ["<C-h>"] = actions.which_key,
@@ -38,6 +42,7 @@ return {
               ["<C-j>"] = actions.move_selection_next,
               ["<C-q>"] = actions.smart_send_to_qflist,
               ["<C-l>"] = actions.smart_send_to_loclist,
+              ["<C-t>"] = trouble_telescope.smart_open_with_trouble,
               ["<up>"] = actions.cycle_history_prev,
               ["<down>"] = actions.cycle_history_next,
             },
@@ -48,6 +53,7 @@ return {
       require("telescope").load_extension("noice")
       require("telescope").load_extension("frecency")
       require("telescope").load_extension("macros")
+      require("telescope").load_extension("neoclip")
 
       local builtin = require("telescope.builtin")
       map("n", "<leader>ff", function()
@@ -71,6 +77,7 @@ return {
       map("n", "<leader>fd", builtin.diagnostics, { desc = "[F]ind [D]iagnostics" })
       map("n", "<leader>/", builtin.current_buffer_fuzzy_find, { desc = "Fuzzy Search Buffer" })
       map("n", "<leader>fm", "<cmd>Telescope macros<cr>", { desc = "[F]ind [M]acros" })
+      map("n", "<leader>fy", "<cmd>Telescope neoclip<cr>", { desc = "[F]ind [Y]anks" })
     end,
   },
 }

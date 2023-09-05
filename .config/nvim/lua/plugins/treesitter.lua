@@ -14,6 +14,7 @@ return {
       "andymass/vim-matchup",
     },
     config = function()
+      ---@diagnostic disable-next-line: missing-fields
       require("nvim-treesitter.configs").setup({
         ensure_installed = {
           "c",
@@ -41,34 +42,21 @@ return {
             node_decremental = "<M-Space>",
           },
         },
-        rainbow = {
-          enable = true,
-          extended_mode = true,
-          max_file_lines = 2000,
-        },
-        context_commentstring = {
-          enable = true,
-          enable_autocmd = false,
-        },
+        rainbow = { enable = true, extended_mode = true, max_file_lines = 2000 },
+        context_commentstring = { enable = true, enable_autocmd = false },
         textobjects = {
           select = {
             enable = true,
             lookahead = true,
-            keymaps = {
-              ["aa"] = { query = "@parameter.outer", desc = "around parameter" },
-              ["ia"] = { query = "@parameter.inner", desc = "inside parameter" },
-              ["af"] = { query = "@function.outer", desc = "around function" },
-              ["if"] = { query = "@function.inner", desc = "inside function" },
-              ["ac"] = { query = "@class.outer", desc = "around class" },
-              ["ic"] = { query = "@class.inner", desc = "inside class" },
-              ["al"] = { query = "@loop.outer", desc = "around loop" },
-              ["il"] = { query = "@loop.inner", desc = "inside loop" },
-              ["a?"] = { query = "@conditional.outer", desc = "around conditional" },
-              ["i?"] = { query = "@conditional.inner", desc = "inside conditional" },
-            },
             selection_modes = {
               ["@function.outer"] = "V",
+              ["@function.inner"] = "V",
               ["@class.outer"] = "V",
+              ["@class.inner"] = "V",
+            },
+            keymaps = {
+              -- Note: the rest are set in mini.ai
+              ["as"] = { query = "@scope", query_group = "locals", desc = "around scope" },
             },
           },
           swap = {
@@ -123,17 +111,14 @@ return {
             },
           },
         },
-        playground = {
-          enable = true,
-        },
-        matchup = {
-          enable = true,
-        },
+        playground = { enable = true },
+        matchup = { enable = true },
       })
       require("treesitter-context").setup()
-      map("n", "[c", function()
+
+      map("n", "<leader>tc", function()
         require("treesitter-context").go_to_context()
-      end, { silent = true })
+      end, { desc = "[T]reesitter [C]ontext" })
     end,
   },
 }

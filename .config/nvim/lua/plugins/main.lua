@@ -1,8 +1,7 @@
 local map = require("utils").map
 
 return {
-  "goerz/jupytext.vim",
-  "lervag/vimtex",
+  -- colorscheme
   {
     "sainnhe/gruvbox-material",
     priority = 10000,
@@ -10,14 +9,51 @@ return {
       vim.cmd.colorscheme([[gruvbox-material]])
     end,
   },
+  -- jj and jk for escape
   { "max397574/better-escape.nvim", opts = {} },
+  -- grab-bag of enhancements
   {
     "echasnovski/mini.nvim",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "JoosepAlviste/nvim-ts-context-commentstring",
+      "nvim-treesitter/nvim-treesitter-textobjects",
+    },
     config = function()
+      local spec_treesitter = require("mini.ai").gen_spec.treesitter
+      -- textobjects
+      require("mini.ai").setup({
+        custom_textobjects = {
+          f = spec_treesitter({ a = "@function.outer", i = "@function.inner" }),
+          a = spec_treesitter({ a = "@parameter.outer", i = "@parameter.inner" }),
+          c = spec_treesitter({ a = "@class.outer", i = "@class.inner" }),
+          o = spec_treesitter({
+            a = { "@conditional.outer", "@loop.outer" },
+            i = { "@conditional.inner", "@loop.inner" },
+          }),
+          s = spec_treesitter({ a = "@class.outer", i = "@class.inner" }),
+          B = function()
+            local from = { line = 1, col = 1 }
+            local to = {
+              line = vim.fn.line("$"),
+              col = math.max(vim.fn.getline("$"):len(), 1),
+            }
+            return { from = from, to = to }
+          end,
+        },
+      })
+      -- interactive alignment
       require("mini.align").setup()
-      require("mini.basics").setup()
-      require("mini.bracketed").setup()
+      -- basic options, keymaps, and autocommands
+      require("mini.basics").setup({
+        options = {
+          extra_ui = true,
+          win_borders = "double",
+        },
+      })
+      -- commands for removing/hiding buffers
       require("mini.bufremove").setup()
+      -- commands for commenting/uncommenting
       require("mini.comment").setup({
         options = {
           custom_commentstring = function()
@@ -25,23 +61,49 @@ return {
           end,
         },
       })
+      -- highlight occurrences of word under the cursor
       require("mini.cursorword").setup()
+      -- mark the indent-scope of the cursor
       require("mini.indentscope").setup()
+      -- command for making a floating map + scrollbar of the current file
       require("mini.map").setup()
+      -- interactively move text blocks
+      require("mini.move").setup({
+        mappings = {
+          left = "<S-left>",
+          right = "<S-right>",
+          down = "<S-down>",
+          up = "<S-up>",
+
+          line_left = "<S-left>",
+          line_right = "<S-right>",
+          line_down = "<S-down>",
+          line_up = "<S-up>",
+        },
+      })
+      -- evaluate, exchange, multiply, replace, sort operators
+      require("mini.operators").setup()
+      -- autopairs
       require("mini.pairs").setup({
         mappings = {
           ["<"] = { action = "open", pair = "<>", neigh_pattern = "[%a%d].", register = { cr = false } },
           [">"] = { action = "close", pair = "<>", register = { cr = false } },
         },
       })
+      -- add, change, remove surroundings
+      require("mini.surround").setup()
+      -- split and join args across lines
+      require("mini.splitjoin").setup()
+      -- trailspace marking and trimming
       require("mini.trailspace").setup()
 
       map("n", "<leader>bd", MiniBufremove.delete)
-      map("i", "<S-CR>", "v:lua.MiniPairs.cr()", { noremap = true, expr = true, desc = "MiniPairs <CR>" })
-      map("i", "<S-BS>", "v:lua.MiniPairs.bs()", { noremap = true, expr = true, desc = "MiniPairs <BS>" })
+      map("i", "<S-CR>", "v:lua.MiniPairs.cr()", { expr = true, replace_keycodes = false, desc = "MiniPairs <CR>" })
+      map("i", "<S-BS>", "v:lua.MiniPairs.bs()", { expr = true, replace_keycodes = false, desc = "MiniPairs <BS>" })
+      map("n", "<leader>m", MiniMap.toggle, { desc = "[M]inimap Toggle" })
     end,
   },
-  { "dhruvasagar/vim-table-mode", ft = { "markdown", "org", "norg" } },
+  -- Async code runner
   {
     "skywind3000/asyncrun.vim",
     init = function()
@@ -51,10 +113,7 @@ return {
       ]])
     end,
   },
-  "tpope/vim-fugitive",
-  "tpope/vim-abolish",
-  "tpope/vim-rhubarb",
-  "tpope/vim-sleuth",
+  -- Code Screenshots
   {
     "segeljakt/vim-silicon",
     init = function()
@@ -69,6 +128,7 @@ return {
       }
     end,
   },
+  -- Keymap hints
   {
     "folke/which-key.nvim",
     config = function()
@@ -79,10 +139,13 @@ return {
         ["<leader>"] = {
           f = { name = "+[F]ind..." },
           g = { name = "+[G]it" },
+          x = { name = "+Trouble" },
+          s = { name = "+[S]end Code" },
         },
       })
     end,
   },
+  -- Todo highlighting and searching
   {
     "folke/todo-comments.nvim",
     opts = {
@@ -97,18 +160,33 @@ return {
       },
     },
   },
+  -- Diagnostics list
   {
     "folke/trouble.nvim",
     config = function()
       require("trouble").setup()
-      map("n", "<leader>xx", "<cmd>TroubleToggle<cr>", { desc = "Trouble Toggle" })
+      map("n", "<leader>xx", "<cmd>TroubleToggle document_diagnostics<cr>", { desc = "Trouble Toggle" })
       map("n", "<leader>xX", "<cmd>TroubleToggle workspace_diagnostics<cr>", { desc = "Trouble Toggle (Workspace)" })
+      map("n", "<leader>xq", "<cmd>TroubleToggle quickfix<cr>", { desc = "Trouble quickfix" })
+      map("n", "<leader>xl", "<cmd>TroubleToggle loclist<cr>", { desc = "Trouble loclist" })
+      map("n", "<leader>xr", "<cmd>TroubleToggle lsp_references<cr>", { desc = "Trouble open references" })
+      map("n", "]t", function()
+        require("trouble").next({ skip_groups = true, jump = true })
+      end, { desc = "next trouble diagnostic" })
+      map("n", "[t", function()
+        require("trouble").previous({ skip_groups = true, jump = true })
+      end, { desc = "prev trouble diagnostic" })
     end,
   },
+  -- Quickfixlist enhancements
   { "kevinhwang91/nvim-bqf", opts = {} },
+  -- Highlight banners for headlines in notes files
   { "lukas-reineke/headlines.nvim", opts = {}, ft = { "markdown", "org", "norg" } },
+  -- Breadcrumbs navigation in ranger-like explorer
   { "SmiteshP/nvim-navbuddy", opts = { lsp = { auto_attach = true } } },
+  -- Editing and reviewing github PRs/issues
   { "pwntester/octo.nvim", config = true, cmd = { "Octo" } },
+  -- Docs generation
   {
     "danymat/neogen",
     config = function()
@@ -117,7 +195,6 @@ return {
         { nil, "/// @file", { no_results = true, type = { "file" } } },
         { nil, "/// @brief $1", { no_results = true, type = { "func", "file", "class" } } },
         { nil, "", { no_results = true, type = { "file" } } },
-
         { i.ClassName, "/// @class %s", { type = { "class" } } },
         { i.Type, "/// @typedef %s", { type = { "type" } } },
         { nil, "/// @brief $1", { type = { "func", "class", "type" } } },
@@ -138,14 +215,13 @@ return {
       })
     end,
   },
-  { "ThePrimeagen/refactoring.nvim", opts = {} },
-  {
-    "karb94/neoscroll.nvim",
-    opts = { mappings = { "<C-u>", "<C-d>", "<C-y>", "<C-e>", "zt", "zz", "zb" } },
-  },
+  -- Enhancements on marks
   { "chentoast/marks.nvim", config = true },
+  -- View diffs easily
   { "sindrets/diffview.nvim", config = true },
+  -- Status line
   { "nvim-lualine/lualine.nvim", opts = { options = { globalstatus = true } } },
+  -- Buffer line
   {
     "akinsho/bufferline.nvim",
     config = function()
@@ -154,34 +230,22 @@ return {
       map("n", "L", "<cmd>BufferLineCycleNext<cr>", {})
     end,
   },
+  -- Git-gutter and hunk actions
   {
     "lewis6991/gitsigns.nvim",
     opts = {
       on_attach = function()
-        local gs = package.loaded.gitsigns
-        map("n", "]h", function()
-          if vim.wo.diff then
-            return "]h"
-          end
-          vim.schedule(function()
-            gs.next_hunk()
-          end)
-          return "<Ignore>"
-        end, { expr = true })
-
-        map("n", "[h", function()
-          if vim.wo.diff then
-            return "[h"
-          end
-          vim.schedule(function()
-            gs.prev_hunk()
-          end)
-          return "<Ignore>"
-        end, { expr = true })
+        local gitsigns = require("gitsigns")
+        map("n", "]h", gitsigns.next_hunk, { desc = "hunk forward" })
+        map("n", "]h", gitsigns.prev_hunk, { desc = "hunk backward" })
+        map("n", "<leader>gp", gitsigns.preview_hunk, { desc = "preview hunk" })
+        map("n", "<leader>gs", gitsigns.stage_hunk, { desc = "stage hunk" })
+        map("n", "<leader>gr", gitsigns.reset_hunk, { desc = "reset hunk" })
+        map("n", "<leader>gb", gitsigns.blame_line, { desc = "blame line" })
       end,
     },
   },
-  { "kylechui/nvim-surround", version = "*", event = "VeryLazy", opts = { keymaps = { visual = "Y" } } },
+  -- Tagged jumping / remote-motions
   {
     "folke/flash.nvim",
     event = "VeryLazy",
@@ -189,22 +253,14 @@ return {
     opts = { modes = { search = { enabled = false } } },
     -- stylua: ignore
     keys = {
-      { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-      { "S", mode = { "n", "o", "x" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
-      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
-      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+      { "ss", mode = { "n", "o", "x" }, function() require("flash").jump() end, desc = "Flash" },
+      { "sS", mode = { "n", "o", "x" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "sr", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+      { "sR", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
       { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
     },
   },
-  {
-    "Wansmer/treesj",
-    dependencies = { "nvim-treesitter/nvim-treesitter" },
-    config = function()
-      require("treesj").setup({ use_default_keymaps = false })
-      map("n", "<leader>j", require("treesj").toggle)
-    end,
-  },
-  "romainl/vim-cool",
+  -- Notes
   {
     "nvim-neorg/neorg",
     build = ":Neorg sync-parsers",
@@ -226,11 +282,9 @@ return {
       })
     end,
   },
-  {
-    "ecthelionvi/NeoComposer.nvim",
-    dependencies = { "kkharji/sqlite.lua" },
-    opts = {},
-  },
+  -- Better macros
+  { "ecthelionvi/NeoComposer.nvim", dependencies = { "kkharji/sqlite.lua" }, opts = {} },
+  -- Better increment/decremnt
   {
     "monaqa/dial.nvim",
     config = function()
@@ -240,20 +294,15 @@ return {
       map("v", "<C-b>", require("dial.map").dec_visual())
     end,
   },
-  {
-    "stevearc/stickybuf.nvim",
-    opts = {},
-  },
-  {
-    "stevearc/overseer.nvim",
-    opts = {},
-  },
+  -- Code-runner
+  { "stevearc/overseer.nvim", opts = { templates = { "builtin", "cpp_build" } } },
+  -- Repl runner
   {
     "Vigemus/iron.nvim",
     config = function()
       local iron = require("iron.core")
       iron.setup({
-        config = {repl_open_cmd = require("iron.view").split("20%")},
+        config = { repl_open_cmd = require("iron.view").split("20%") },
         keymaps = {
           send_motion = "<space>ss",
           visual_send = "<space>ss",
@@ -266,33 +315,93 @@ return {
       })
     end,
   },
-  -- { "mg979/vim-visual-multi", branch = "master" },
-  -- { "kevinhwang91/nvim-ufo" },
-  -- { "AckslD/muren.nvim" },
-  -- { "mg979/vim-visual-multi" },
-  -- { "nvim-pack/nvim-spectre" },
+  -- Alternative Repl runner (runs in wezterm pane which has the benefit of allowing iterm images)
+  {
+    "jpalardy/vim-slime",
+    init = function()
+      vim.g.slime_target = "wezterm"
+      vim.g.slime_default_config = { pane_direction = "Down" }
+    end,
+  },
+  -- Buffer-like file explorer
+  {
+    "stevearc/oil.nvim",
+    config = function()
+      require("oil").setup()
+      map("n", "<leader>e", require("oil").toggle_float, { desc = "File [E]xplorer" })
+    end,
+  },
+  -- Open jupyter files as py files
+  "goerz/jupytext.vim",
+  -- Latex integration
+  "lervag/vimtex",
+  -- Git command integration
+  "tpope/vim-fugitive",
+  -- Abbreviations, substitution patterns, and case-coersion
+  "tpope/vim-abolish",
+  -- Automatic detection of file indentation
+  "tpope/vim-sleuth",
+  -- Automatically stop highlighting search results
+  "romainl/vim-cool",
+  -- Adds mode for easy creation of ascii tables
+  "dhruvasagar/vim-table-mode",
+  -- { "mg979/vim-visual-multi", branch = "master", opts = {} },
+  -- { "Borwe/wasm_nvim" },
+  -- { "CKolkey/ts-node-action" },
+  -- { "Konfekt/FastFold" },
+  -- { "Olical/conjure" },
+  -- { "RRethy/nvim-treesitter-textsubjects" },
+  -- { "Zeioth/compiler.nvim" },
+  -- { "akinsho/git-conflict.nvim" },
   -- { "chipsenkbeil/distant.nvim" },
+  -- { "bennypowers/nvim-regexplainer" },
+  -- { "AckslD/muren.nvim", opts = {} },
+  -- { "chrisgrieser/nvim-early-retirement", opts = {} },
+  -- { "cbochs/grapple.nvim", dependencies = "nvim-lua/plenary.nvim" },
+  -- { "chrisgrieser/nvim-spider" },
+  -- { "chrisgrieser/nvim-various-textobjs" },
+  -- { "dccsillag/magma-nvim" },
+  -- { "debugloop/telescope-undo.nvim" },
+  -- { "f-person/git-blame.nvim" },
+  -- { "folke/edgy.nvim" },
+  -- { "frabjous/knap" },
+  -- { "gbprod/substitute.nvim" },
+  -- { "gbprod/yanky.nvim" },
+  -- { "ghillb/cybu.nvim" },
+  -- { "gorbit99/codewindow.nvim" },
+  -- { "haya14busa/vim-asterisk" },
+  -- { "iamcco/markdown-preview.nvim" },
+  -- { "jamestthompson3/nvim-remote-containers" },
+  -- { "jbyuki/instant.nvim" },
+  -- { "justinmk/vim-dirvish" },
+  -- { "kevinhwang91/nvim-hlslens" },
+  -- { "kevinhwang91/nvim-ufo" },
+  -- { "lewis6991/hover.nvim" },
+  -- { "linty-org/readline.nvim" },
+  -- { "luukvbaal/statuscol.nvim" },
+  -- { "mbbill/undotree" },
+  -- { "michaelb/sniprun" },
+  -- { "miversen33/netman.nvim" },
   -- { "mrjones2014/legendary.nvim" },
-  -- { "Konfekt/FastFold" }
-  -- { "mbbill/undotree" }
-  -- { "miversen33/netman.nvim" }
-  -- { "folke/edgy.nvim" }
-  -- { "gbprod/yanky.nvim" }
-  -- { "justinmk/vim-dirvish" }
-  -- { "jbyuki/instant.nvim" }
-  -- { "stevearc/dressing.nvim" }
-  -- { "Borwe/wasm_nvim" }
-  -- {"stevearc/oil.nvim"}
-  -- {"Zeioth/compiler.nvim"}
-  -- {"stevearc/aerial.nvim"}
-  -- {"iamcco/markdown-preview.nvim"}
-  -- { "AckslD/nvim-neoclip.lua" }
-  -- {"nvim-neotest/neotest"}
-  -- {"lewis6991/hover.nvim"}
-  -- {"dccsillag/magma-nvim"}
-  -- {"Olical/conjure"}
-  -- {"michaelb/sniprun"}
-  -- { "git-blame-nvim" }
+  -- { "nacro90/numb.nvim" },
+  -- { "nvim-neotest/neotest" },
+  -- { "nvim-pack/nvim-spectre" },
+  -- { "p00f/godbolt.nvim" },
+  -- { "petertriho/nvim-scrollbar" },
+  -- { "roobert/search-replace.nvim" },
+  -- { "smjonas/live-command.nvim" },
+  -- { "stevearc/aerial.nvim" },
+  -- { "stevearc/dressing.nvim" },
+  -- { "sunjon/Shade.nvim" },
+  -- { "tomiis4/hypersonic.nvim" },
+  -- { "willothy/flatten.nvim" },
+  -- { "ziontee113/syntax-tree-surfer" },
+  -- { "ThePrimeagen/refactoring.nvim", opts = {} },
+  -- { "Bekaboo/dropbar.nvim" },
+  -- { "neovim-remote" },
+  -- { "telekasten.nvim" },
+  -- { "neo-tree.nvim" },
+  -- { "portal.nvim" },
   --
   -- Look at other plugins included in lazyvim
   -- Setup DAP stuff

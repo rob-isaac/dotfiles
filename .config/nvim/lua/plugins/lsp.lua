@@ -8,19 +8,9 @@ local function on_attach(client, bufnr)
     map(mode, key, mapping, vim.tbl_extend("force", opts, { buffer = true }))
   end
 
-  -- Goto keymaps
-  map_buf("n", "gd", builtin.lsp_definitions, { desc = "[G]oto [D]efinition" })
-  map_buf("n", "gr", builtin.lsp_references, { desc = "[G]oto [R]eferences" })
-  map_buf("n", "]d", vim.diagnostic.goto_next, { desc = "Diagnostic forward" })
-  map_buf("n", "[d", vim.diagnostic.goto_prev, { desc = "Diagnostic backward" })
-  map_buf("n", "]e", function()
-    vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
-  end, { desc = "Error forward" })
-  map_buf("n", "[e", function()
-    vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
-  end, { desc = "Error backward" })
-
   -- Lsp behavior
+  map_buf("n", "gd", builtin.lsp_definitions, { desc = "[G]oto [D]efinition" })
+  map_buf("n", "gR", builtin.lsp_references, { desc = "[G]oto [R]eferences" })
   map_buf("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "[C]ode [A]ction" })
   map_buf("n", "<leader>cr", vim.lsp.buf.rename, { desc = "[C]ode [R]ename" })
   map_buf("n", "<leader>cs", builtin.lsp_document_symbols, { desc = "[C]ode [S]ymbols" })
@@ -30,7 +20,6 @@ local function on_attach(client, bufnr)
 
   -- Hover
   map_buf("n", "K", vim.lsp.buf.hover, { desc = "Hover" })
-  map_buf("n", "<M-k>", vim.lsp.buf.signature_help, { desc = "Signature Help" })
 
   local format = function()
     vim.lsp.buf.format({
@@ -118,7 +107,6 @@ return {
           null_ls.builtins.formatting.rustfmt.with({ extra_args = { "--edition", "2021" } }),
           null_ls.builtins.formatting.shfmt,
           null_ls.builtins.formatting.stylua,
-          null_ls.builtins.formatting.trim_whitespace,
         },
       })
     end,

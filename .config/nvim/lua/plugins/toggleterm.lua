@@ -4,40 +4,49 @@ return {
   {
     "akinsho/toggleterm.nvim",
     config = function()
-      require("toggleterm").setup({
-        open_mapping = [[<C-\>]],
-        direction = "float",
-      })
       local Terminal = require("toggleterm.terminal").Terminal
-      local lazygit = Terminal:new({ cmd = "lazygit", hidden = true })
+
+      require("toggleterm").setup({ direction = "float" })
+
+      local shell = Terminal:new({
+        on_create = function(term)
+          map("t", "<esc><esc>", "<C-\\><C-n>", { buffer = term.bufnr })
+          map("t", "<C-d>", function()
+            term:close()
+            term:send("clear")
+          end, { buffer = term.bufnr })
+          map({ "n", "t" }, [[<C-\>]], function()
+            term:toggle()
+          end, { buffer = term.bufnr })
+        end,
+      })
+
+      local lazygit = Terminal:new({
+        hidden = true,
+        dir = "git_dir",
+        on_create = function(term)
+          map({ "n", "t" }, "q", function()
+            term:close()
+          end, { buffer = term.bufnr })
+        end,
+        on_close = function(term)
+          -- close lazygit so it doesn't take cpu cycles
+          term:send("q")
+        end,
+      })
+
+      shell:spawn()
+      lazygit:spawn()
+
       map("n", "<leader>gg", function()
-        lazygit:toggle()
+        if not lazygit:is_open() then
+          lazygit:send("lazygit")
+          lazygit:open()
+        end
       end, { desc = "Lazygit" })
-
-      -- TODO(Rob): should avoid closing on exit and instead reuse the terminal
-      local function xplr_term(dir)
-        local prev_win = vim.api.nvim_get_current_win()
-        local tmpname = os.tmpname()
-        Terminal:new({
-          cmd = "xplr " .. dir .. "> " .. tmpname,
-          hidden = true,
-          on_exit = function()
-            vim.api.nvim_set_current_win(prev_win)
-            for line in io.lines(tmpname) do
-              vim.cmd("edit " .. line)
-            end
-            os.remove(tmpname)
-          end,
-        }):open()
-      end
-
-      map("n", "<leader>e", function()
-        xplr_term(vim.fn.expand("%:p:h"))
-      end, { desc = "File [E]xplorer" })
-
-      map("n", "<leader>E", function()
-        xplr_term(".")
-      end, { desc = "File [E]xplorer (Root Dir)" })
+      map("n", [[<C-\>]], function()
+        shell:toggle()
+      end, { desc = "Lazygit" })
     end,
   },
 }

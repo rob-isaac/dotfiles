@@ -40,10 +40,7 @@ return {
       { "smjonas/inc-rename.nvim", opts = {} },
     },
   },
-  {
-    "stevearc/dressing.nvim",
-    opts = {},
-  },
+  {"stevearc/dressing.nvim", opts = {},},
   {
     "goolord/alpha-nvim",
     event = "VimEnter",

@@ -48,9 +48,6 @@ if status is-interactive
     # Setup the GPG agent
     set -gx GPG_TTY (tty)
     gpgconf --launch gpg-agent
-
-    # Set my pwd to $HOME
-    cd $HOME
 end
 
 # Initialize conda if available
