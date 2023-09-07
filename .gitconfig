@@ -33,5 +33,16 @@
   fetch-rob = fetch origin 'refs/heads/users/rob*:refs/remotes/origin/users/rob*'
   br = branch --sort=committerdate
 
+# Sign commits
+# Note: This requires adding:
+# [user]
+#   signingkey = <path-to-ssh-key>
+# into file "~/.gitconfig-secret"
+[gpg]
+	format = ssh
+[commit]
+	gpgSign = true
+[tag]
+	gpgSign = true
 [include]
-  path = "~/.gitconfig-secret" # for adding a signingkey
+  path = "~/.gitconfig-secret"
