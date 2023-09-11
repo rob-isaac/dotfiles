@@ -21,8 +21,10 @@ return {
     },
     config = function()
       local spec_treesitter = require("mini.ai").gen_spec.treesitter
+      local spec_pair = require("mini.ai").gen_spec.pair
       -- textobjects
       require("mini.ai").setup({
+        n_lines = 500,
         custom_textobjects = {
           f = spec_treesitter({ a = "@function.outer", i = "@function.inner" }),
           a = spec_treesitter({ a = "@parameter.outer", i = "@parameter.inner" }),
@@ -31,8 +33,7 @@ return {
             a = { "@conditional.outer", "@loop.outer" },
             i = { "@conditional.inner", "@loop.inner" },
           }),
-          s = spec_treesitter({ a = "@class.outer", i = "@class.inner" }),
-          B = function()
+          g = function()
             local from = { line = 1, col = 1 }
             local to = {
               line = vim.fn.line("$"),
@@ -103,10 +104,11 @@ return {
       map("i", "<S-CR>", "v:lua.MiniPairs.cr()", { expr = true, replace_keycodes = false, desc = "MiniPairs <CR>" })
       map("i", "<S-BS>", "v:lua.MiniPairs.bs()", { expr = true, replace_keycodes = false, desc = "MiniPairs <BS>" })
       map("n", "<leader>m", MiniMap.toggle, { desc = "[M]inimap Toggle" })
-      map("n", "<leader>e", MiniFiles.open, { desc = "File [E]xplorer" })
-      map("n", "<leader>E", function()
+      map("n", "<leader>E", MiniFiles.open, { desc = "File [E]xplorer" })
+      map("n", "<leader>e", function()
         MiniFiles.open(vim.api.nvim_buf_get_name(0), false)
       end, { desc = "File [E]xplorer (Cur-Buf)" })
+      vim.cmd([[hi! MiniTrailspace guibg=grey]])
     end,
   },
   -- Code Screenshots
@@ -284,48 +286,80 @@ return {
   {
     "monaqa/dial.nvim",
     config = function()
-      map("n", "<C-f>", require("dial.map").inc_normal())
-      map("n", "<C-b>", require("dial.map").dec_normal())
-      map("v", "<C-f>", require("dial.map").inc_visual())
-      map("v", "<C-b>", require("dial.map").dec_visual())
+      map("n", "<C-a>", require("dial.map").inc_normal())
+      map("n", "<C-x>", require("dial.map").dec_normal())
+      map("v", "<C-a>", require("dial.map").inc_visual())
+      map("v", "<C-x>", require("dial.map").dec_visual())
     end,
   },
-  -- Code-runner
+  -- Task runner
   { "stevearc/overseer.nvim", opts = { templates = { "builtin", "cpp_build" } } },
-  -- Repl runner
+  -- Test runner
   {
-    "Vigemus/iron.nvim",
+    "nvim-neotest/neotest",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      "antoinemadec/FixCursorHold.nvim",
+      "nvim-neotest/neotest-python",
+    },
     config = function()
-      local iron = require("iron.core")
-      iron.setup({
-        config = { repl_open_cmd = require("iron.view").split("20%") },
-        keymaps = {
-          send_motion = "<space>ss",
-          visual_send = "<space>ss",
-          send_file = "<space>sf",
-          send_line = "<space>sl",
-          interrupt = "<space>s<space>",
-          exit = "<space>sq",
-          clear = "<space>sc",
+      require("neotest").setup({
+        adapters = {
+          require("neotest-python"),
         },
       })
+      map("n", "<leader>tr", require("neotest").run.run, { desc = "Run Test" })
+      map("n", "<leader>tf", function()
+        require("neotest").run.run(vim.fn.expand("%"))
+      end, { desc = "Test File" })
+      map("n", "<leader>ts", require("neotest").run.stop, { desc = "Stop Test" })
+      map("n", "<leader>to", require("neotest").output.open, { desc = "Test Open Output" })
+      map("n", "<leader>ts", require("neotest").summary.toggle, { desc = "Test Open Summary" })
     end,
   },
-  -- Alternative Repl runner (runs in wezterm pane which has the benefit of allowing iterm images)
+  -- Repl runner
+  -- TODO: Switch to iron.nvim when images work in nvim terminal
   {
     "jpalardy/vim-slime",
+    dependencies = {
+      "goerz/jupytext.vim",
+      "Klafyvel/vim-slime-cells",
+    },
     init = function()
       vim.g.slime_target = "wezterm"
-      vim.g.slime_default_config = { pane_direction = "Down" }
+      vim.g.slime_default_config = { pane_direction = "Right" }
+      vim.g.jupytext_fmt = "py"
+      vim.g.slime_no_mappings = true
+      vim.g.slime_bracketed_paste = true
+      vim.g.slime_cell_delimiter = [[^\s*##]]
+    end,
+    config = function()
+      map("n", "<leader>sz", "<Plug>SlimeConfig", { desc = "Slime Config" })
+      map("n", "<leader>ss", "<Plug>SlimeCellsSendAndGoToNext", { desc = "Slime Send Cell" })
+      map("n", "<leader>sn", "<Plug>SlimeCellsNext", { desc = "Slime Next Cell" })
+      map("n", "<leader>sn", "<Plug>SlimeCellsPrev", { desc = "Slime Prev Cell" })
+      map("n", "<leader>sl", "<Plug>SlimeLineSend", { desc = "Slime Send Line" })
+      map("n", "<leader>s", "<Plug>SlimeMotionSend", { desc = "Slime Send Motion" })
+      map("v", "<leader>s", "<Plug>SlimeRegionSend", { desc = "Slime Send Region" })
     end,
   },
-  -- Open jupyter files as py files
-  "goerz/jupytext.vim",
+  -- Yank to local clipboard using escape-codes
+  {
+    "ojroques/nvim-osc52",
+    config = function()
+      map("n", "<leader>y", require("osc52").copy_operator, { expr = true })
+      map("n", "<leader>yy", "<leader>y_", { remap = true })
+      map("v", "<leader>y", require("osc52").copy_visual)
+    end,
+  },
+  -- Scrollbar with diagnostics
+  { "petertriho/nvim-scrollbar", opts = {} },
   -- Latex integration
   "lervag/vimtex",
   -- Git command integration
   "tpope/vim-fugitive",
-  -- Abbreviations, substitution patterns, and case-coersion
+  -- Abbreviations, substitution patterns, and case-coercion
   "tpope/vim-abolish",
   -- Automatic detection of file indentation
   "tpope/vim-sleuth",

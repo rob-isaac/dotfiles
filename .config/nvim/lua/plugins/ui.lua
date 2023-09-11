@@ -21,7 +21,7 @@ return {
         },
       })
       map({ "n", "i", "s" }, "<c-f>", function()
-        if not require("noice.lsp").scroll(4) then
+        if not require("noice.lsp").scroll(5) then
           return "<c-f>"
         end
       end, { silent = true, expr = true })
@@ -40,7 +40,7 @@ return {
       { "smjonas/inc-rename.nvim", opts = {} },
     },
   },
-  {"stevearc/dressing.nvim", opts = {},},
+  { "stevearc/dressing.nvim", opts = {} },
   {
     "goolord/alpha-nvim",
     event = "VimEnter",

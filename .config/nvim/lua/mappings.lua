@@ -51,3 +51,6 @@ map("n", "]q", "<cmd>cnext<cr>", { desc = "Quickfix next" })
 map("n", "[q", "<cmd>cprev<cr>", { desc = "Quickfix next" })
 map("n", "]l", "<cmd>lnext<cr>", { desc = "Loclist next" })
 map("n", "[l", "<cmd>lprev<cr>", { desc = "Loclist next" })
+
+-- Quick quit
+map("n", "<leader>qq", "<cmd>wa|qa<cr>", {desc = "Quick Quit"})

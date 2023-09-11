@@ -90,14 +90,18 @@ return {
         capabilities = vim.tbl_extend("force", capabilities, { offsetEncoding = { "utf-16" } }),
         on_attach = on_attach,
       })
-      lspconfig.pyright.setup({ capabilities = capabilities, on_attach = on_attach })
+      lspconfig.pyright.setup({
+        capabilities = capabilities,
+        on_attach = on_attach,
+        settings = { python = { analysis = { typeCheckingMode = "off" } } },
+      })
       lspconfig.gopls.setup({ capabilities = capabilities, on_attach = on_attach })
       lspconfig.rust_analyzer.setup({ capabilities = capabilities, on_attach = on_attach })
 
       local null_ls = require("null-ls")
       null_ls.setup({
         sources = {
-          null_ls.builtins.diagnostics.codespell,
+          null_ls.builtins.diagnostics.typos,
           null_ls.builtins.diagnostics.shellcheck,
           null_ls.builtins.formatting.black,
           null_ls.builtins.formatting.clang_format,

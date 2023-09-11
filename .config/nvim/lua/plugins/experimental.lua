@@ -1,4 +1,5 @@
 return {
+  -- {"anuvyklack/hydra.nvim"}
   -- { "AckslD/muren.nvim", opts = {} },
   -- { "Bekaboo/dropbar.nvim" },
   -- { "Borwe/wasm_nvim" },
@@ -12,7 +13,6 @@ return {
   -- { "bennypowers/nvim-regexplainer" },
   -- { "cbochs/grapple.nvim", dependencies = "nvim-lua/plenary.nvim" },
   -- { "cbochs/portal.nvim" },
-  -- { "chipsenkbeil/distant.nvim" },
   -- { "chrisgrieser/nvim-early-retirement", opts = {} },
   -- { "chrisgrieser/nvim-spider" },
   -- { "chrisgrieser/nvim-various-textobjs" },
@@ -42,10 +42,8 @@ return {
   -- { "miversen33/netman.nvim" },
   -- { "mrjones2014/legendary.nvim" },
   -- { "nacro90/numb.nvim" },
-  -- { "nvim-neotest/neotest" },
   -- { "nvim-pack/nvim-spectre" },
   -- { "p00f/godbolt.nvim" },
-  -- { "petertriho/nvim-scrollbar" },
   -- { "renerocksai/telekasten.nvim" },
   -- { "roobert/search-replace.nvim" },
   -- { "smjonas/live-command.nvim" },
@@ -54,8 +52,16 @@ return {
   -- { "tomiis4/hypersonic.nvim" },
   -- { "willothy/flatten.nvim" },
   -- { "ziontee113/syntax-tree-surfer" },
+  -- {"simrat39/symbols-outline.nvim"}
+  -- {"altermo/ultimate-autopair.nvim"}
   -- {"Wansmer/sibling-swap.nvim"}
   -- {"gabrielpoca/replacer.nvim"}
   -- {"m4xshen/hardtime.nvim"}
   -- {"rgroli/other.nvim"}
+  -- {"xeluxee/competitest.nvim"}
+  -- {"mfussenegger/nvim-dap"}
+  -- {"theHamsta/nvim-dap-virtual-text"}
+  -- {"rcarriga/nvim-dap-ui"}
+  -- {"akinsho/git-conflict.nvim"}
+  -- {"echasnovski/mini.clue"}
 }
