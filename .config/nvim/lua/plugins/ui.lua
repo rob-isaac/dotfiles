@@ -3,15 +3,15 @@ local map = require("utils").map
 return {
   {
     "folke/noice.nvim",
+    event = "VeryLazy",
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "rcarriga/nvim-notify",
+      "nvim-treesitter/nvim-treesitter",
+      { "smjonas/inc-rename.nvim", opts = {} },
+    },
     config = function()
       require("noice").setup({
-        lsp = {
-          override = {
-            ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
-            ["vim.lsp.util.stylize_markdown"] = true,
-            ["cmp.entry.get_documentation"] = true,
-          },
-        },
         presets = {
           bottom_search = true,
           command_palette = true,
@@ -19,9 +19,17 @@ return {
           inc_rename = true,
           lsp_doc_border = true,
         },
+        lsp = {
+          override = {
+            ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+            ["vim.lsp.util.stylize_markdown"] = true,
+            ["cmp.entry.get_documentation"] = true,
+          },
+        },
       })
+
       map({ "n", "i", "s" }, "<c-f>", function()
-        if not require("noice.lsp").scroll(5) then
+        if not require("noice.lsp").scroll(4) then
           return "<c-f>"
         end
       end, { silent = true, expr = true })
@@ -32,13 +40,6 @@ return {
         end
       end, { silent = true, expr = true })
     end,
-    event = "VeryLazy",
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-      "rcarriga/nvim-notify",
-      "nvim-treesitter/nvim-treesitter",
-      { "smjonas/inc-rename.nvim", opts = {} },
-    },
   },
   { "stevearc/dressing.nvim", opts = {} },
   {
@@ -49,12 +50,12 @@ return {
         "folke/persistence.nvim",
         event = "BufReadPre",
         opts = { options = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp" } },
-  -- stylua: ignore
-  keys = {
-    { "<leader>qs", function() require("persistence").load() end, desc = "Restore Session" },
-    { "<leader>ql", function() require("persistence").load({ last = true }) end, desc = "Restore Last Session" },
-    { "<leader>qd", function() require("persistence").stop() end, desc = "Don't Save Current Session" },
-  },
+        -- stylua: ignore
+        keys = {
+          { "<leader>qs", function() require("persistence").load() end, desc = "Restore Session" },
+          { "<leader>ql", function() require("persistence").load({ last = true }) end, desc = "Restore Last Session" },
+          { "<leader>qd", function() require("persistence").stop() end, desc = "Don't Save Current Session" },
+        },
       },
     },
     config = function()
@@ -92,5 +93,36 @@ return {
 
       require("alpha").setup(dashboard.opts)
     end,
+  },
+  -- Status line
+  {
+    "nvim-lualine/lualine.nvim",
+    dependencies = { "folke/noice.nvim" },
+    opts = {
+      options = { globalstatus = true },
+      sections = {
+        lualine_x = {
+          {
+            require("noice").api.status.message.get_hl,
+            cond = require("noice").api.status.message.has,
+          },
+          {
+            require("noice").api.status.command.get,
+            cond = require("noice").api.status.command.has,
+            color = { fg = "#ff9e64" },
+          },
+          {
+            require("noice").api.status.mode.get,
+            cond = require("noice").api.status.mode.has,
+            color = { fg = "#ff9e64" },
+          },
+          {
+            require("noice").api.status.search.get,
+            cond = require("noice").api.status.search.has,
+            color = { fg = "#ff9e64" },
+          },
+        },
+      },
+    },
   },
 }

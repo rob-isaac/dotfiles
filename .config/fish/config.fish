@@ -1,14 +1,11 @@
 if status is-interactive
     # Add some abbreviations
     abbr --add vim nvim
-    abbr --add tw taskwarrior-tui
-    abbr --add nf neofetch
     abbr --add lg lazygit
+    abbr --add ld lazydocker
     abbr --add cat bat
     abbr --add dot git --git-dir=$HOME/.dotfiles --work-tree=$HOME
-    abbr --add cmake cmake -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-    abbr --add make ninja
-    abbr --add fd fdfind
+    abbr --add cmake-ninja cmake -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
     abbr --add ls exa
 
     # Add bin locations to path

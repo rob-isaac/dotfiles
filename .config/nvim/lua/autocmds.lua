@@ -40,7 +40,7 @@ autocmd("FileType", {
   end,
 })
 
--- Show cursorline only in active window
+-- Show cursorline only in active window only
 autocmd({ "InsertLeave", "WinEnter" }, {
   callback = function()
     local ok, cl = pcall(vim.api.nvim_win_get_var, 0, "auto-cursorline")

@@ -1,5 +1,4 @@
 return {
-  -- {"anuvyklack/hydra.nvim"}
   -- { "AckslD/muren.nvim", opts = {} },
   -- { "Bekaboo/dropbar.nvim" },
   -- { "Borwe/wasm_nvim" },
@@ -52,16 +51,27 @@ return {
   -- { "tomiis4/hypersonic.nvim" },
   -- { "willothy/flatten.nvim" },
   -- { "ziontee113/syntax-tree-surfer" },
-  -- {"simrat39/symbols-outline.nvim"}
-  -- {"altermo/ultimate-autopair.nvim"}
   -- {"Wansmer/sibling-swap.nvim"}
+  -- {"akinsho/git-conflict.nvim"}
+  -- {"altermo/ultimate-autopair.nvim"}
+  -- {"anuvyklack/hydra.nvim"}
+  -- {"axkirillov/easypick.nvim"}
+  -- {"debugloop/telescope-undo.nvim"}
+  -- {"echasnovski/mini.clue"}
   -- {"gabrielpoca/replacer.nvim"}
   -- {"m4xshen/hardtime.nvim"}
-  -- {"rgroli/other.nvim"}
-  -- {"xeluxee/competitest.nvim"}
   -- {"mfussenegger/nvim-dap"}
-  -- {"theHamsta/nvim-dap-virtual-text"}
+  -- {"mfussenegger/nvim-lint"}
+  -- {"nvim-neorg/neorg-telescope"}
+  -- {"nvim-telescope/telescope-file-browser.nvim"}
+  -- {"nvim-telescope/telescope-live-grep-args.nvim"}
   -- {"rcarriga/nvim-dap-ui"}
-  -- {"akinsho/git-conflict.nvim"}
-  -- {"echasnovski/mini.clue"}
+  -- {"rgroli/other.nvim"}
+  -- {"simrat39/symbols-outline.nvim"}
+  -- {"stevearc/conform.nvim"}
+  -- {"stevearc/oil.nvim"}
+  -- {"theHamsta/nvim-dap-virtual-text"}
+  -- {"tpope/vim-dadbod"}
+  -- {"tpope/vim-projectionist"}
+  -- {"xeluxee/competitest.nvim"}
 }

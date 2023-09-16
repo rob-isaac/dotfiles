@@ -46,12 +46,12 @@ end
 local function capture(cmd)
 	local f = io.popen(cmd, "r")
 	if not f then
-		return "ERROR"
+		return nil
 	end
 	local s = f:read("*a")
 	f:close()
 	if not s then
-		return "ERROR"
+		return nil
 	end
 	s = string.gsub(s, "^%s+", "")
 	s = string.gsub(s, "%s+$", "")
@@ -60,13 +60,13 @@ local function capture(cmd)
 end
 
 -- Start in maximized mode
-wezterm.on('gui-startup', function(cmd)
-  local _, _, window = mux.spawn_window(cmd or {})
-  window:gui_window():maximize()
+wezterm.on("gui-startup", function(cmd)
+	local _, _, window = mux.spawn_window(cmd or {})
+	window:gui_window():maximize()
 end)
 
 -- Status configuration
-local num_cpus = capture("nproc")
+local num_cpus = capture("nproc") or "1"
 local time = 0
 local cpu_load = ""
 local cpu_usage = ""
@@ -88,17 +88,16 @@ wezterm.on("update-status", function(window, _)
 	local tmp_time = math.floor(os.time() / 2)
 	if tmp_time ~= time then
 		time = tmp_time
-		cpu_load = capture("ps -aux | awk '{print $3}' | tail -n+2 | awk '{s+=$1} END {print s}'")
+		cpu_load = capture("ps -aux | awk '{print $3}' | tail -n+2 | awk '{s+=$1} END {print s}'") or "0"
 		cpu_usage = "CPU: " .. math.floor(tonumber(cpu_load) / tonumber(num_cpus)) .. "%"
-		mem_usage = "MEM: " .. capture("free | awk -v format='%3.1f%%' '$1 ~ /Mem/ {printf(format, 100*$3/$2)}'")
+		mem_usage = "MEM: "
+			.. (capture("free | awk -v format='%3.1f%%' '$1 ~ /Mem/ {printf(format, 100*$3/$2)}'") or "NONE")
 	end
 
 	window:set_right_status(wezterm.format({
 		{ Text = table_name .. "   " .. cpu_usage .. "   " .. mem_usage .. "   " .. bat .. "   " .. date },
 	}))
 end)
-
--- This is where you actually apply your config choices
 
 config.color_scheme = "Gruvbox Material (Gogh)"
 config.force_reverse_video_cursor = true
@@ -170,6 +169,12 @@ config.keys = {
 		mods = "LEADER|CTRL",
 		action = act.SendString("\x01"),
 	},
+	-- Toggle Zoom
+	{
+		key = "T",
+		mods = "CTRL",
+		action = wezterm.action.TogglePaneZoomState,
+	},
 }
 
 config.key_tables = {
@@ -178,6 +183,8 @@ config.key_tables = {
 		{ key = "h", mods = "CTRL", action = act.ActivateTabRelative(-1) },
 	},
 }
+
+config.enable_kitty_graphics = true
 
 -- and finally, return the configuration to wezterm
 return config

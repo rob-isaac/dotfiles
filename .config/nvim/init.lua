@@ -35,4 +35,6 @@ require("lazy").setup({
       },
     },
   },
+  change_detection = { notify = false },
+  dev = { path = "~/repos/", patterns = { "rob-isaac" } },
 })

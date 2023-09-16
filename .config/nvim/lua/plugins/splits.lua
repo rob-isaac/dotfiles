@@ -10,6 +10,7 @@ return {
             on_leave = require("bufresize").register,
           },
         },
+        at_edge = "stop",
       })
       vim.keymap.set("n", "<A-h>", ss.resize_left)
       vim.keymap.set("n", "<A-j>", ss.resize_down)

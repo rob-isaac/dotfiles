@@ -21,7 +21,6 @@ return {
     },
     config = function()
       local spec_treesitter = require("mini.ai").gen_spec.treesitter
-      local spec_pair = require("mini.ai").gen_spec.pair
       -- textobjects
       require("mini.ai").setup({
         n_lines = 500,
@@ -43,8 +42,10 @@ return {
           end,
         },
       })
+
       -- interactive alignment
       require("mini.align").setup()
+
       -- basic options, keymaps, and autocommands
       require("mini.basics").setup({
         options = {
@@ -52,8 +53,11 @@ return {
           win_borders = "double",
         },
       })
+
       -- commands for removing/hiding buffers
       require("mini.bufremove").setup()
+      map("n", "<leader>bd", MiniBufremove.delete)
+
       -- commands for commenting/uncommenting
       require("mini.comment").setup({
         options = {
@@ -62,12 +66,24 @@ return {
           end,
         },
       })
+
       -- highlight occurrences of word under the cursor
       require("mini.cursorword").setup()
+
+      -- highlight patterns
+      require("mini.hipatterns").setup({
+        highlighters = {
+          hex_color = require("mini.hipatterns").gen_highlighter.hex_color(),
+        },
+      })
+
       -- mark the indent-scope of the cursor
       require("mini.indentscope").setup()
+
       -- command for making a floating map + scrollbar of the current file
       require("mini.map").setup()
+      map("n", "<leader>m", MiniMap.toggle, { desc = "[M]inimap Toggle" })
+
       -- interactively move text blocks
       require("mini.move").setup({
         mappings = {
@@ -84,6 +100,7 @@ return {
       })
       -- evaluate, exchange, multiply, replace, sort operators
       require("mini.operators").setup()
+
       -- autopairs
       require("mini.pairs").setup({
         mappings = {
@@ -91,47 +108,27 @@ return {
           [">"] = { action = "close", pair = "<>", register = { cr = false } },
         },
       })
-      -- add, change, remove surroundings
-      require("mini.surround").setup()
-      -- split and join args across lines
-      require("mini.splitjoin").setup()
-      -- trailspace marking and trimming
-      require("mini.trailspace").setup()
-      -- file explorer
-      require("mini.files").setup()
-
-      map("n", "<leader>bd", MiniBufremove.delete)
       map("i", "<S-CR>", "v:lua.MiniPairs.cr()", { expr = true, replace_keycodes = false, desc = "MiniPairs <CR>" })
       map("i", "<S-BS>", "v:lua.MiniPairs.bs()", { expr = true, replace_keycodes = false, desc = "MiniPairs <BS>" })
-      map("n", "<leader>m", MiniMap.toggle, { desc = "[M]inimap Toggle" })
+
+      -- add, change, remove surroundings
+      require("mini.surround").setup()
+
+      -- split and join args across lines
+      require("mini.splitjoin").setup()
+
+      -- file explorer
+      require("mini.files").setup()
       map("n", "<leader>E", MiniFiles.open, { desc = "File [E]xplorer" })
       map("n", "<leader>e", function()
         MiniFiles.open(vim.api.nvim_buf_get_name(0), false)
       end, { desc = "File [E]xplorer (Cur-Buf)" })
-      vim.cmd([[hi! MiniTrailspace guibg=grey]])
-    end,
-  },
-  -- Code Screenshots
-  {
-    "segeljakt/vim-silicon",
-    init = function()
-      vim.g.silicon = {
-        theme = "gruvbox-dark",
-        font = "JetBrainsMono Nerd Font",
-        ["pad-vert"] = 0,
-        ["pad-horiz"] = 0,
-        ["line-number"] = false,
-        ["round-corner"] = false,
-        ["window-controls"] = false,
-      }
     end,
   },
   -- Keymap hints
   {
     "folke/which-key.nvim",
     config = function()
-      vim.o.timeout = true
-      vim.o.timeoutlen = 300
       require("which-key").setup()
       require("which-key").register({
         ["<leader>"] = {
@@ -142,21 +139,6 @@ return {
         },
       })
     end,
-  },
-  -- Todo highlighting and searching
-  {
-    "folke/todo-comments.nvim",
-    opts = {
-      highlight = {
-        before = "",
-        keyword = "bg",
-        after = "",
-        pattern = [[.*<(KEYWORDS).*:]], -- vim regex
-      },
-      search = {
-        pattern = [[\b(KEYWORDS).*:]], -- ripgrep regex
-      },
-    },
   },
   -- Diagnostics list
   {
@@ -181,7 +163,7 @@ return {
   -- Highlight banners for headlines in notes files
   { "lukas-reineke/headlines.nvim", opts = {}, ft = { "markdown", "org", "norg" } },
   -- Breadcrumbs navigation in ranger-like explorer
-  { "SmiteshP/nvim-navbuddy", opts = { lsp = { auto_attach = true } } },
+  { "SmiteshP/nvim-navbuddy", opts = { lsp = { auto_attach = true } }, dependencies = "MunifTanjim/nui.nvim" },
   -- Editing and reviewing github PRs/issues
   { "pwntester/octo.nvim", config = true, cmd = { "Octo" } },
   -- Docs generation
@@ -217,8 +199,6 @@ return {
   { "chentoast/marks.nvim", config = true },
   -- View diffs easily
   { "sindrets/diffview.nvim", config = true },
-  -- Status line
-  { "nvim-lualine/lualine.nvim", opts = { options = { globalstatus = true } } },
   -- Buffer line
   {
     "akinsho/bufferline.nvim",
@@ -280,8 +260,6 @@ return {
       })
     end,
   },
-  -- Better macros
-  { "ecthelionvi/NeoComposer.nvim", dependencies = { "kkharji/sqlite.lua" }, opts = {} },
   -- Better increment/decremnt
   {
     "monaqa/dial.nvim",
@@ -292,8 +270,6 @@ return {
       map("v", "<C-x>", require("dial.map").dec_visual())
     end,
   },
-  -- Task runner
-  { "stevearc/overseer.nvim", opts = { templates = { "builtin", "cpp_build" } } },
   -- Test runner
   {
     "nvim-neotest/neotest",
@@ -353,6 +329,23 @@ return {
       map("v", "<leader>y", require("osc52").copy_visual)
     end,
   },
+  -- Useful helper functions
+  {
+    "nvim-lua/plenary.nvim",
+    config = function()
+      P = function(v)
+        print(vim.inspect(v))
+        return v
+      end
+      RELOAD = function(...)
+        require("plenary.reload").reload_module(...)
+      end
+      R = function(name)
+        RELOAD(name)
+        return require("name")
+      end
+    end,
+  },
   -- Scrollbar with diagnostics
   { "petertriho/nvim-scrollbar", opts = {} },
   -- Latex integration
@@ -369,4 +362,6 @@ return {
   "romainl/vim-cool",
   -- Adds mode for easy creation of ascii tables
   "dhruvasagar/vim-table-mode",
+  -- Lua docs in :help
+  "milisims/nvim-luaref",
 }
