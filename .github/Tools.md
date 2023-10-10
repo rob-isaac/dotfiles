@@ -10,6 +10,9 @@
  - [bazel-compdb](https://github.com/grailbio/bazel-compilation-database): Generate compile-commands.json for bazel
  - [fzf](https://github.com/junegunn/fzf): Terminal fuzzy-finder
  - [lemonade](https://github.com/lemonade-command/lemonade): Copy, paste, and open browser over remote connection
+ - [k9s](https://github.com/derailed/k9s): Kubernetes management
+ - [buck](https://github.com/facebook/buck2): Build system
+ - [bazel](https://github.com/bazelbuild/bazel): Build system
  - Rust Tools
    - [ripgrep](https://github.com/BurntSushi/ripgrep): Like `grep` but better
    - [fd-find](https://github.com/sharkdp/fd): Like `find` but better
@@ -27,6 +30,7 @@
    - [tealdeer](https://github.com/dbrgn/tealdeer): TLDR pages
    - [z](https://github.com/ajeetdsouza/zoxide): Smarter cd. Depends on fzf and init with `zoxide init fish | source`
    - [so](https://github.com/samtay/so): Terminal interface for stack overflow
+   - [sad](https://github.com/ms-jpq/sad): Better sed with fzf integration
 
 ## Other tools to try
 
@@ -46,6 +50,10 @@
  - [asdf](https://github.com/asdf-vm/asdf): Version manager for many different languages
  - [mosh](https://mosh.org/): Alternative to ssh with better support for laggy networks
  - [ast-grep](https://github.com/ast-grep/ast-grep): Like grep but for AST
+ - [fpp](https://github.com/facebook/PathPicker): Choose paths from arbitrary output
+ - [act](https://github.com/nektos/act): Run github actions locally
+ - [just](https://github.com/casey/just): Make altermative
+ - [watchexec](https://github.com/watchexec/watchexec): Automatically run commands on file change
 # Installation
 
 Many of the tools are available via `cargo install`
