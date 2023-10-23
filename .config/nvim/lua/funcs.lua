@@ -31,6 +31,6 @@ usrcmd("Screenshot", function(command)
     vim.notify("Expected an argument!")
     return
   end
-  local lines = vim.api.nvim_buf_get_lines(0, command["line1"]-1, command["line2"], true)
+  local lines = vim.api.nvim_buf_get_lines(0, command["line1"] - 1, command["line2"], true)
   vim.notify(vim.fn.system("silicon -o " .. out_file .. " -l " .. vim.fn.expand("%:e"), lines))
-end, { nargs = 1, range="%", complete="file" })
+end, { nargs = 1, range = "%", complete = "file" })

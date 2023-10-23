@@ -45,6 +45,11 @@ if status is-interactive
     # Setup the GPG agent
     set -gx GPG_TTY (tty)
     gpgconf --launch gpg-agent
+
+    # Init zoxide
+    if command -sq zoxide
+        zoxide init --cmd j fish | source
+    end
 end
 
 # Initialize conda if available

@@ -344,6 +344,23 @@ return {
         RELOAD(name)
         return require("name")
       end
+      map("n", "<leader>tp", "<Plug>PlenaryTestFile", { desc = "Test with Plenary" })
+    end,
+  },
+  {
+    "stevearc/aerial.nvim",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-tree/nvim-web-devicons",
+    },
+    config = function()
+      require("aerial").setup({
+        on_attach = function(bufnr)
+          vim.keymap.set("n", "{", "<cmd>AerialPrev<cr>", { buffer = bufnr })
+          vim.keymap.set("n", "}", "<cmd>AerialNext<cr>", { buffer = bufnr })
+        end,
+      })
+      map("n","<leader>ta","<cmd>AerialToggle!<cr>")
     end,
   },
   -- Scrollbar with diagnostics
@@ -358,10 +375,14 @@ return {
   "tpope/vim-sleuth",
   -- Unix commands
   "tpope/vim-eunuch",
+  -- Async processes
+  "tpope/vim-dispatch",
   -- Automatically stop highlighting search results
   "romainl/vim-cool",
   -- Adds mode for easy creation of ascii tables
   "dhruvasagar/vim-table-mode",
   -- Lua docs in :help
   "milisims/nvim-luaref",
+  -- Undo tree visualization/manuvering
+  "mbbill/undotree",
 }

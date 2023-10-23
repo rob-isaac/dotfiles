@@ -21,9 +21,8 @@ return {
     dependencies = {
       "folke/noice.nvim",
       "folke/trouble.nvim",
-      "kkharji/sqlite.lua",
+      { "nvim-telescope/telescope-live-grep-args.nvim", version = "^1.0.0" },
       "nvim-lua/plenary.nvim",
-      "nvim-telescope/telescope-frecency.nvim",
       "nvim-tree/nvim-web-devicons",
       "ecthelionvi/NeoComposer.nvim",
       { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
@@ -48,10 +47,15 @@ return {
             },
           },
         },
+        pickers = {
+          buffers = {
+            ignore_current_buffer = true,
+            sort_mru = true,
+          },
+        },
       })
       require("telescope").load_extension("fzf")
       require("telescope").load_extension("noice")
-      require("telescope").load_extension("frecency")
       require("telescope").load_extension("macros")
       require("telescope").load_extension("neoclip")
 
