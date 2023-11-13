@@ -29,6 +29,7 @@ return {
   -- { "jamestthompson3/nvim-remote-containers" },
   -- { "jbyuki/instant.nvim" },
   -- { "justinmk/vim-dirvish" },
+  -- { "LeonHeidelbach/trailblazer.nvim" },
   -- { "kevinhwang91/nvim-hlslens" },
   -- { "kevinhwang91/nvim-ufo" },
   -- { "lewis6991/hover.nvim" },
@@ -74,4 +75,6 @@ return {
   -- {"tpope/vim-dadbod"}
   -- {"tpope/vim-projectionist"}
   -- {"xeluxee/competitest.nvim"}
+  -- {"hinell/lsp-timeout.nvim"}
+  -- {"Bekaboo/dropbar.nvim"}
 }

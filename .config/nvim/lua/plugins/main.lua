@@ -180,7 +180,6 @@ return {
         { nil, "/// @brief $1", { type = { "func", "class", "type" } } },
         { i.Tparam, "/// @tparam %s $1" },
         { i.Parameter, "/// @param %s $1" },
-        { i.Return, "/// @return $1" },
       }
       require("neogen").setup({
         snippet_engine = "luasnip",
@@ -278,11 +277,13 @@ return {
       "nvim-treesitter/nvim-treesitter",
       "antoinemadec/FixCursorHold.nvim",
       "nvim-neotest/neotest-python",
+      "rouge8/neotest-rust",
     },
     config = function()
       require("neotest").setup({
         adapters = {
           require("neotest-python"),
+          require("neotest-rust"),
         },
       })
       map("n", "<leader>tr", require("neotest").run.run, { desc = "Run Test" })
@@ -385,4 +386,12 @@ return {
   "milisims/nvim-luaref",
   -- Undo tree visualization/manuvering
   "mbbill/undotree",
+  -- Readline keybindings in command and insert modes
+  "tpope/vim-rsi",
+  -- Projections and alternate files
+  "tpope/vim-projectionist",
+  -- Netrw enhancements
+  "tpope/vim-vinegar",
+  -- Async grep
+  "mhinz/vim-grepper",
 }
