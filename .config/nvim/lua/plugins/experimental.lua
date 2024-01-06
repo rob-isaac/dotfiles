@@ -52,29 +52,31 @@ return {
   -- { "tomiis4/hypersonic.nvim" },
   -- { "willothy/flatten.nvim" },
   -- { "ziontee113/syntax-tree-surfer" },
-  -- {"Wansmer/sibling-swap.nvim"}
-  -- {"akinsho/git-conflict.nvim"}
-  -- {"altermo/ultimate-autopair.nvim"}
-  -- {"anuvyklack/hydra.nvim"}
-  -- {"axkirillov/easypick.nvim"}
-  -- {"debugloop/telescope-undo.nvim"}
-  -- {"echasnovski/mini.clue"}
-  -- {"gabrielpoca/replacer.nvim"}
-  -- {"m4xshen/hardtime.nvim"}
-  -- {"mfussenegger/nvim-dap"}
-  -- {"mfussenegger/nvim-lint"}
-  -- {"nvim-neorg/neorg-telescope"}
-  -- {"nvim-telescope/telescope-file-browser.nvim"}
-  -- {"nvim-telescope/telescope-live-grep-args.nvim"}
-  -- {"rcarriga/nvim-dap-ui"}
-  -- {"rgroli/other.nvim"}
-  -- {"simrat39/symbols-outline.nvim"}
-  -- {"stevearc/conform.nvim"}
-  -- {"stevearc/oil.nvim"}
-  -- {"theHamsta/nvim-dap-virtual-text"}
-  -- {"tpope/vim-dadbod"}
-  -- {"tpope/vim-projectionist"}
-  -- {"xeluxee/competitest.nvim"}
-  -- {"hinell/lsp-timeout.nvim"}
-  -- {"Bekaboo/dropbar.nvim"}
+  -- { "Wansmer/sibling-swap.nvim"}
+  -- { "akinsho/git-conflict.nvim"}
+  -- { "altermo/ultimate-autopair.nvim"}
+  -- { "anuvyklack/hydra.nvim"}
+  -- { "axkirillov/easypick.nvim"}
+  -- { "debugloop/telescope-undo.nvim"}
+  -- { "echasnovski/mini.clue"}
+  -- { "gabrielpoca/replacer.nvim"}
+  -- { "m4xshen/hardtime.nvim"}
+  -- { "mfussenegger/nvim-dap"}
+  -- { "mfussenegger/nvim-lint"}
+  -- { "nvim-neorg/neorg-telescope"}
+  -- { "nvim-telescope/telescope-file-browser.nvim"}
+  -- { "nvim-telescope/telescope-live-grep-args.nvim"}
+  -- { "rcarriga/nvim-dap-ui"}
+  -- { "rgroli/other.nvim"}
+  -- { "simrat39/symbols-outline.nvim"}
+  -- { "stevearc/conform.nvim"}
+  -- { "stevearc/oil.nvim"}
+  -- { "theHamsta/nvim-dap-virtual-text"}
+  -- { "tpope/vim-dadbod"}
+  -- { "tpope/vim-projectionist"}
+  -- { "xeluxee/competitest.nvim"}
+  -- { "hinell/lsp-timeout.nvim"}
+  -- { "Bekaboo/dropbar.nvim"}
+  -- { "nvimdev/dashboard-nvim" }
+  -- { "nvimtools/none-ls.nvim" }
 }

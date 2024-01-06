@@ -1,5 +1,4 @@
 local map = require("utils").map
-local format_augroup = vim.api.nvim_create_augroup("LspFormatting", {})
 
 local function on_attach(client, bufnr)
   local builtin = require("telescope.builtin")
@@ -28,6 +27,7 @@ local function on_attach(client, bufnr)
       end,
     })
   end
+  local format_augroup = vim.api.nvim_create_augroup("LspFormatting", {})
   vim.api.nvim_clear_autocmds({ group = format_augroup, buffer = bufnr })
   vim.api.nvim_create_autocmd("BufWritePre", {
     group = format_augroup,

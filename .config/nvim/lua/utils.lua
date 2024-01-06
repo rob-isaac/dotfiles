@@ -1,7 +1,7 @@
 M = {}
 
 M.map = function(mode, key, mapping, opts)
-  vim.keymap.set(mode, key, mapping, opts or {})
+  vim.keymap.set(mode, key, mapping, vim.tbl_extend("force", { silent = true }, opts or {}))
 end
 
 M.autocmd = vim.api.nvim_create_autocmd

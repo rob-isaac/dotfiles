@@ -50,13 +50,16 @@ if status is-interactive
     if command -sq zoxide
         zoxide init --cmd j fish | source
     end
+
+    # Remove the fish greeting message
+    set -g fish_greeting
 end
 
 # Initialize conda if available
 # TODO(Rob): would be nice if we could speed this up a bit
 if test -f $HOME/miniconda3/bin/conda
     eval $HOME/miniconda3/bin/conda "shell.fish" hook $argv | source
-    # activate dev environment if availible (will print error if not found)
+    # activate dev environment if available (will print error if not found)
     conda activate dev
 end
 

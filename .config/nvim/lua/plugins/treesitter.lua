@@ -45,7 +45,6 @@ return {
           },
         },
         rainbow = { enable = true, extended_mode = true, max_file_lines = 2000 },
-        context_commentstring = { enable = true, enable_autocmd = false },
         textobjects = {
           select = {
             enable = true,
@@ -79,7 +78,6 @@ return {
               ["]f"] = { query = "@function.outer", desc = "Next function start" },
               ["]]"] = { query = "@class.outer", desc = "Next class start" },
               ["]c"] = { query = "@class.outer", desc = "Next class start" },
-              ["]s"] = { query = "@scope", query_group = "locals", desc = "Next scope" },
               ["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
             },
             goto_next_end = {
@@ -91,7 +89,6 @@ return {
               ["[f"] = "@function.outer",
               ["[["] = "@class.outer",
               ["[c"] = "@class.outer",
-              ["[s"] = { query = "@scope", query_group = "locals", desc = "Prev scope" },
               ["[z"] = { query = "@fold", query_group = "folds", desc = "Prev fold" },
             },
             goto_previous_end = {
@@ -117,6 +114,14 @@ return {
         matchup = { enable = true },
       })
       require("treesitter-context").setup()
+
+      ---@diagnostic disable-next-line: missing-fields
+      require("ts_context_commentstring").setup({
+        enable_autocmd = false,
+        languages = {
+          cpp = "// %s",
+        },
+      })
 
       map("n", "<leader>tc", function()
         require("treesitter-context").go_to_context()

@@ -1,4 +1,5 @@
 return {
+  -- split jumping and resizing with wezterm integration
   {
     "mrjones2014/smart-splits.nvim",
     dependencies = { { "kwkarlwang/bufresize.nvim", config = true } },
