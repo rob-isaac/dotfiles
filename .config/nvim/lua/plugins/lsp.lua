@@ -94,7 +94,11 @@ return {
         settings = { python = { analysis = { typeCheckingMode = "off" } } },
       })
       lspconfig.gopls.setup({ capabilities = capabilities, on_attach = on_attach })
-      lspconfig.rust_analyzer.setup({ capabilities = capabilities, on_attach = on_attach })
+      lspconfig.rust_analyzer.setup({
+        capabilities = capabilities,
+        on_attach = on_attach,
+        settings = { ["rust-analyzer"] = { completion = { autoimport = { enable = false } } } },
+      })
 
       local null_ls = require("null-ls")
       null_ls.setup({
@@ -110,6 +114,7 @@ return {
           null_ls.builtins.formatting.shfmt,
           null_ls.builtins.formatting.stylua,
         },
+        on_attach = on_attach,
       })
     end,
   },

@@ -1,5 +1,3 @@
----@diagnostic disable: missing-fields
-
 local function pad_or_truncate(s, l)
   if not s then
     return string.rep(" ", l)
@@ -71,6 +69,7 @@ return {
             item.menu = ({ nvim_lsp = " [LSP]", luasnip = "[SNIP]", buffer = " [BUF]", path = "[PATH]" })[entry.source.name]
             return item
           end,
+          expandable_indicator = true,
         },
         window = {
           completion = cmp.config.window.bordered(),
@@ -116,6 +115,7 @@ return {
           ghost_text = { hl_group = "LspCodeLens" },
         },
         sorting = {
+          priority_weight = 10,
           comparators = {
             cmp.config.compare.offset,
             cmp.config.compare.exact,
@@ -128,6 +128,7 @@ return {
           },
         },
       })
+
       cmp.setup.cmdline({ "/", "?" }, {
         mapping = cmp.mapping.preset.cmdline(),
         sources = {

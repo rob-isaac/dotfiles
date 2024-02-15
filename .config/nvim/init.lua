@@ -14,15 +14,16 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- Set options, autocmds, and mappings
+-- Set options, auto-commands, basic mappings, and abbreviations
 require("opts")
 require("autocmds")
 require("mappings")
+require("abbrs")
 
 -- Load plugins
 require("lazy").setup({
   spec = { import = "plugins" },
-  install = { colorscheme = { "gruvbox-material", "tokyonight", "habamax" } },
+  install = { colorscheme = { "kanagawa-dragon", "gruvbox-material", "habamax" } },
   performance = {
     rtp = {
       disabled_plugins = {

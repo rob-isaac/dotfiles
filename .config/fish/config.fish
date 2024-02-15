@@ -53,22 +53,24 @@ if status is-interactive
 
     # Remove the fish greeting message
     set -g fish_greeting
+
+    # Initialize conda if available
+    # TODO(Rob): would be nice if we could speed this up a bit
+    if test -f $HOME/miniconda3/bin/conda
+        eval $HOME/miniconda3/bin/conda "shell.fish" hook $argv | source
+        # activate dev environment if available (will print error if not found)
+        conda activate dev
+    end
+
+    # Activate asdf environment if available
+    if test -f $HOME/.asdf/asdf.fish
+        source $HOME/.asdf/asdf.fish
+    end
+    
+    # Source secrets file if available
+    if test -f $HOME/.config/fish/secret.fish
+        source $HOME/.config/fish/secret.fish
+    end
 end
 
-# Initialize conda if available
-# TODO(Rob): would be nice if we could speed this up a bit
-if test -f $HOME/miniconda3/bin/conda
-    eval $HOME/miniconda3/bin/conda "shell.fish" hook $argv | source
-    # activate dev environment if available (will print error if not found)
-    conda activate dev
-end
-
-# Activate asdf environment if available
-if test -f $HOME/.asdf/asdf.fish
-    source $HOME/.asdf/asdf.fish
-end
-
-# Source secrets file if available
-if test -f $HOME/.config/fish/secret.fish
-    source $HOME/.config/fish/secret.fish
-end
+set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin /home/rob/.ghcup/bin $PATH # ghcup-env

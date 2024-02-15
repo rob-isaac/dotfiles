@@ -22,7 +22,6 @@ return {
       { "nvim-telescope/telescope-live-grep-args.nvim", version = "^1.0.0" },
       "nvim-lua/plenary.nvim",
       "nvim-tree/nvim-web-devicons",
-      "ecthelionvi/NeoComposer.nvim",
       { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
       { "AckslD/nvim-neoclip.lua", opts = {} },
     },
@@ -31,7 +30,9 @@ return {
       local trouble_telescope = require("trouble.providers.telescope")
       require("telescope").setup({
         defaults = {
-          path_display = { "smart" },
+          path_display = {
+            truncate = 3,
+          },
           mappings = {
             i = {
               ["<C-h>"] = actions.which_key,
@@ -54,7 +55,6 @@ return {
       })
       require("telescope").load_extension("fzf")
       require("telescope").load_extension("noice")
-      require("telescope").load_extension("macros")
       require("telescope").load_extension("neoclip")
 
       local builtin = require("telescope.builtin")
@@ -83,7 +83,6 @@ return {
       map("n", "<leader>fc", builtin.git_commits, { desc = "[F]ind [C]ommits" })
       map("n", "<leader>fC", builtin.git_commits, { desc = "[F]ind [C]ommits (current buffer)" })
       map("n", "<leader>/", builtin.current_buffer_fuzzy_find, { desc = "Fuzzy Search Buffer" })
-      map("n", "<leader>fm", "<cmd>Telescope macros<cr>", { desc = "[F]ind [M]acros" })
       map("n", "<leader>fy", "<cmd>Telescope neoclip<cr>", { desc = "[F]ind [Y]anks" })
     end,
   },

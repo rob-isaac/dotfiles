@@ -1,11 +1,12 @@
-
 return {
-  -- colorscheme
+  -- main colorscheme
   {
-    "sainnhe/gruvbox-material",
+    "rebelot/kanagawa.nvim",
     priority = 10000,
     config = function()
-      vim.cmd.colorscheme([[gruvbox-material]])
+      vim.cmd.colorscheme([[kanagawa-dragon]])
     end,
   },
+  -- Other colorschemes
+  "sainnhe/gruvbox-material",
 }

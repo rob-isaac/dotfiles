@@ -1,4 +1,5 @@
 return {
+  -- List of plugins to consider adding in the future
   -- { "AckslD/muren.nvim", opts = {} },
   -- { "Bekaboo/dropbar.nvim" },
   -- { "Borwe/wasm_nvim" },
@@ -79,4 +80,5 @@ return {
   -- { "Bekaboo/dropbar.nvim"}
   -- { "nvimdev/dashboard-nvim" }
   -- { "nvimtools/none-ls.nvim" }
+  -- { "ecthelionvi/NeoComposer.nvim" }
 }

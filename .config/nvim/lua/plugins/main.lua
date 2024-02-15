@@ -104,7 +104,7 @@ return {
       { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
     },
   },
-  -- Better increment/decremnt
+  -- Better increment/decrement
   {
     "monaqa/dial.nvim",
     config = function()
@@ -210,6 +210,21 @@ return {
       })
       map("n", "<leader>ta", "<cmd>AerialToggle!<cr>")
     end,
+  },
+  -- Todo highlighting and searching
+  {
+    "folke/todo-comments.nvim",
+    opts = {
+      highlight = {
+        before = "",
+        keyword = "bg",
+        after = "",
+        pattern = [[.*<(KEYWORDS).*:]], -- vim regex
+      },
+      search = {
+        pattern = [[\b(KEYWORDS).*:]], -- ripgrep regex
+      },
+    },
   },
   -- Scrollbar with diagnostic information
   { "petertriho/nvim-scrollbar", opts = {} },

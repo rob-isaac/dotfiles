@@ -1,5 +1,3 @@
--- tune options
-
 -- no line numbers, but keep the sign column
 vim.opt.number = false
 vim.opt.relativenumber = false
