@@ -73,15 +73,13 @@ return {
         vim.lsp.handlers.signature_help(_, result, ctx, config)
       end
 
+      -- options for the rhs of this table are cmd, filetypes, capabilities, and settings
       local servers = {
-        clangd = { capabilities = { offsetEncoding = { "utf-16" } } },
+        clangd = { capabilities = { offsetEncoding = { "utf-16" } }, cmd = { "clangd", "--header-insertion=never" } },
         gopls = {},
         pyright = {},
         rust_analyzer = { settings = { ["rust-analyzer"] = { completion = { autoimport = { enable = false } } } } },
         lua_ls = {
-          -- cmd = {},
-          -- filetypes = {},
-          -- capabilities = {},
           settings = {
             Lua = {
               completion = {
@@ -91,6 +89,7 @@ return {
             },
           },
         },
+        jsonnet_ls = {},
       }
 
       require("mason").setup()

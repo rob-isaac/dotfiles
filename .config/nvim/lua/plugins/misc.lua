@@ -149,4 +149,21 @@ return {
       end, { desc = "Structural Search Replace" })
     end,
   },
+  {
+    "stevearc/aerial.nvim",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-tree/nvim-web-devicons",
+    },
+    opts = {
+      on_attach = function(bufnr)
+        vim.keymap.set("n", "]a", "<cmd>AerialNext<CR>", { buffer = bufnr })
+        vim.keymap.set("n", "[a", "<cmd>AerialPrev<CR>", { buffer = bufnr })
+      end,
+    },
+    config = function(_, opts)
+      require("aerial").setup(opts)
+      vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<cr>", { desc = "[A]erial Toggle" })
+    end,
+  },
 }

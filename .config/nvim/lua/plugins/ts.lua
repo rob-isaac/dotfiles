@@ -8,6 +8,9 @@ return {
       "JoosepAlviste/nvim-ts-context-commentstring",
       "nvim-treesitter/nvim-treesitter-textobjects",
     },
+    init = function()
+      vim.g.skip_ts_context_commentstring_module = true
+    end,
     opts = {
       ensure_installed = { "bash", "c", "cpp", "html", "lua", "markdown", "vim", "vimdoc", "org" },
       auto_install = true,
