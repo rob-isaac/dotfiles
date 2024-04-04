@@ -16,5 +16,5 @@ echo ".dotfiles" >> .gitignore
 git clone --bare <git-repo-url> $HOME/.dotfiles
 alias dot='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
 dot config --local status.showUntrackedFiles no
-dot checkout # this may throw error -> resolve conficts and retry
+dot checkout # this may throw error -> resolve conflicts and retry
 ```

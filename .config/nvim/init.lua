@@ -34,6 +34,7 @@ vim.opt.winblend = 5
 vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt.foldmethod = "expr"
 vim.opt.foldlevelstart = 99
+vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 if vim.fn.executable("fish") then
   vim.opt.shell = "fish"
 end
@@ -102,6 +103,11 @@ vim.keymap.set("i", ".", ".<c-g>u", { desc = "Add undo break-point" })
 vim.keymap.set("i", ";", ";<c-g>u", { desc = "Add undo break-point" })
 vim.keymap.set({ "n", "v" }, "<Space>", "<Nop>", { desc = "Do nothing on spacabar" })
 vim.keymap.set("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
+
+-- NOTE: don't use <cmd> otherwise the mapping won't work (command-line mode is never entered)
+vim.keymap.set("n", "gx", ":silent !open <C-r><C-f><cr>", { desc = "Open link under cursor" })
+
+vim.keymap.set("n", "<C-s>", "<cmd>up<cr>", { desc = "Save current buffer" })
 
 -- [[ Basic Abbreviations ]]
 

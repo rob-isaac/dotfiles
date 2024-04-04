@@ -72,7 +72,8 @@ return {
       require("mini.bufremove").setup()
       vim.keymap.set("n", "<leader>bd", MiniBufremove.delete)
 
-      require("mini.statusline").setup()
+      require("mini.cursorword").setup()
+      require("mini.splitjoin").setup()
 
       require("mini.files").setup()
       vim.keymap.set("n", "<leader>E", MiniFiles.open, { desc = "File [E]xplorer" })
@@ -133,14 +134,6 @@ return {
   },
   { "petertriho/nvim-scrollbar", opts = {} },
   {
-    "olimorris/persisted.nvim",
-    lazy = false,
-    config = function()
-      require("persisted").setup({ use_git_branch = true })
-      vim.keymap.set("n", "<leader>sl", "<cmd>SessionLoad<cr>", { desc = "Load Session" })
-    end,
-  },
-  {
     "cshuaimin/ssr.nvim",
     config = function()
       require("ssr").setup()
@@ -166,4 +159,76 @@ return {
       vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<cr>", { desc = "[A]erial Toggle" })
     end,
   },
+  {
+    "rmagatti/auto-session",
+    opts = {
+      log_level = "error",
+      auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
+    },
+  },
+  {
+    "nvim-lualine/lualine.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    opts = { options = { globalstatus = true }, extensions = { "quickfix", "fugitive", "lazy", "mason" } },
+  },
+  {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      local harpoon = require("harpoon")
+
+      harpoon:setup()
+
+      vim.keymap.set("n", "<leader>ha", function()
+        harpoon:list():append()
+      end)
+      vim.keymap.set("n", "<leader>hh", function()
+        harpoon.ui:toggle_quick_menu(harpoon:list())
+      end)
+
+      vim.keymap.set("n", "<leader>h1", function()
+        harpoon:list():select(1)
+      end)
+      vim.keymap.set("n", "<leader>h2", function()
+        harpoon:list():select(2)
+      end)
+      vim.keymap.set("n", "<leader>h3", function()
+        harpoon:list():select(3)
+      end)
+      vim.keymap.set("n", "<leader>h4", function()
+        harpoon:list():select(4)
+      end)
+
+      vim.keymap.set("n", "<leader>hp", function()
+        harpoon:list():prev()
+      end)
+      vim.keymap.set("n", "<leader>hn", function()
+        harpoon:list():next()
+      end)
+    end,
+  },
+  {
+    "folke/trouble.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("trouble").setup()
+      vim.keymap.set("n", "<leader>xx", function()
+        require("trouble").toggle()
+      end)
+      vim.keymap.set("n", "<leader>xw", function()
+        require("trouble").toggle("workspace_diagnostics")
+      end)
+      vim.keymap.set("n", "<leader>xd", function()
+        require("trouble").toggle("document_diagnostics")
+      end)
+      vim.keymap.set("n", "<leader>xq", function()
+        require("trouble").toggle("quickfix")
+      end)
+      vim.keymap.set("n", "<leader>xl", function()
+        require("trouble").toggle("loclist")
+      end)
+    end,
+  },
+  { "kevinhwang91/nvim-bqf", opts = {} },
 }

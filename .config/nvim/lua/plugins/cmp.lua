@@ -108,7 +108,7 @@ return {
 
             cmp.config.compare.recently_used,
             cmp.config.compare.locality,
-            -- cmp.config.compare.kind,
+            cmp.config.compare.kind,
             cmp.config.compare.length,
             cmp.config.compare.order,
           },
