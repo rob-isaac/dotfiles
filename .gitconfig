@@ -21,11 +21,8 @@
 [diff]
 	colorMoved = default
 
-[url "ssh://git@github.com/"]
-	insteadOf = https://github.com/
 [init]
 	defaultBranch = main
-
 [alias]
 	graph = log --graph --all --oneline --decorate --color
 	st = status -sb

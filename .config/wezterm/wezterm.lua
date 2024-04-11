@@ -28,6 +28,9 @@ wezterm.on("gui-startup", function(cmd)
   window:gui_window():maximize()
 end)
 
+-- Set some background opacity for the terminal
+config.window_background_opacity = 0.92
+
 -- Status configuration
 local num_cpus = capture("nproc") or "1"
 local time = 0
@@ -64,7 +67,7 @@ end)
 
 config.force_reverse_video_cursor = true
 config.colors = require("colorscheme").kanagawa
-config.font = wezterm.font("JetBrainsMono Nerd Font")
+config.font = wezterm.font("JetBrains Mono")
 config.window_padding = { left = 0, right = 0, bottom = 0, top = 0 }
 config.window_decorations = "RESIZE"
 

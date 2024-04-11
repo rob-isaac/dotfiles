@@ -6,7 +6,12 @@ return {
     "rebelot/kanagawa.nvim",
     priority = 10000,
     config = function()
-      vim.cmd.colorscheme([[kanagawa-dragon]])
+      -- Use the colorscheme but clear the background to allow transparancy
+      vim.cmd([[
+        colorscheme kanagawa-dragon
+        highlight Normal guibg=None ctermbg=None
+        highlight NonText guibg=None ctermbg=None
+      ]])
     end,
   },
   {

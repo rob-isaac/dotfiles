@@ -1,23 +1,21 @@
 if status is-interactive
     # Add some abbreviations
+    abbr --add vi nvim
     abbr --add vim nvim
     abbr --add lg lazygit
     abbr --add ld lazydocker
     abbr --add cat bat
     abbr --add dot git --git-dir=$HOME/.dotfiles --work-tree=$HOME
+    abbr --add ldot lazygit --git-dir=$HOME/.dotfiles --work-tree=$HOME
+    abbr --add ls eza
     abbr --add cmake-ninja cmake -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-    abbr --add ls exa
+    abbr --add less less -R
 
     # Add bin locations to path
     fish_add_path $HOME/bin
     fish_add_path $HOME/.cargo/bin
     fish_add_path $HOME/go/bin
     fish_add_path $HOME/node/bin
-
-    # Set editor to nvim if available
-    if command -sq nvim
-        set -gx EDITOR nvim
-    end
 
     # Convenience function for generating a flamegraph after perf record
     function perf-fg -d "takes perf.data and generates a flamegraph svg"
@@ -42,6 +40,17 @@ if status is-interactive
         cp -a "$__fpath" \.
     end
 
+    # Remove the fish greeting message
+    set -g fish_greeting
+
+    # Use colors for less pager
+    set -gx PAGER less -R
+
+    # Set editor to nvim if available
+    if command -sq nvim
+        set -gx EDITOR nvim
+    end
+
     # Setup the GPG agent
     set -gx GPG_TTY (tty)
     gpgconf --launch gpg-agent
@@ -51,9 +60,6 @@ if status is-interactive
         zoxide init --cmd j fish | source
     end
 
-    # Remove the fish greeting message
-    set -g fish_greeting
-
     # Initialize conda if available
     # TODO(Rob): would be nice if we could speed this up a bit
     if test -f $HOME/miniconda3/bin/conda
@@ -62,15 +68,18 @@ if status is-interactive
         conda activate dev
     end
 
-    # Activate asdf environment if available
-    if test -f $HOME/.asdf/asdf.fish
-        source $HOME/.asdf/asdf.fish
+    # Activate mise environment if available (similar to asdf)
+    if test -f $HOME/.local/bin/mise
+        $HOME/.local/bin/mise activate fish | source
     end
-    
+    $HOME/.local/bin/mise activate fish | source
+
+    # Setup ghcup (haskell) environment
+    set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin $HOME/.ghcup/bin $PATH
+
     # Source secrets file if available
     if test -f $HOME/.config/fish/secret.fish
         source $HOME/.config/fish/secret.fish
     end
 end
 
-set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin /home/rob/.ghcup/bin $PATH # ghcup-env
