@@ -81,5 +81,7 @@ if status is-interactive
     if test -f $HOME/.config/fish/secret.fish
         source $HOME/.config/fish/secret.fish
     end
+
+    source $HOME/.config/fish/wezterm.fish
 end
 
