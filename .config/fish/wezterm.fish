@@ -54,3 +54,7 @@ if status --is-interactive
     end
   end
 end
+
+function _wezterm_get_workspace
+  wezterm cli list | grep $WEZTERM_PANE | awk '{ print $4 }'
+end

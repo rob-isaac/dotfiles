@@ -9,19 +9,20 @@ M.status_state = {
 }
 
 function M.update_status(window, _)
-  local leader = window:leader_is_active() and "LEADER" or ""
-  local workspace_name = "WORKSPACE: " .. window:active_workspace()
+  local leader = window:leader_is_active() and "LEADER" or nil
 
-  local table_name = window:active_key_table() or ""
-  if table_name ~= "" then
-    table_name = "TABLE: " .. table_name
+  local table_name = window:active_key_table()
+  if table_name then
+    table_name = wezterm.nerdfonts.md_table_furniture .. " " .. table_name
   end
 
-  local date = wezterm.strftime("%a %b %-d %H:%M ")
+  local workspace_name = wezterm.nerdfonts.cod_beaker .. " " .. window:active_workspace()
+
+  local date = wezterm.nerdfonts.fa_clock_o .. " " .. wezterm.strftime("%Y-%m-%d %H:%M")
 
   local bat = ""
   for _, b in ipairs(wezterm.battery_info()) do
-    bat = "🔋 " .. string.format("%.0f%%", b.state_of_charge * 100)
+    bat = wezterm.nerdfonts.md_battery_high .. " " .. string.format("%.0f%%", b.state_of_charge * 100)
   end
 
   -- only update cpu/mem usage stats every 2 seconds
@@ -51,25 +52,29 @@ function M.update_status(window, _)
       wezterm.log_error("Couldn't calc mem_usage: " .. (success and stdout or "FAIL"))
     end
 
-    M.status_state.cpu_usage = num_cpus and cpu_load and "CPU: " .. math.floor(cpu_load / num_cpus) .. "%" or ""
-    M.status_state.mem_usage = mem_usage and "MEM: " .. mem_usage or ""
+    M.status_state.cpu_usage = num_cpus
+        and cpu_load
+        and wezterm.nerdfonts.cod_symbol_event .. " " .. math.floor(cpu_load / num_cpus) .. "%"
+      or ""
+    M.status_state.mem_usage = mem_usage and wezterm.nerdfonts.cod_symbol_field .. " " .. mem_usage or ""
   end
 
+  local sep = " " .. wezterm.nerdfonts.pl_right_soft_divider .. " "
   window:set_right_status(wezterm.format({
     {
-      Text = leader
-        .. "   "
-        .. table_name
-        .. "   "
+      Text = sep
+        .. (leader and leader .. sep or "")
+        .. (table_name and table_name .. sep or "")
         .. workspace_name
-        .. "   "
+        .. sep
         .. M.status_state.cpu_usage
-        .. "   "
+        .. sep
         .. M.status_state.mem_usage
-        .. "   "
+        .. sep
         .. bat
-        .. "   "
-        .. date,
+        .. sep
+        .. date
+        .. sep,
     },
   }))
 end

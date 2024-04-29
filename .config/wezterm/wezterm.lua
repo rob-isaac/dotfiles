@@ -26,10 +26,11 @@ config.force_reverse_video_cursor = true
 config.colors = colorscheme.kanagawa
 config.font = wezterm.font("JetBrains Mono")
 config.window_padding = { left = 0, right = 0, bottom = 0, top = 0 }
-config.window_decorations = "RESIZE"
+config.window_decorations = "RESIZE|INTEGRATED_BUTTONS"
 config.use_fancy_tab_bar = false
 config.bypass_mouse_reporting_modifiers = "CTRL|SHIFT"
 config.enable_kitty_graphics = true
+config.tab_max_width = 30
 
 config.leader = { key = "a", mods = "CTRL" }
 
@@ -43,7 +44,6 @@ config.mouse_bindings = {
     mods = "CTRL",
     action = act.IncreaseFontSize,
   },
-
   -- Scrolling down while holding CTRL decreases the font size
   {
     event = { Down = { streak = 1, button = { WheelDown = 1 } } },
@@ -57,5 +57,12 @@ config.mouse_bindings = {
     mods = "NONE",
   },
 }
+
+-- Allow clicking hyperlinks of the form user/project
+config.hyperlink_rules = wezterm.default_hyperlink_rules()
+table.insert(config.hyperlink_rules, {
+  regex = [[["]?([\w\d]{1}[-\w\d]+)(/){1}([-\w\d\.]+)["]?]],
+  format = "https://www.github.com/$1/$3",
+})
 
 return config
