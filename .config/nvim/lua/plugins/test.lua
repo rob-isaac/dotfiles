@@ -8,6 +8,7 @@ return {
       "nvim-neotest/neotest-python",
       "rouge8/neotest-rust",
       "nvim-neotest/nvim-nio",
+      "alfaix/neotest-gtest",
     },
     config = function()
       ---@diagnostic disable-next-line: missing-fields
@@ -15,6 +16,7 @@ return {
         adapters = {
           require("neotest-python"),
           require("neotest-rust"),
+          require("neotest-gtest").setup({}),
         },
       })
       vim.keymap.set("n", "<leader>tr", require("neotest").run.run, { desc = "Run Test" })

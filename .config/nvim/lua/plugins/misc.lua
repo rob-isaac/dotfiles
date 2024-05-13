@@ -2,6 +2,7 @@ return {
   "tpope/vim-sleuth",
   "tpope/vim-abolish",
   "tpope/vim-dispatch",
+  "tpope/vim-projectionist",
   {
     "rebelot/kanagawa.nvim",
     priority = 10000,
@@ -163,13 +164,6 @@ return {
       require("aerial").setup(opts)
       vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<cr>", { desc = "[A]erial Toggle" })
     end,
-  },
-  {
-    "rmagatti/auto-session",
-    opts = {
-      log_level = "error",
-      auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
-    },
   },
   {
     "nvim-lualine/lualine.nvim",

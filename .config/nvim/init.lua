@@ -34,6 +34,9 @@ vim.opt.winblend = 5
 vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt.foldmethod = "expr"
 vim.opt.foldlevelstart = 99
+vim.opt.expandtab = true
+vim.opt.tabstop = 2
+vim.opt.softtabstop = 2
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 if vim.fn.executable("fish") then
   vim.opt.shell = "fish"
@@ -108,6 +111,32 @@ vim.keymap.set("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buff
 vim.keymap.set("n", "gx", ":silent !open <C-r><C-f><cr>", { desc = "Open link under cursor" })
 
 vim.keymap.set("n", "<C-s>", "<cmd>up<cr>", { desc = "Save current buffer" })
+
+local function save_session()
+  local session_dir = vim.fn.stdpath("data") .. "/sessions"
+  vim.fn.mkdir(session_dir, "p")
+  local pwd = vim.fn.getcwd()
+  if not pwd or pwd == "" then
+    vim.notify("FAILED TO SAVE SESSION", vim.log.levels.ERROR)
+    return
+  end
+  local session_name = string.gsub(pwd, "/", "%%")
+  -- TODO: can incorporate the git branch as well
+  vim.cmd("mksession! " .. vim.fn.fnameescape(session_dir .. "/" .. session_name))
+end
+local function load_session()
+  local session_dir = vim.fn.stdpath("data") .. "/sessions"
+  local pwd = vim.fn.getcwd()
+  if not pwd or pwd == "" then
+    vim.notify("FAILED TO LOAD SESSION", vim.log.levels.ERROR)
+    return
+  end
+  local session_name = string.gsub(pwd, "/", "%%")
+  -- TODO: can incorporate the git branch as well
+  vim.cmd("source " .. vim.fn.fnameescape(session_dir .. "/" .. session_name))
+end
+vim.keymap.set("n", "<leader>ql", load_session, { desc = "Load session" })
+vim.keymap.set("n", "<leader>qs", save_session, { desc = "Load session" })
 
 -- [[ Basic Abbreviations ]]
 
@@ -184,6 +213,12 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
 })
 
+vim.api.nvim_create_autocmd("VimLeavePre", {
+  desc = "Save session on exit",
+  group = vim.api.nvim_create_augroup("save-session", {}),
+  callback = save_session,
+})
+
 -- [[ Basic Usercommands ]]
 
 vim.api.nvim_create_user_command(
@@ -191,6 +226,8 @@ vim.api.nvim_create_user_command(
   "cexpr system('git diff --check')",
   { desc = "Load results from 'git diff --check' into quickfix" }
 )
+vim.api.nvim_create_user_command("SessionSave", save_session, { desc = "Save session" })
+vim.api.nvim_create_user_command("SessionLoad", load_session, { desc = "Load session" })
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 
