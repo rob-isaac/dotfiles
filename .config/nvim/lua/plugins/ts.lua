@@ -14,13 +14,9 @@ return {
     opts = {
       ensure_installed = { "bash", "c", "cpp", "html", "lua", "markdown", "vim", "vimdoc", "org" },
       auto_install = true,
-      highlight = {
-        enable = true,
-        -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-        -- Should disable here when having indenting problems.
-        additional_vim_regex_highlighting = { "ruby" },
-      },
-      indent = { enable = true, disable = { "ruby" } },
+      highlight = { enable = true },
+      -- indent can be slow in large files
+      indent = { enable = false },
       incremental_selection = {
         enable = true,
         keymaps = {
@@ -98,10 +94,20 @@ return {
     },
     config = function(_, opts)
       require("nvim-treesitter.configs").setup(opts)
+
       require("treesitter-context").setup({ max_lines = 5, mode = "topline" })
-      vim.keymap.set("n", "<leader>tc", function()
+      vim.keymap.set("n", "<leader>cc", function()
         require("treesitter-context").go_to_context()
-      end, { desc = "[T]reesitter [C]ontext" })
+      end, { desc = "[C]ode [C]ontext" })
+
+      -- Treesitter movements repeatable
+      local ts_repeat_move = require("nvim-treesitter.textobjects.repeatable_move")
+      vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move_next)
+      vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_previous)
+      vim.keymap.set({ "n", "x", "o" }, "f", ts_repeat_move.builtin_f)
+      vim.keymap.set({ "n", "x", "o" }, "F", ts_repeat_move.builtin_F)
+      vim.keymap.set({ "n", "x", "o" }, "t", ts_repeat_move.builtin_t)
+      vim.keymap.set({ "n", "x", "o" }, "T", ts_repeat_move.builtin_T)
     end,
   },
 }

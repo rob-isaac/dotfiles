@@ -4,7 +4,6 @@ return {
     dependencies = {
       "williamboman/mason.nvim",
       "williamboman/mason-lspconfig.nvim",
-      { "j-hui/fidget.nvim", opts = {} },
       { "folke/neodev.nvim", opts = {} },
     },
     config = function()
@@ -22,15 +21,15 @@ return {
 
           map("<leader>cs", require("telescope.builtin").lsp_document_symbols, "[C]ode [S]ymbols (Buffer)")
           map("<leader>cS", require("telescope.builtin").lsp_workspace_symbols, "[C]ode [S]ymbols (Workspace)")
-          map("<Leader>ci", require("telescope.builtin").lsp_incoming_calls, "[C]ode [I]ncoming calls")
-          map("<Leader>co", require("telescope.builtin").lsp_outgoing_calls, "[C]ode [O]utgoing calls")
+          map("<Leader>cI", require("telescope.builtin").lsp_incoming_calls, "[C]ode [I]ncoming calls")
+          map("<Leader>cO", require("telescope.builtin").lsp_outgoing_calls, "[C]ode [O]utgoing calls")
           map("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction")
           map("<leader>cr", vim.lsp.buf.rename, "[C]ode [R]ename")
           map("<leader>ct", require("telescope.builtin").lsp_type_definitions, "Goto [T]ype Definition")
 
           map("K", vim.lsp.buf.hover, "Hover")
           vim.keymap.set(
-            { "n", "i", "s" },
+            { "i", "s" },
             "<C-k>",
             vim.lsp.buf.signature_help,
             { buffer = event.buf, desc = "LSP: Signature Help" }
@@ -47,6 +46,12 @@ return {
               buffer = event.buf,
               callback = vim.lsp.buf.clear_references,
             })
+          end
+          if client and client.server_capabilities.completionProvider then
+            vim.bo[event.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
+          end
+          if client and client.server_capabilities.definitionProvider then
+            vim.bo[event.buf].tagfunc = "v:lua.vim.lsp.tagfunc"
           end
         end,
       })

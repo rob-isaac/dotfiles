@@ -89,10 +89,10 @@ return {
         },
         sorting = {
           comparators = {
-            cmp.config.compare.offset,
-            -- cmp.config.compare.exact,
             cmp.config.compare.score,
-            cmp.config.compare.scopes,
+            cmp.config.compare.offset,
+            cmp.config.compare.exact,
+            -- NOTE: the builtin scopes comparator is very slow - do not use
 
             function(entry1, entry2)
               local _, entry1_under = entry1.completion_item.label:find("^_+")

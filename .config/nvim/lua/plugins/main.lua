@@ -5,7 +5,6 @@ return {
   "tpope/vim-projectionist",
   {
     "rebelot/kanagawa.nvim",
-    priority = 10000,
     config = function()
       -- Use the colorscheme but clear the background to allow transparancy
       vim.cmd([[
@@ -14,42 +13,8 @@ return {
         highlight NonText guibg=None ctermbg=None
       ]])
     end,
+    priority = 10000,
   },
-  {
-    "folke/which-key.nvim",
-    event = "VimEnter",
-    config = function()
-      require("which-key").setup()
-
-      -- Document existing key chains
-      require("which-key").register({
-        ["<leader>c"] = { name = "[C]ode", _ = "which_key_ignore" },
-        ["<leader>f"] = { name = "[F]ind", _ = "which_key_ignore" },
-        ["<leader>g"] = { name = "[G]it", _ = "which_key_ignore" },
-        ["<leader>t"] = { name = "[T]est", _ = "which_key_ignore" },
-        ["<leader>o"] = { name = "[O]rg", _ = "which_key_ignore" },
-      })
-    end,
-  },
-  {
-    "folke/todo-comments.nvim",
-    event = "VimEnter",
-    dependencies = { "nvim-lua/plenary.nvim" },
-    opts = {
-      highlight = {
-        keyword = "bg",
-        pattern = [[.*<(KEYWORDS)(\(.{-}\))?:]],
-      },
-      search = {
-        pattern = [[\b(KEYWORDS)\b]],
-      },
-    },
-    config = function(_, opts)
-      require("todo-comments").setup(opts)
-      vim.keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<cr>", { desc = "[F]ind [T]odos" })
-    end,
-  },
-
   {
     "echasnovski/mini.nvim",
     config = function()
@@ -66,7 +31,7 @@ return {
           }),
         },
       })
-      require("mini.align").setup()
+      require("mini.align").setup({ mappings = { start = "" } })
       require("mini.surround").setup()
       require("mini.comment").setup({
         options = {
@@ -80,6 +45,10 @@ return {
 
       require("mini.cursorword").setup()
       require("mini.splitjoin").setup()
+      require("mini.operators").setup()
+      require("mini.hipatterns").setup({
+        highlighters = { hex_color = require("mini.hipatterns").gen_highlighter.hex_color() },
+      })
 
       require("mini.files").setup()
       vim.keymap.set("n", "<leader>E", MiniFiles.open, { desc = "File [E]xplorer" })
@@ -138,73 +107,38 @@ return {
       vim.keymap.set("v", "<C-x>", require("dial.map").dec_visual())
     end,
   },
-  { "petertriho/nvim-scrollbar", opts = {} },
   {
-    "cshuaimin/ssr.nvim",
+    "folke/which-key.nvim",
+    event = "VimEnter",
     config = function()
-      require("ssr").setup()
-      vim.keymap.set({ "n", "x" }, "<leader>sr", function()
-        require("ssr").open()
-      end, { desc = "Structural Search Replace" })
+      require("which-key").setup()
+
+      -- Document existing key chains
+      require("which-key").register({
+        ["<leader>c"] = { name = "[C]ode", _ = "which_key_ignore" },
+        ["<leader>f"] = { name = "[F]ind", _ = "which_key_ignore" },
+        ["<leader>g"] = { name = "[G]it", _ = "which_key_ignore" },
+        ["<leader>t"] = { name = "[T]est", _ = "which_key_ignore" },
+        ["<leader>o"] = { name = "[O]rg", _ = "which_key_ignore" },
+      })
     end,
   },
   {
-    "stevearc/aerial.nvim",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      "nvim-tree/nvim-web-devicons",
-    },
+    "folke/todo-comments.nvim",
+    event = "VimEnter",
+    dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
-      on_attach = function(bufnr)
-        vim.keymap.set("n", "]a", "<cmd>AerialNext<CR>", { buffer = bufnr })
-        vim.keymap.set("n", "[a", "<cmd>AerialPrev<CR>", { buffer = bufnr })
-      end,
+      highlight = {
+        keyword = "bg",
+        pattern = [[.*<(KEYWORDS)(\(.{-}\))?:]],
+      },
+      search = {
+        pattern = [[\b(KEYWORDS)\b]],
+      },
     },
     config = function(_, opts)
-      require("aerial").setup(opts)
-      vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<cr>", { desc = "[A]erial Toggle" })
-    end,
-  },
-  {
-    "nvim-lualine/lualine.nvim",
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    opts = { options = { globalstatus = true }, extensions = { "quickfix", "fugitive", "lazy", "mason" } },
-  },
-  {
-    "ThePrimeagen/harpoon",
-    branch = "harpoon2",
-    dependencies = { "nvim-lua/plenary.nvim" },
-    config = function()
-      local harpoon = require("harpoon")
-
-      harpoon:setup()
-
-      vim.keymap.set("n", "<leader>ha", function()
-        harpoon:list():append()
-      end)
-      vim.keymap.set("n", "<leader>hh", function()
-        harpoon.ui:toggle_quick_menu(harpoon:list())
-      end)
-
-      vim.keymap.set("n", "<leader>h1", function()
-        harpoon:list():select(1)
-      end)
-      vim.keymap.set("n", "<leader>h2", function()
-        harpoon:list():select(2)
-      end)
-      vim.keymap.set("n", "<leader>h3", function()
-        harpoon:list():select(3)
-      end)
-      vim.keymap.set("n", "<leader>h4", function()
-        harpoon:list():select(4)
-      end)
-
-      vim.keymap.set("n", "<leader>hp", function()
-        harpoon:list():prev()
-      end)
-      vim.keymap.set("n", "<leader>hn", function()
-        harpoon:list():next()
-      end)
+      require("todo-comments").setup(opts)
+      vim.keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<cr>", { desc = "[F]ind [T]odos" })
     end,
   },
   {
@@ -229,5 +163,44 @@ return {
       end)
     end,
   },
-  { "kevinhwang91/nvim-bqf", opts = {} },
+  {
+    "cshuaimin/ssr.nvim",
+    config = function()
+      require("ssr").setup()
+      vim.keymap.set({ "n", "x" }, "<leader>sr", function()
+        require("ssr").open()
+      end, { desc = "Structural Search Replace" })
+    end,
+  },
+  {
+    "nvim-pack/nvim-spectre",
+    config = function()
+      require("spectre").setup()
+      vim.keymap.set("n", "<leader>ss", '<cmd>lua require("spectre").toggle()<CR>', {
+        desc = "Toggle Spectre",
+      })
+      vim.keymap.set("n", "<leader>sw", '<cmd>lua require("spectre").open_visual({select_word=true})<CR>', {
+        desc = "Search current word",
+      })
+      vim.keymap.set("v", "<leader>sw", '<esc><cmd>lua require("spectre").open_visual()<CR>', {
+        desc = "Search current word",
+      })
+      vim.keymap.set("n", "<leader>sp", '<cmd>lua require("spectre").open_file_search({select_word=true})<CR>', {
+        desc = "Search on current file",
+      })
+    end,
+  },
+  {
+    "stevearc/aerial.nvim",
+    opts = {
+      on_attach = function(bufnr)
+        vim.keymap.set("n", "]a", "<cmd>AerialNext<CR>", { buffer = bufnr })
+        vim.keymap.set("n", "[a", "<cmd>AerialPrev<CR>", { buffer = bufnr })
+      end,
+    },
+    config = function(_, opts)
+      require("aerial").setup(opts)
+      vim.keymap.set("n", "<leader>co", "<cmd>AerialToggle!<cr>", { desc = "[C]ode [O]utline" })
+    end,
+  },
 }

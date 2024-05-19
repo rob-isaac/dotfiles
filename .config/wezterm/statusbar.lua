@@ -54,7 +54,7 @@ function M.update_status(window, _)
 
     M.status_state.cpu_usage = num_cpus
         and cpu_load
-        and wezterm.nerdfonts.cod_symbol_event .. " " .. math.floor(cpu_load / num_cpus) .. "%"
+        and wezterm.nerdfonts.cod_symbol_event .. " " .. string.format("%2.0f", math.floor(cpu_load / num_cpus)) .. "%"
       or ""
     M.status_state.mem_usage = mem_usage and wezterm.nerdfonts.cod_symbol_field .. " " .. mem_usage or ""
   end

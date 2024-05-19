@@ -1,4 +1,6 @@
+# gitignore for dotfiles bare repo
 **/*secret*
 **/fish_variables
 **/lazy-lock.json
 .dotfiles
+**/en.utf-8.add.spl

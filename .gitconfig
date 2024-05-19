@@ -1,6 +1,7 @@
 [core]
 	editor = nvim
 	pager = delta
+	excludesFile = "~/.globalgitignore"
 [user]
 	name = Rob Isaac
 	email = robert.a.isaac@gmail.com
@@ -13,21 +14,20 @@
 [interactive]
 	diffFilter = delta --color-only
 [delta]
-	navigate = true    # use n and N to move between diff sections
+	# use n and N to move between diff sections
+	navigate = true
 	light = false
 [merge]
 	tool = nvimdiff
 	conflictstyle = diff3
 [diff]
 	colorMoved = default
-
 [init]
 	defaultBranch = main
 [alias]
 	graph = log --graph --all --oneline --decorate --color
 	st = status -sb
 	cl = log --oneline --name-status
-	fetch-rob = fetch origin 'refs/heads/users/rob*:refs/remotes/origin/users/rob*'
 	br = branch --sort=committerdate
 
 # Sign commits
