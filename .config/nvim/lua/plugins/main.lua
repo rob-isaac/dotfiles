@@ -45,7 +45,6 @@ return {
 
       require("mini.cursorword").setup()
       require("mini.splitjoin").setup()
-      require("mini.operators").setup()
       require("mini.hipatterns").setup({
         highlighters = { hex_color = require("mini.hipatterns").gen_highlighter.hex_color() },
       })
@@ -174,21 +173,22 @@ return {
   },
   {
     "nvim-pack/nvim-spectre",
-    config = function()
-      require("spectre").setup()
-      vim.keymap.set("n", "<leader>ss", '<cmd>lua require("spectre").toggle()<CR>', {
-        desc = "Toggle Spectre",
-      })
-      vim.keymap.set("n", "<leader>sw", '<cmd>lua require("spectre").open_visual({select_word=true})<CR>', {
+    opts = {},
+    keys = {
+      { "<leader>ss", '<cmd>lua require("spectre").toggle()<CR>', desc = "Toggle Spectre" },
+      {
+        "<leader>sw",
+        '<cmd>lua require("spectre").open_visual({select_word=true})<CR>',
         desc = "Search current word",
-      })
-      vim.keymap.set("v", "<leader>sw", '<esc><cmd>lua require("spectre").open_visual()<CR>', {
-        desc = "Search current word",
-      })
-      vim.keymap.set("n", "<leader>sp", '<cmd>lua require("spectre").open_file_search({select_word=true})<CR>', {
+      },
+      { "<leader>sw", '<esc><cmd>lua require("spectre").open_visual()<CR>', mode = "v", desc = "Search current word" },
+      {
+        "<leader>sp",
+        '<cmd>lua require("spectre").open_file_search({select_word=true})<CR>',
         desc = "Search on current file",
-      })
-    end,
+      },
+    },
+    command = "Spectre",
   },
   {
     "stevearc/aerial.nvim",

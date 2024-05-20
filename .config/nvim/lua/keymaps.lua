@@ -46,8 +46,8 @@ vim.keymap.set("n", "[<Space>", function()
   local cur_line = vim.api.nvim_win_get_cursor(0)[1] - 1
   vim.api.nvim_buf_set_lines(0, cur_line, cur_line, true, { "" })
 end, { desc = "Insert line above" })
-vim.keymap.set("n", "]q", "<cmd>cnext<cr>", { desc = "Next quickfix" })
-vim.keymap.set("n", "[q", "<cmd>cprev<cr>", { desc = "Prev quickfix" })
+vim.keymap.set("n", "]q", "<cmd>silent cnext<cr>", { desc = "Next quickfix" })
+vim.keymap.set("n", "[q", "<cmd>silent cprev<cr>", { desc = "Prev quickfix" })
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Go to next [D]iagnostic message" })
 vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Go to previous [D]iagnostic message" })
 vim.keymap.set("n", "]e", function()
@@ -57,11 +57,16 @@ vim.keymap.set("n", "[e", function()
   vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
 end, { desc = "Error prev" })
 
+vim.keymap.set("n", "n", "(v:searchforward ? 'n' : 'N')", { expr = true, desc = "Search Forward" })
+vim.keymap.set("n", "N", "(v:searchforward ? 'N' : 'n')", { expr = true, desc = "Search Backward" })
+
 vim.keymap.set("i", ",", ",<c-g>u", { desc = "Add undo break-point" })
 vim.keymap.set("i", ".", ".<c-g>u", { desc = "Add undo break-point" })
 vim.keymap.set("i", ";", ";<c-g>u", { desc = "Add undo break-point" })
+
 vim.keymap.set({ "n", "v" }, "<Space>", "<Nop>", { desc = "Do nothing on spacabar" })
 vim.keymap.set("n", "<leader>bb", "<cmd>e #<cr>", { desc = "Switch to Other Buffer" })
+vim.keymap.set("n", "<leader>qc", "<cmd>cc<cr>", { desc = "[Q]uickfix [C]urrent" })
 
 vim.keymap.set("n", "<leader>ql", require("utils").load_session, { desc = "Load session" })
 vim.keymap.set("n", "<leader>qs", require("utils").save_session, { desc = "Load session" })

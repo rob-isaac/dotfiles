@@ -19,13 +19,43 @@ return {
           require("neotest-gtest").setup({}),
         },
       })
-      vim.keymap.set("n", "<leader>tr", require("neotest").run.run, { desc = "Run Test" })
-      vim.keymap.set("n", "<leader>tf", function()
-        require("neotest").run.run(vim.fn.expand("%"))
-      end, { desc = "Test File" })
-      vim.keymap.set("n", "<leader>ts", require("neotest").run.stop, { desc = "Stop Test" })
-      vim.keymap.set("n", "<leader>to", require("neotest").output.open, { desc = "Test Open Output" })
-      vim.keymap.set("n", "<leader>ts", require("neotest").summary.toggle, { desc = "Test Open Summary" })
     end,
+    keys = {
+      {
+        "<leader>tr",
+        function()
+          require("neotest").run.run()
+        end,
+        desc = "Run Test",
+      },
+      {
+        "<leader>tf",
+        function()
+          require("neotest").run.run(vim.fn.expand("%"))
+        end,
+        desc = "Test File",
+      },
+      {
+        "<leader>ts",
+        function()
+          require("neotest").run.stop()
+        end,
+        desc = "Stop Test",
+      },
+      {
+        "<leader>to",
+        function()
+          require("neotest").output.open()
+        end,
+        desc = "Test Open Output",
+      },
+      {
+        "<leader>ts",
+        function()
+          require("neotest").summary.toggle()
+        end,
+        desc = "Test Open Summary",
+      },
+    },
   },
 }

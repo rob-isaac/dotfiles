@@ -57,16 +57,13 @@ end
 
 local function cfilter_file(opts)
   local input_lines = vim.fn.getqflist()
-  local re = vim.regex(opts.args)
-  local output_lines = {}
-  for _, line in ipairs(input_lines) do
-    if line.bufnr ~= 0 then
-      local bufname = vim.api.nvim_buf_get_name(line.bufnr)
-      if bufname and re:match_str(bufname) then
-        table.insert(output_lines, line)
-      end
-    end
+  if M.cfilter_state.need_to_restore == true then
+    M.cfilter_state.need_to_restore = false
+    input_lines = M.cfilter_state.restore_items
+    M.cfilter_state.restore_items = {}
   end
+  local matcher = vim.regex(opts.args)
+  local output_lines = opts.bang and negative_filter(matcher, input_lines) or positive_filter(matcher, input_lines)
   vim.fn.setqflist(output_lines)
 end
 

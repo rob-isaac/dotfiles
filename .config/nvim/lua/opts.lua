@@ -31,6 +31,7 @@ vim.o.completeopt = "menuone,popup"
 vim.o.cmdheight = 0
 vim.opt.list = true
 vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣", eol = "⤶" }
+vim.o.grepprg = "rg --vimgrep"
 if vim.fn.executable("fish") then
   vim.opt.shell = "fish"
 end
