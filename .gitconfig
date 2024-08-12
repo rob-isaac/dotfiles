@@ -1,40 +1,62 @@
+
+[user]
+	name = Rob Isaac
+	email = robert.a.isaac@gmail.com
 [core]
 	editor = nvim
 	pager = delta
 	excludesFile = "~/.globalgitignore"
-[user]
-	name = Rob Isaac
-	email = robert.a.isaac@gmail.com
+[init]
+	defaultBranch = main
+
+[alias]
+	graph = log --graph --all --oneline --decorate --color
+	st = status -sb
+	cl = log --oneline --name-status
+	br = branch --sort=committerdate
+  mt = mergetool .
+  dt = difftool .
+  umt = checkout --conflict=merge -- .
+
+[delta]
+	navigate = true
+	light = false
+[interactive]
+	diffFilter = delta --color-only
+
 [fetch]
 	recurseSubmodules = on-demand
 [push]
 	recurseSubmodules = check
 [submodule]
 	recurse = true
-[interactive]
-	diffFilter = delta --color-only
-[delta]
-	# use n and N to move between diff sections
-	navigate = true
-	light = false
-[merge]
-	tool = nvimdiff
-	conflictstyle = diff3
+
 [diff]
 	colorMoved = default
-[init]
-	defaultBranch = main
-[alias]
-	graph = log --graph --all --oneline --decorate --color
-	st = status -sb
-	cl = log --oneline --name-status
-	br = branch --sort=committerdate
+  algorithm = histogram
+  tool = nvimdiff
+[difftool]
+  prompt = false
 
-# Sign commits
-# Note: This requires adding:
-# [user]
-#   signingkey = <path-to-ssh-key>
-# into file "~/.gitconfig-secret"
+[merge]
+	tool = nvimdiff
+	conflictStyle = zdiff3
+[mergetool]
+	keepBackup = false
+	hideResolved = true
+  prompt = false
+[rebase]
+  updateRefs = true
+[mergetool "vimdiff"]
+	layout = @LOCAL,REMOTE + BASE,LOCAL + BASE,REMOTE + MERGED
+[rerere]
+	enabled = true
+
+; Sign commits
+; Note: This requires adding:
+; [user]
+;   signingkey = <path-to-ssh-key>
+; into file "~/.gitconfig-secret"
 [gpg]
 	format = ssh
 [commit]
@@ -43,5 +65,3 @@
 	gpgSign = true
 [include]
 	path = "~/.gitconfig-secret"
-[mergetool]
-	keepBackup = false

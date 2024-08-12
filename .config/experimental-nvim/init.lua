@@ -45,10 +45,14 @@ vim.o.wildignore = "build/**,*.o,*.obj"
 vim.o.grepprg = "rg --vimgrep"
 vim.o.gdefault = true
 vim.o.updatetime = 250
-vim.o.timeoutlen = 300
+vim.o.timeoutlen = 1000
 vim.o.inccommand = "split"
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 vim.o.signcolumn = "yes"
+vim.opt.diffopt:append("vertical")
+vim.opt.diffopt:append("indent-heuristic")
+vim.opt.diffopt:append("linematch:60")
+vim.opt.diffopt:append("algorithm:histogram")
 
 --------------------------------------------------------------------------------
 -- Colorscheme                                                                --
@@ -157,7 +161,6 @@ map("n", "<leader>qc", "<cmd>cclose<cr>", { desc = "Quickfix close" })
 
 vim.cmd([[cabbr h vert help]])
 vim.cmd([[cabbr Man vert Man]])
-vim.cmd([[cabbr bd bp<bar>sp<bar>bn<bar>bd]])
 
 --------------------------------------------------------------------------------
 -- Autocommands                                                               --
@@ -218,29 +221,20 @@ vim.api.nvim_create_autocmd({ "Filetype" }, {
   desc = "Disable Spell",
 })
 vim.api.nvim_create_autocmd("LspAttach", {
-  callback = function(args)
+  callback = function()
+    map("n", "gd", function()
+      vim.lsp.buf.definition()
+    end, { desc = "Code Definition" })
+    map("n", "gD", function()
+      vim.lsp.buf.declaration()
+    end, { desc = "Code Declaration" })
+    map("n", "gI", function()
+      vim.lsp.buf.implementation()
+    end, { desc = "Code Implementation" })
+
     map("n", "<leader>cr", function()
       vim.lsp.buf.rename()
     end, { desc = "Code Rename" })
-    map("n", "<leader>cf", function()
-      vim.lsp.buf.format({
-        filter = function(client)
-          return client.name == "null-ls"
-        end,
-      })
-    end, { desc = "Code Format" })
-    map("n", "<leader>cd", function()
-      vim.lsp.buf.definition()
-    end, { desc = "Code Definition" })
-    map("n", "<leader>cD", function()
-      vim.lsp.buf.declaration()
-    end, { desc = "Code Declaration" })
-    map("n", "<leader>ch", function()
-      vim.lsp.buf.document_highlight()
-    end, { desc = "Code Highlight" })
-    map("n", "<leader>cH", function()
-      vim.lsp.buf.clear_references()
-    end, { desc = "Code Remove Highlight" })
     map("n", "<leader>cs", function()
       vim.lsp.buf.document_symbol()
     end, { desc = "Code Symbols (Document)" })
@@ -253,9 +247,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>co", function()
       vim.lsp.buf.outgoing_calls()
     end, { desc = "Code Outgoing Calls" })
-    map("n", "<leader>cI", function()
-      vim.lsp.buf.implementation()
-    end, { desc = "Code Implementation" })
     map("n", "<leader>cR", function()
       vim.lsp.buf.references()
     end, { desc = "Code References" })
@@ -272,18 +263,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("i", "<C-k>", function()
       vim.lsp.buf.signature_help()
     end, { desc = "Signature Help" })
-
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      buffer = args.buf,
-      callback = function()
-        vim.lsp.buf.format({
-          filter = function(client)
-            return client.name == "null-ls"
-          end,
-        })
-      end,
-      desc = "format on save",
-    })
   end,
 })
 
