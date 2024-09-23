@@ -237,6 +237,7 @@ require("lazy").setup({
   spec = {
     -- Classic vim plugins
     "tpope/vim-surround",
+    "tpope/vim-projectionist",
     "tpope/vim-sensible",
     "tpope/vim-unimpaired",
     "tpope/vim-abolish",
