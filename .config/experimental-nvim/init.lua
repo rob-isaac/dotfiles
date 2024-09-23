@@ -10,7 +10,6 @@ vim.g.loaded_ruby_provider = 0
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
-vim.g.dispatch_compilers = { ninja = "gcc" }
 vim.g.diagnostic_severity = vim.diagnostic.severity.ERROR
 vim.g.autoformat = true
 
@@ -143,7 +142,7 @@ vim.keymap.set("n", "<leader>ql", function()
   vim.cmd("source " .. vim.fn.fnameescape(session_dir .. "/" .. session_name))
 end, { desc = "Load session" })
 
-vim.api.nvim_create_user_command("Econfig", "e $MYVIMRC", { desc = "Edit Config File" })
+vim.api.nvim_create_user_command("ConfigEdit", "e $MYVIMRC", { desc = "Edit Config File" })
 vim.api.nvim_create_user_command(
   "Gcheck",
   "cexpr system('git diff --check')",
@@ -247,21 +246,22 @@ require("lazy").setup({
     "tpope/vim-sleuth",
     "tpope/vim-eunuch",
     "tpope/vim-speeddating",
+    "tpope/vim-fugitive",
 
     -- LSP
     { "folke/neodev.nvim", opts = {} },
     "neovim/nvim-lspconfig",
 
     -- Completion / Snippets
+    { "L3MON4D3/LuaSnip", version = "v2.*", build = "make install_jsregexp" },
+    { "danymat/neogen", version = "*", opts = { snippet_engine = "luasnip" } },
+    { "windwp/nvim-autopairs", opts = { fast_wrap = { map = "<C-g>w" } } },
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-buffer",
     "hrsh7th/cmp-path",
     "hrsh7th/cmp-cmdline",
-    "hrsh7th/nvim-cmp",
     "saadparwaiz1/cmp_luasnip",
-    { "L3MON4D3/LuaSnip", version = "v2.*", build = "make install_jsregexp" },
-    { "danymat/neogen", version = "*", opts = { snippet_engine = "luasnip" } },
-    { "windwp/nvim-autopairs", opts = { fast_wrap = { map = "<C-g>w" } } },
+    "hrsh7th/nvim-cmp",
 
     -- Treesitter
     { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
@@ -297,6 +297,11 @@ require("lazy").setup({
 vim.g.gruvbox_material_foreground = "mix"
 vim.g.gruvbox_material_enable_italic = true
 vim.cmd.colorscheme("gruvbox-material")
+
+-- [[ Vim Plugins ]]
+
+vim.g.dispatch_compilers = { ninja = "gcc" }
+vim.g.netrw_sort_sequence = [[[\/]$,*,\%(\.bak\|\~\|\.o\|\.info\|\.swp\|\.obj\)[*@]\=$]]
 
 -- [[ Fuzzy-Finder ]]
 
@@ -428,11 +433,14 @@ local lspconfig = require("lspconfig")
 local ls = require("luasnip")
 local cmp = require("cmp")
 
-vim.api.nvim_create_user_command("Esnippet", function()
+vim.api.nvim_create_user_command("SnippetEdit", function()
   require("luasnip.loaders").edit_snippet_files()
 end, { desc = "Edit Config File" })
 
-require("luasnip.loaders.from_lua").load({ paths = { vim.fn.stdpath("config") .. "/snippets" } })
+---@diagnostic disable-next-line: assign-type-mismatch
+require("luasnip.loaders.from_lua").load({ paths = vim.fn.stdpath("config") .. "/snippets" })
+ls.config.setup({})
+
 local function pad_or_truncate(s, l)
   if not s then
     return string.rep(" ", l)
@@ -501,8 +509,14 @@ cmp.setup({
     -- NOTE: using C-k for signature help so don't want to clobber
   }),
   sources = {
-    { name = "nvim_lsp" },
     { name = "luasnip" },
+    {
+      name = "nvim_lsp",
+      entry_filter = function(entry)
+        return entry:get_kind() ~= require("cmp").lsp.CompletionItemKind.Snippet
+          and entry:get_kind() ~= require("cmp").lsp.CompletionItemKind.Text
+      end,
+    },
     { name = "path" },
     { name = "buffer" },
   },
