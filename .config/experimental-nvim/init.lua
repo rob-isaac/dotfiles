@@ -10,16 +10,21 @@ vim.g.loaded_ruby_provider = 0
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+vim.g.dispatch_compilers = { ninja = "gcc" }
+vim.g.diagnostic_severity = vim.diagnostic.severity.ERROR
+vim.g.autoformat = true
+
 vim.o.termguicolors = true
 vim.o.splitright = true
 vim.o.splitbelow = true
 vim.o.smartcase = true
 vim.o.ignorecase = true
+vim.o.infercase = true
 vim.o.scrolloff = 3
 vim.o.sidescrolloff = 3
+vim.o.textwidth = 80
 vim.o.linebreak = true
 vim.o.breakindent = true
-vim.o.cmdheight = 0
 vim.o.list = true
 vim.o.cursorline = true
 vim.o.spell = true
@@ -42,42 +47,91 @@ vim.o.autoindent = true
 vim.o.smartindent = true
 vim.o.wildignorecase = true
 vim.o.wildignore = "build/**,*.o,*.obj"
-vim.o.grepprg = "rg --vimgrep"
-vim.o.gdefault = true
+vim.o.wildmenu = true
 vim.o.updatetime = 250
 vim.o.timeoutlen = 1000
 vim.o.inccommand = "split"
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 vim.o.signcolumn = "yes"
+vim.o.autoread = true
+vim.o.hidden = true
+vim.o.confirm = true
+vim.o.lazyredraw = true
+
 vim.opt.diffopt:append("vertical")
 vim.opt.diffopt:append("indent-heuristic")
 vim.opt.diffopt:append("linematch:60")
 vim.opt.diffopt:append("algorithm:histogram")
+vim.opt.listchars:append("tab:<->")
+vim.opt.listchars:append("trail:-")
+vim.opt.comments:append(":///")
 
 --------------------------------------------------------------------------------
--- Colorscheme                                                                --
+-- Basic Mappings / Commands / Autocommands / Abbreviations                   --
 --------------------------------------------------------------------------------
 
-vim.cmd([[colorscheme retrobox]])
+vim.keymap.set("i", "jj", "<esc>", { desc = "Quick Escape" })
+vim.keymap.set("i", "jk", "<esc>", { desc = "Quick Escape" })
+vim.keymap.set("i", "<C-r>?", "<C-o>:reg<cr>", { desc = "Peek Registers" })
 
---------------------------------------------------------------------------------
--- Helper Functions                                                           --
---------------------------------------------------------------------------------
+vim.keymap.set("c", "<C-p>", "<up>", { desc = "Scroll History" })
+vim.keymap.set("c", "<C-n>", "<down>", { desc = "Scroll History" })
+vim.keymap.set("c", "<C-k>", "<up>", { desc = "Scroll History" })
+vim.keymap.set("c", "<C-j>", "<down>", { desc = "Scroll History" })
+vim.keymap.set("c", "<C-h>", "<left>", { desc = "Quick Move Left" })
+vim.keymap.set("c", "<C-l>", "<right>", { desc = "Quick Move Right" })
 
-local function save_session()
-  local session_dir = vim.fn.stdpath("data") .. "/sessions"
-  vim.fn.mkdir(session_dir, "p")
-  local pwd = vim.fn.getcwd()
-  if not pwd or pwd == "" then
-    vim.notify("FAILED TO SAVE SESSION", vim.log.levels.ERROR)
-    return
+vim.keymap.set("n", "<C-s>", "<cmd>update<cr>", { desc = "Save file" })
+vim.keymap.set("n", "<esc>", "<cmd>noh<cr>", { desc = "Clear Highlights" })
+
+vim.keymap.set("n", "<C-h>", "<C-w><C-h>", { desc = "Move To Window" })
+vim.keymap.set("n", "<C-j>", "<C-w><C-j>", { desc = "Move To Window" })
+vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move To Window" })
+vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move To Window" })
+
+vim.keymap.set("n", "]oe", function()
+  vim.g.diagnostic_severity = vim.diagnostic.severity.ERROR
+end, { desc = "Set Error Diagnostic Severity" })
+vim.keymap.set("n", "[oe", function()
+  vim.g.diagnostic_severity = nil
+end, { desc = "Unset Diagnostic Severity" })
+vim.keymap.set("n", "yoe", function()
+  if vim.g.diagnostic_severity then
+    vim.g.diagnostic_severity = nil
+  else
+    vim.g.diagnostic_severity = vim.diagnostic.severity.ERROR
   end
-  local session_name = string.gsub(pwd, "/", "%%")
-  -- TODO: can incorporate the git branch as well
-  vim.cmd("mksession! " .. vim.fn.fnameescape(session_dir .. "/" .. session_name))
-end
+end, { desc = "Toggle Diagnostic Severity" })
 
-local function load_session()
+vim.keymap.set("n", "]of", function()
+  vim.g.format_on_save = true
+end, { desc = "Set Format On Save" })
+vim.keymap.set("n", "[of", function()
+  vim.g.format_on_save = false
+end, { desc = "Unset Format On Save" })
+vim.keymap.set("n", "yof", function()
+  vim.g.format_on_save = not vim.g.format_on_save
+end, { desc = "Toggle Format On Save" })
+
+vim.keymap.set("n", "]d", function()
+  vim.diagnostic.goto_next({ severity = vim.g.diagnostic_severity })
+end, { desc = "Next error" })
+vim.keymap.set("n", "[d", function()
+  vim.diagnostic.goto_prev({ severity = vim.g.diagnostic_severity })
+end, { desc = "Prev error" })
+
+vim.keymap.set("n", "}", "<cmd>keepjumps normal! }<cr>", { desc = "No Jumplist on }" })
+vim.keymap.set("n", "{", "<cmd>keepjumps normal! {<cr>", { desc = "No Jumplist on {" })
+
+vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]], { desc = "Copy to system clipboard" })
+vim.keymap.set({ "n", "v" }, "<leader>p", [["+p]], { desc = "Paste from system clipboard" })
+
+for _, k in ipairs({ ",", ".", ";" }) do
+  vim.keymap.set("i", k, k .. "<c-g>u", { desc = "Add undo break-point" })
+end
+vim.keymap.set("i", "<C-u>", "<c-g>u<c-u>", { desc = "Add undo break-point" })
+
+vim.keymap.set("n", "<leader>ql", function()
   local session_dir = vim.fn.stdpath("data") .. "/sessions"
   local pwd = vim.fn.getcwd()
   if not pwd or pwd == "" then
@@ -87,96 +141,18 @@ local function load_session()
   local session_name = string.gsub(pwd, "/", "%%")
   -- TODO: can incorporate the git branch as well
   vim.cmd("source " .. vim.fn.fnameescape(session_dir .. "/" .. session_name))
-end
+end, { desc = "Load session" })
 
---------------------------------------------------------------------------------
--- Mappings                                                                   --
---------------------------------------------------------------------------------
+vim.api.nvim_create_user_command("Econfig", "e $MYVIMRC", { desc = "Edit Config File" })
+vim.api.nvim_create_user_command(
+  "Gcheck",
+  "cexpr system('git diff --check')",
+  { desc = "Load results from 'git diff --check' into quickfix" }
+)
 
-local map = vim.keymap.set
-
--- Misc mappings
-for _, k in ipairs({ "h", "j", "k", "l" }) do
-  map("n", "<C-" .. k .. ">", "<C-w>" .. k, { desc = "Move Window" })
-end
-
-for _, k in ipairs({ ",", ".", ";" }) do
-  map("i", k, k .. "<c-g>u", { desc = "Add undo break-point" })
-end
-map("i", "<C-u>", "<c-g>u<c-u>", { desc = "Add undo break-point" })
-
-map("i", "jk", "<Esc>", { desc = "Quick Escape" })
-map("i", "jj", "<Esc>", { desc = "Quick Escape" })
-
-map("n", "j", "gj", { desc = "visual move line" })
-map("n", "k", "gk", { desc = "visual move line" })
-
-map({ "i", "c" }, "<C-l>", "<right>", { desc = "quick move right" })
-map({ "i", "c" }, "<C-h>", "<left>", { desc = "quick move left" })
-
-map("c", "<C-k>", "<Up>", { desc = "Earlier Command" })
-map("c", "<C-j>", "<Down>", { desc = "Later Command" })
-
-map({ "n", "v" }, "<leader>y", [["+y]], { desc = "Copy to system clipboard" })
-map({ "n", "v" }, "<leader>p", [["+p]], { desc = "Paste from system clipboard" })
-
-map("n", "}", "<cmd>keepjumps normal! }<cr>", { desc = "No Jumplist on }" })
-map("n", "{", "<cmd>keepjumps normal! {<cr>", { desc = "No Jumplist on {" })
-
-map("n", "-", "<cmd>e %:p:h<cr>", { desc = "Open File Explorer" })
-map("n", "<Esc>", "<cmd>noh<cr>", { desc = "Clear Highlights" })
-map("n", "<C-s>", "<cmd>w<cr>", { desc = "Save Buffer" })
-map({ "n", "v" }, "<Space>", "<Nop>", { desc = "Do nothing on spacabar" })
-
--- Bracket mappings
-map("n", "]<Space>", function()
-  local cur_line = vim.api.nvim_win_get_cursor(0)[1]
-  vim.api.nvim_buf_set_lines(0, cur_line, cur_line, true, { "" })
-end, { desc = "Insert line below" })
-map("n", "[<Space>", function()
-  local cur_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-  vim.api.nvim_buf_set_lines(0, cur_line, cur_line, true, { "" })
-end, { desc = "Insert line above" })
-map("n", "]q", "<cmd>silent cnext<cr>", { desc = "Next quickfix" })
-map("n", "[q", "<cmd>silent cprev<cr>", { desc = "Prev quickfix" })
-map("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
-map("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" })
-map("n", "]e", function()
-  vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR })
-end, { desc = "Next error" })
-map("n", "[e", function()
-  vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR })
-end, { desc = "Prev error" })
-
--- Leader mappings
-map("n", "<leader>ql", load_session, { desc = "Load session" })
-map("n", "<leader>qs", save_session, { desc = "Save session" })
-map("n", "<leader>qq", "<cmd>wqa<cr>", { desc = "Quick quit" })
-map("n", "<leader>qo", "<cmd>copen<cr>", { desc = "Quickfix open" })
-map("n", "<leader>qc", "<cmd>cclose<cr>", { desc = "Quickfix close" })
-
---------------------------------------------------------------------------------
--- Abbreviations                                                              --
---------------------------------------------------------------------------------
-
-vim.cmd([[cabbr h vert help]])
-vim.cmd([[cabbr Man vert Man]])
-
---------------------------------------------------------------------------------
--- Autocommands                                                               --
---------------------------------------------------------------------------------
-
-vim.api.nvim_create_autocmd("Filetype", {
-  pattern = { "help", "vim", "qf", "man" },
-  group = vim.api.nvim_create_augroup("Close With Q", {}),
-  callback = function(args)
-    map("n", "q", "<cmd>close<cr>", { buffer = args.buf })
-  end,
-  desc = "Close With 'q'",
-})
 vim.api.nvim_create_autocmd("TextYankPost", {
   callback = function()
-    vim.highlight.on_yank({ higroup = "Visual", timeout = 100 })
+    vim.highlight.on_yank()
   end,
   desc = "Highlight on Yank",
 })
@@ -195,11 +171,6 @@ vim.api.nvim_create_autocmd("BufReadPost", {
     end
   end,
   desc = "restore cursor when opening buffer",
-})
-vim.api.nvim_create_autocmd("ExitPre", {
-  group = vim.api.nvim_create_augroup("save_session", {}),
-  callback = save_session,
-  desc = "save session on exit",
 })
 vim.api.nvim_create_autocmd({ "VimEnter", "WinEnter" }, {
   group = vim.api.nvim_create_augroup("auto_hide_cursorline", {}),
@@ -220,66 +191,32 @@ vim.api.nvim_create_autocmd({ "Filetype" }, {
   end,
   desc = "Disable Spell",
 })
-vim.api.nvim_create_autocmd("LspAttach", {
+vim.api.nvim_create_autocmd("ExitPre", {
+  group = vim.api.nvim_create_augroup("save_session", {}),
   callback = function()
-    map("n", "gd", function()
-      vim.lsp.buf.definition()
-    end, { desc = "Code Definition" })
-    map("n", "gD", function()
-      vim.lsp.buf.declaration()
-    end, { desc = "Code Declaration" })
-    map("n", "gI", function()
-      vim.lsp.buf.implementation()
-    end, { desc = "Code Implementation" })
-
-    map("n", "<leader>cr", function()
-      vim.lsp.buf.rename()
-    end, { desc = "Code Rename" })
-    map("n", "<leader>cs", function()
-      vim.lsp.buf.document_symbol()
-    end, { desc = "Code Symbols (Document)" })
-    map("n", "<leader>cS", function()
-      vim.lsp.buf.workspace_symbol()
-    end, { desc = "Code Symbols (Workspace)" })
-    map("n", "<leader>ci", function()
-      vim.lsp.buf.incoming_calls()
-    end, { desc = "Code Incoming Calls" })
-    map("n", "<leader>co", function()
-      vim.lsp.buf.outgoing_calls()
-    end, { desc = "Code Outgoing Calls" })
-    map("n", "<leader>cR", function()
-      vim.lsp.buf.references()
-    end, { desc = "Code References" })
-    map("n", "<leader>ct", function()
-      vim.lsp.buf.type_definition()
-    end, { desc = "Code References" })
-    map("n", "<leader>ci", function()
-      vim.lsp.inlay_hint.enable()
-    end, { desc = "Code Inlay Hints" })
-    map("n", "<leader>ca", function()
-      vim.lsp.buf.code_action()
-    end, { desc = "Code Action" })
-
-    map("i", "<C-k>", function()
-      vim.lsp.buf.signature_help()
-    end, { desc = "Signature Help" })
+    local session_dir = vim.fn.stdpath("data") .. "/sessions"
+    vim.fn.mkdir(session_dir, "p")
+    local pwd = vim.fn.getcwd()
+    if not pwd or pwd == "" then
+      vim.notify("FAILED TO SAVE SESSION", vim.log.levels.ERROR)
+      return
+    end
+    local session_name = string.gsub(pwd, "/", "%%")
+    -- TODO: can incorporate the git branch as well
+    vim.cmd("mksession! " .. vim.fn.fnameescape(session_dir .. "/" .. session_name))
   end,
+  desc = "save session on exit",
 })
 
---------------------------------------------------------------------------------
--- User Commands                                                              --
---------------------------------------------------------------------------------
-
-vim.api.nvim_create_user_command(
-  "Gcheck",
-  "cexpr system('git diff --check')",
-  { desc = "Load results from 'git diff --check' into quickfix" }
-)
+vim.cmd([[cabbr h vert help]])
+vim.cmd([[cabbr Man vert Man]])
+vim.cmd([[cabbr copen botright copen]])
 
 --------------------------------------------------------------------------------
--- Plugins                                                                    --
+-- Lazy.nvim (Plugin Manager)                                                --
 --------------------------------------------------------------------------------
 
+-- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -298,8 +235,397 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   spec = {
-    { import = "plugins" },
+    -- Classic vim plugins
+    "tpope/vim-surround",
+    "tpope/vim-sensible",
+    "tpope/vim-unimpaired",
+    "tpope/vim-abolish",
+    "tpope/vim-dispatch",
+    "tpope/vim-repeat",
+    "tpope/vim-vinegar",
+    "tpope/vim-sleuth",
+    "tpope/vim-eunuch",
+    "tpope/vim-speeddating",
+
+    -- LSP
+    { "folke/neodev.nvim", opts = {} },
+    "neovim/nvim-lspconfig",
+
+    -- Completion / Snippets
+    "hrsh7th/cmp-nvim-lsp",
+    "hrsh7th/cmp-buffer",
+    "hrsh7th/cmp-path",
+    "hrsh7th/cmp-cmdline",
+    "hrsh7th/nvim-cmp",
+    "saadparwaiz1/cmp_luasnip",
+    { "L3MON4D3/LuaSnip", version = "v2.*", build = "make install_jsregexp" },
+    { "danymat/neogen", version = "*", opts = { snippet_engine = "luasnip" } },
+    { "windwp/nvim-autopairs", opts = { fast_wrap = { map = "<C-g>w" } } },
+
+    -- Treesitter
+    { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+    "nvim-treesitter/nvim-treesitter-textobjects",
+
+    -- Statusline
+    "nvim-lualine/lualine.nvim",
+    "SmiteshP/nvim-navic",
+    "arkav/lualine-lsp-progress",
+
+    -- Misc
+    "ibhagwan/fzf-lua",
+    "lewis6991/gitsigns.nvim",
+    "sainnhe/gruvbox-material",
+    "nvim-tree/nvim-web-devicons",
+    "stevearc/conform.nvim",
+    { "folke/trouble.nvim", opts = {} },
+    { "williamboman/mason.nvim", opts = {} },
+    { "cshuaimin/ssr.nvim", opts = {} },
+    { "stevearc/aerial.nvim", opts = {} },
+    { "chentoast/marks.nvim", event = "VeryLazy", opts = {} },
   },
-  change_detection = { enabled = false },
+  checker = { enabled = false },
   rocks = { enabled = false },
+})
+
+--------------------------------------------------------------------------------
+-- Plugins                                                                    --
+--------------------------------------------------------------------------------
+
+-- [[ Colorscheme ]]
+
+vim.g.gruvbox_material_foreground = "mix"
+vim.g.gruvbox_material_enable_italic = true
+vim.cmd.colorscheme("gruvbox-material")
+
+-- [[ Fuzzy-Finder ]]
+
+vim.keymap.set("n", "<leader>ff", "<cmd>FzfLua files<cr>", { desc = "Find Files" })
+vim.keymap.set("n", "<leader>fg", "<cmd>FzfLua live_grep_glob<cr>", { desc = "Live Grep" })
+vim.keymap.set("n", "<leader>fs", "<cmd>FzfLua lsp_document_symbols<cr>", { desc = "Live Grep" })
+vim.keymap.set("n", "<leader>fS", "<cmd>FzfLua lsp_workspace_symbols<cr>", { desc = "Live Grep" })
+vim.keymap.set("n", "<leader>fb", "<cmd>FzfLua buffers<cr>", { desc = "Find Buffer" })
+vim.keymap.set("n", "<leader>fw", "<cmd>FzfLua grep_cword<cr>", { desc = "Grep Word" })
+vim.keymap.set("n", "<leader>fW", "<cmd>FzfLua grep_cWORD<cr>", { desc = "Grep WORD" })
+vim.keymap.set("n", "<leader>/", "<cmd>FzfLua lgrep_curbuf<cr>", { desc = "Grep Visual Selection" })
+vim.keymap.set("n", "<leader>fd", "<cmd>FzfLua diagnostics_document<cr>", { desc = "Find Document Diagnostics" })
+vim.keymap.set("n", "<leader>fD", "<cmd>FzfLua diagnostics_workspace<cr>", { desc = "Find Workspace Diagnostics" })
+vim.keymap.set("n", "<leader>fr", "<cmd>FzfLua lsp_references<cr>", { desc = "Find References" })
+vim.keymap.set("n", "<leader>fR", "<cmd>FzfLua resume<cr>", { desc = "Resume Last Find" })
+
+vim.keymap.set("v", "<leader>f", "<cmd>FzfLua grep_visual<cr>", { desc = "Grep Visual Selection" })
+
+require("fzf-lua").register_ui_select()
+
+-- [[ Git Sign Column ]]
+
+require("gitsigns").setup({
+  worktrees = {
+    {
+      toplevel = vim.env.HOME,
+      gitdir = vim.env.HOME .. "/.dotfiles",
+    },
+  },
+  on_attach = function(bufnr)
+    local gitsigns = require("gitsigns")
+    vim.keymap.set("n", "]h", gitsigns.next_hunk, { buffer = bufnr, desc = "hunk forward" })
+    vim.keymap.set("n", "[h", gitsigns.prev_hunk, { buffer = bufnr, desc = "hunk backward" })
+    vim.keymap.set({ "n", "v" }, "<leader>gp", gitsigns.preview_hunk, { buffer = bufnr, desc = "preview hunk" })
+    vim.keymap.set({ "n", "v" }, "<leader>gs", gitsigns.stage_hunk, { buffer = bufnr, desc = "stage hunk" })
+    vim.keymap.set({ "n", "v" }, "<leader>gu", gitsigns.undo_stage_hunk, { buffer = bufnr, desc = "stage hunk" })
+    vim.keymap.set({ "n", "v" }, "<leader>gr", gitsigns.reset_hunk, { buffer = bufnr, desc = "reset hunk" })
+    vim.keymap.set({ "n", "v" }, "<leader>gb", gitsigns.blame_line, { buffer = bufnr, desc = "blame line" })
+  end,
+})
+
+-- [[ Treesitter ]]
+
+---@diagnostic disable-next-line: missing-fields
+require("nvim-treesitter.configs").setup({
+  ensure_installed = { "c", "cpp", "comment", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
+  highlight = { enable = true },
+  textobjects = {
+    select = {
+      enable = true,
+      lookahead = true,
+      keymaps = {
+        ["aa"] = "@parameter.outer",
+        ["ia"] = "@parameter.inner",
+        ["af"] = "@function.outer",
+        ["if"] = "@function.inner",
+        ["ac"] = "@class.outer",
+        ["ic"] = "@class.inner",
+        ["as"] = { query = "@scope", query_group = "locals", desc = "Select language scope" },
+      },
+      selection_modes = {
+        ["@function.outer"] = "V",
+        ["@function.inner"] = "V",
+        ["@class.outer"] = "V",
+        ["@class.inner"] = "V",
+      },
+    },
+    swap = {
+      enable = true,
+      swap_next = {
+        ["<leader>a"] = "@parameter.inner",
+        [">a"] = "@parameter.inner",
+      },
+      swap_previous = {
+        ["<leader>A"] = "@parameter.inner",
+        ["<a"] = "@parameter.inner",
+      },
+    },
+    move = {
+      enable = true,
+      set_jumps = true,
+      goto_next_start = {
+        ["]f"] = { query = "@function.outer", desc = "Next function start" },
+        ["]]"] = { query = "@class.outer", desc = "Next class start" },
+        ["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
+      },
+      goto_next_end = {
+        ["]F"] = "@function.outer",
+        ["]["] = "@class.outer",
+      },
+      goto_previous_start = {
+        ["[f"] = "@function.outer",
+        ["[["] = "@class.outer",
+        ["[z"] = { query = "@fold", query_group = "folds", desc = "Prev fold" },
+      },
+      goto_previous_end = {
+        ["[F"] = "@function.outer",
+        ["[]"] = "@class.outer",
+      },
+    },
+  },
+})
+
+-- [[ Formatting ]]
+
+local function format()
+  if not vim.g.autoformat then
+    return
+  end
+  require("conform").format({
+    lsp_format = "fallback",
+    timeout_ms = 500,
+  })
+end
+
+require("conform").setup({
+  notify_on_error = true,
+  format_on_save = format,
+  formatters_by_ft = {
+    lua = { "stylua" },
+    cpp = { "clang_format" },
+  },
+})
+vim.keymap.set("n", "<leader>cf", format, { desc = "Code Format" })
+
+-- [[ LSP / Completion ]]
+
+local lspconfig = require("lspconfig")
+local ls = require("luasnip")
+local cmp = require("cmp")
+
+vim.api.nvim_create_user_command("Esnippet", function()
+  require("luasnip.loaders").edit_snippet_files()
+end, { desc = "Edit Config File" })
+
+require("luasnip.loaders.from_lua").load({ paths = { vim.fn.stdpath("config") .. "/snippets" } })
+local function pad_or_truncate(s, l)
+  if not s then
+    return string.rep(" ", l)
+  end
+  if s:len() < l then
+    return s .. string.rep(" ", l - s:len())
+  else
+    return string.sub(s, 1, l - 3) .. "..."
+  end
+end
+
+cmp.setup({
+  snippet = {
+    expand = function(args)
+      ls.lsp_expand(args.body)
+    end,
+  },
+  completion = { completeopt = "menuone,preview,noselect" },
+  formatting = {
+    fields = { "abbr", "kind", "menu" },
+    format = function(entry, item)
+      item.abbr = pad_or_truncate(item.abbr, 25)
+      item.menu = ({
+        nvim_lsp = " [LSP]",
+        luasnip = "[SNIP]",
+        buffer = " [BUF]",
+        path = "[PATH]",
+      })[entry.source.name]
+      return item
+    end,
+    expandable_indicator = true,
+  },
+  mapping = cmp.mapping.preset.insert({
+    ["<C-n>"] = cmp.mapping.select_next_item(),
+    ["<C-p>"] = cmp.mapping.select_prev_item(),
+    ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+    ["<C-f>"] = cmp.mapping.scroll_docs(4),
+    ["<C-y>"] = function()
+      if cmp.visible() then
+        cmp.confirm({ select = true })
+      else
+        cmp.complete({})
+      end
+    end,
+    ["<C-l>"] = cmp.mapping(function(fallback)
+      if ls.expand_or_locally_jumpable() then
+        ls.expand_or_jump()
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+    ["<C-h>"] = cmp.mapping(function(fallback)
+      if ls.locally_jumpable(-1) then
+        ls.jump(-1)
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+    ["<C-j>"] = cmp.mapping(function(fallback)
+      if ls.choice_active() then
+        ls.change_choice(1)
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+    -- NOTE: using C-k for signature help so don't want to clobber
+  }),
+  sources = {
+    { name = "nvim_lsp" },
+    { name = "luasnip" },
+    { name = "path" },
+    { name = "buffer" },
+  },
+  ---@diagnostic disable-next-line: missing-fields
+  sorting = {
+    comparators = {
+      cmp.config.compare.score,
+      cmp.config.compare.offset,
+      cmp.config.compare.exact,
+      -- NOTE: the builtin scopes comparator is very slow - do not use
+
+      function(entry1, entry2)
+        local _, entry1_under = entry1.completion_item.label:find("^_+")
+        local _, entry2_under = entry2.completion_item.label:find("^_+")
+        entry1_under = entry1_under or 0
+        entry2_under = entry2_under or 0
+        if entry1_under > entry2_under then
+          return false
+        elseif entry1_under < entry2_under then
+          return true
+        end
+      end,
+
+      cmp.config.compare.recently_used,
+      cmp.config.compare.locality,
+      cmp.config.compare.kind,
+      cmp.config.compare.length,
+      cmp.config.compare.order,
+    },
+  },
+})
+
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = vim.api.nvim_create_augroup("lsp-attach", {}),
+  callback = function(event)
+    local map = function(keys, func, desc)
+      vim.keymap.set("n", keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+    end
+
+    map("gd", "<cmd>FzfLua lsp_definitions<cr>", "[G]oto [D]efinition")
+    map("gD", "<cmd>FzfLua lsp_declarations<cr>", "[G]oto [D]eclaration")
+    map("gr", "<cmd>FzfLua lsp_references<cr>", "[G]oto [R]eferences")
+    map("gI", "<cmd>FzfLua lsp_implementations<cr>", "[G]oto [I]mplementation")
+
+    map("<leader>cs", "<cmd>FzfLua lsp_document_symbols<cr>", "[C]ode [S]ymbols (Buffer)")
+    map("<leader>cS", "<cmd>FzfLua lsp_live_workspace_symbols<cr>", "[C]ode [S]ymbols (Workspace)")
+    map("<Leader>cI", "<cmd>FzfLua lsp_incoming_calls<cr>", "[C]ode [I]ncoming calls")
+    map("<Leader>co", "<cmd>FzfLua lsp_outgoing_calls<cr>", "[C]ode [O]utgoing calls")
+    map("<leader>ca", "<cmd>FzfLua lsp_code_actions<cr>", "[C]ode [A]ction")
+    map("<leader>cr", vim.lsp.buf.rename, "[C]ode [R]ename")
+    map("<leader>ct", "<cmd>FzfLua lsp_typedefs<cr>", "Goto [T]ype Definition")
+
+    map("K", vim.lsp.buf.hover, "Hover")
+    vim.keymap.set(
+      { "i", "s" },
+      "<C-k>",
+      vim.lsp.buf.signature_help,
+      { buffer = event.buf, desc = "LSP: Signature Help" }
+    )
+
+    local client = vim.lsp.get_client_by_id(event.data.client_id)
+    if client and client.server_capabilities.documentHighlightProvider then
+      vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+        buffer = event.buf,
+        callback = vim.lsp.buf.document_highlight,
+      })
+
+      vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+        buffer = event.buf,
+        callback = vim.lsp.buf.clear_references,
+      })
+    end
+
+    require("nvim-navic").attach(client, event.buf)
+  end,
+})
+
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
+
+_G.signature_handler_offset = 0
+vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "InsertCharPre" }, {
+  group = vim.api.nvim_create_augroup("reset_signature_handler_offset", {}),
+  callback = function()
+    _G.signature_handler_offset = 0
+  end,
+  desc = "reset signature handler offset on events that would close the signature help window",
+})
+local signature_help = function(_, result, ctx, config)
+  result = result or {}
+  local num_signatures = math.max(#(result.signatures or {}), 1)
+  result.activeSignature = math.fmod((result.activeSignature or 0) + _G.signature_handler_offset, num_signatures)
+  _G.signature_handler_offset = _G.signature_handler_offset + 1
+  config = config or {}
+  config.focus = false
+  vim.lsp.handlers.signature_help(_, result, ctx, config)
+end
+
+local servers = {
+  clangd = { cmd = { "clangd", "--header-insertion=never" } },
+  lua_ls = {},
+  rust_analyzer = {
+    settings = { ["rust-analyzer"] = { completion = { autoimport = { enable = false } } } },
+  },
+}
+
+for server, settings in pairs(servers) do
+  lspconfig[server].setup(
+    vim.tbl_deep_extend(
+      "force",
+      { capabilities = capabilities, handlers = { ["textDocument/signatureHelp"] = signature_help } },
+      settings
+    )
+  )
+end
+
+-- [[ Statusline ]]
+
+require("lualine").setup({
+  sections = {
+    lualine_c = {
+      "filename",
+      "navic",
+      "lsp_progress",
+    },
+  },
 })
