@@ -254,7 +254,7 @@ require("lazy").setup({
 
     -- Completion / Snippets
     { "L3MON4D3/LuaSnip", version = "v2.*", build = "make install_jsregexp" },
-    { "danymat/neogen", version = "*", opts = { snippet_engine = "luasnip" } },
+    { "danymat/neogen", version = "*" },
     { "windwp/nvim-autopairs", opts = { fast_wrap = { map = "<C-g>w" } } },
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-buffer",
@@ -641,6 +641,31 @@ require("lualine").setup({
       "filename",
       "navic",
       "lsp_progress",
+    },
+  },
+})
+
+-- [[ Docs Generation ]]
+
+local neogen_item = require("neogen.types.template").item
+local cpp_annotation_convention = {
+  { nil, "/// @file", { no_results = true, type = { "file" } } },
+  { nil, "/// @brief $1", { no_results = true, type = { "func", "file", "class" } } },
+  { nil, "", { no_results = true, type = { "file" } } },
+  { neogen_item.ClassName, "/// @class %s", { type = { "class" } } },
+  { neogen_item.Type, "/// @typedef %s", { type = { "type" } } },
+  { nil, "/// @brief $1", { type = { "func", "class", "type" } } },
+  { neogen_item.Tparam, "/// @tparam %s $1" },
+  { neogen_item.Parameter, "/// @param %s $1" },
+}
+require("neogen").setup({
+  snippet_engine = "luasnip",
+  languages = {
+    cpp = {
+      template = {
+        annotation_convention = "cpp_annotation_convention",
+        cpp_annotation_convention = cpp_annotation_convention,
+      },
     },
   },
 })
