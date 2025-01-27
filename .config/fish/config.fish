@@ -53,7 +53,9 @@ if status is-interactive
 
     # Setup the GPG agent
     set -gx GPG_TTY (tty)
-    gpgconf --launch gpg-agent
+    if command -sq gpgconf
+        gpgconf --launch gpg-agent
+    end
 
     # Init zoxide
     if command -sq zoxide
@@ -72,7 +74,6 @@ if status is-interactive
     if test -f $HOME/.local/bin/mise
         $HOME/.local/bin/mise activate fish | source
     end
-    $HOME/.local/bin/mise activate fish | source
 
     # Setup ghcup (haskell) environment
     set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin $HOME/.ghcup/bin $PATH
