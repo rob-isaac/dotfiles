@@ -13,6 +13,28 @@ vim.g.maplocalleader = " "
 vim.g.diagnostic_severity = vim.diagnostic.severity.ERROR
 vim.g.format_on_save = true
 
+vim.g.dispatch_compilers = { ninja = "gcc" }
+
+vim.g.gruvbox_material_background = "hard"
+vim.g.gruvbox_material_spell_foreground = "colored"
+vim.g.gruvbox_material_enable_italic = 1
+vim.g.gruvbox_material_enable_bold = 1
+vim.g.gruvbox_material_better_performance = 1
+vim.g.gruvbox_material_diagnotsic_text_highlight = 1
+
+vim.g.everforest_background = "hard"
+vim.g.everforest_spell_foreground = "colored"
+vim.g.everforest_enable_italic = 1
+vim.g.everforest_enable_bold = 1
+vim.g.everforest_better_performance = 1
+vim.g.everforest_diagnotsic_text_highlight = 1
+
+vim.g.mkdp_open_to_the_world = 1
+vim.g.mkdp_open_ip = "127.0.0.1"
+vim.g.mkdp_port = "9008"
+vim.g.mkdp_browser = "none"
+vim.g.mkdp_echo_preview_url = 1
+
 vim.o.termguicolors = true
 vim.o.splitright = true
 vim.o.splitbelow = true
@@ -21,7 +43,6 @@ vim.o.ignorecase = true
 vim.o.infercase = true
 vim.o.scrolloff = 3
 vim.o.sidescrolloff = 3
-vim.o.textwidth = 100
 vim.o.linebreak = true
 vim.o.breakindent = true
 vim.o.list = true
@@ -104,15 +125,16 @@ end, { desc = "Toggle Format On Save" })
 
 vim.keymap.set("n", "]d", function()
   vim.diagnostic.goto_next({ severity = vim.g.diagnostic_severity })
-end, { desc = "Next error" })
+end, { desc = "Next diagnostic" })
 vim.keymap.set("n", "[d", function()
   vim.diagnostic.goto_prev({ severity = vim.g.diagnostic_severity })
-end, { desc = "Prev error" })
+end, { desc = "Prev diagnostic" })
 
-vim.keymap.set("n", "}", "<cmd>keepjumps normal! }<cr>", { desc = "No Jumplist on }" })
-vim.keymap.set("n", "{", "<cmd>keepjumps normal! {<cr>", { desc = "No Jumplist on {" })
+vim.keymap.set({ "n", "v" }, "}", "<cmd>keepjumps normal! }<cr>", { desc = "No Jumplist on }" })
+vim.keymap.set({ "n", "v" }, "{", "<cmd>keepjumps normal! {<cr>", { desc = "No Jumplist on {" })
 
 vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]], { desc = "Copy to system clipboard" })
+vim.keymap.set("n", "<leader>Y", [["+y$]], { desc = "Copy to system clipboard" })
 vim.keymap.set({ "n", "v" }, "<leader>p", [["+p]], { desc = "Paste from system clipboard" })
 
 for _, k in ipairs({ ",", ".", ";" }) do
@@ -141,17 +163,14 @@ vim.keymap.set("n", "<leader>to", "<cmd>tabonly<cr>", { desc = "tabonly" })
 vim.keymap.set("n", "<leader>tc", "<cmd>tabclose<cr>", { desc = "tabclose" })
 vim.keymap.set("n", "<leader>tg", "<cmd>tab Git<cr>", { desc = "Open git in new tab" })
 
+vim.keymap.set("n", "<C-]>", "g<C-]>", { desc = "Tagjump with select" })
+
 vim.keymap.set("n", "<leader>ds", function()
   vim.fn.histdel("search", -1)
   vim.fn.setreg("/", vim.fn.histget("search", -1))
 end, { desc = "Delete the last search pattern" })
 
 vim.keymap.set("i", "<C-s>", "<C-g>u<esc>[s1z=`]a<C-g>u", { desc = "Correct last misspelling" })
-
-vim.keymap.set("n", "]<Space>", [[:<C-u>put =repeat(nr2char(10),v:count)<Bar>execute "'[-1"<cr>]],
-  { desc = "Insert blank line below" })
-vim.keymap.set("n", "[<Space>", [[:<C-u>put!=repeat(nr2char(10),v:count)<Bar>execute "']+1"<cr>]],
-  { desc = "Insert blank line above" })
 
 vim.api.nvim_create_user_command("ConfigEdit", "e $MYVIMRC", { desc = "Edit Config File" })
 vim.api.nvim_create_user_command(
@@ -195,7 +214,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "WinEnter" }, {
 })
 vim.api.nvim_create_autocmd({ "Filetype" }, {
   group = vim.api.nvim_create_augroup("disable_spelling", {}),
-  pattern = { "help", "qf", "man", "checkhealth" },
+  pattern = { "help", "qf", "man", "checkhealth", "git" },
   callback = function(args)
     vim.api.nvim_set_option_value("spell", false, { win = args.win })
   end,
@@ -222,75 +241,100 @@ vim.cmd([[cabbr h vert help]])
 vim.cmd([[cabbr Man vert Man]])
 vim.cmd([[cabbr copen botright copen]])
 
-
 --------------------------------------------------------------------------------
 -- Plugin Manager                                                             --
 --------------------------------------------------------------------------------
 
-local path_package = vim.fn.stdpath('data') .. '/site'
-local mini_path = path_package .. '/pack/deps/start/mini.nvim'
-if not vim.loop.fs_stat(mini_path) then
-  vim.cmd('echo "Installing `mini.nvim`" | redraw')
-  local clone_cmd = {
-    'git', 'clone', '--filter=blob:none',
-    'https://github.com/echasnovski/mini.nvim', mini_path
-  }
-  vim.fn.system(clone_cmd)
-  vim.cmd('packadd mini.nvim | helptags ALL')
+-- Bootstrap lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
+  local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+  local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+  if vim.v.shell_error ~= 0 then
+    vim.api.nvim_echo({
+      { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+      { out, "WarningMsg" },
+      { "\nPress any key to exit..." },
+    }, true, {})
+    vim.fn.getchar()
+    os.exit(1)
+  end
 end
-require('mini.deps').setup({ path = { package = path_package } })
+
+vim.opt.rtp:prepend(lazypath)
 
 --------------------------------------------------------------------------------
 -- Plugins                                                                    --
 --------------------------------------------------------------------------------
 
-MiniDeps.add({
-  source = "saghen/blink.cmp",
-  checkout = "v0.11.0",
-})
-MiniDeps.add({ source = 'neovim/nvim-lspconfig' })
-MiniDeps.add({
-  source = 'nvim-treesitter/nvim-treesitter',
-  hooks = { post_checkout = function() vim.cmd('TSUpdate') end },
-})
-MiniDeps.add({ source = 'nvim-treesitter/nvim-treesitter-textobjects' })
-MiniDeps.add({ source = "stevearc/conform.nvim" })
-MiniDeps.add({ source = "MagicDuck/grug-far.nvim" })
-MiniDeps.add({ source = "ibhagwan/fzf-lua" })
-MiniDeps.add({ source = "rebelot/kanagawa.nvim" })
-MiniDeps.add({ source = "Bekaboo/dropbar.nvim" })
-MiniDeps.add({ source = "danymat/neogen" })
-MiniDeps.add({ source = "stevearc/oil.nvim" })
-MiniDeps.add({ source = "folke/lazydev.nvim" })
-MiniDeps.add({ source = "j-hui/fidget.nvim" })
-MiniDeps.add({ source = "tpope/vim-dispatch" })
-MiniDeps.add({ source = "tpope/vim-fugitive" })
-MiniDeps.add({ source = "stevearc/aerial.nvim" })
-MiniDeps.add({ source = "chentoast/marks.nvim" })
--- TODO: milanglacier/minuet-ai.nvim
+require("lazy").setup({
+  spec = {
+    -- colorscheme
+    "sainnhe/everforest",
+    "sainnhe/gruvbox-material",
 
-require("mini.ai").setup()
-require("mini.align").setup()
-require("mini.bufremove").setup()
-require("mini.cursorword").setup()
-require("mini.diff").setup()
-require("mini.icons").setup()
-require("mini.indentscope").setup()
-require("mini.jump").setup()
-require("mini.move").setup()
-require("mini.operators").setup()
-require("mini.pairs").setup()
-require("mini.splitjoin").setup()
-require("mini.statusline").setup()
-require("mini.surround").setup()
-require("mini.trailspace").setup()
+    -- vim plugins
+    "tpope/vim-dispatch",
+    "tpope/vim-fugitive",
+    "tpope/vim-projectionist",
+    "tpope/vim-sleuth",
+    "tpope/vim-abolish",
+    "wellle/targets.vim",
+    "kana/vim-textobj-user",
+    "junegunn/vim-easy-align",
+    "dhruvasagar/vim-table-mode",
+    "junegunn/vim-peekaboo",
+
+    -- nvim plugins
+    "nvim-treesitter/nvim-treesitter",
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    "HiPhish/rainbow-delimiters.nvim",
+    "windwp/nvim-ts-autotag",
+    "MagicDuck/grug-far.nvim",
+    "neovim/nvim-lspconfig",
+    "saghen/blink.cmp",
+    "ibhagwan/fzf-lua",
+    "danymat/neogen",
+    "folke/lazydev.nvim",
+    "j-hui/fidget.nvim",
+    "stevearc/aerial.nvim",
+    "stevearc/conform.nvim",
+    "stevearc/oil.nvim",
+    "chentoast/marks.nvim",
+    "williamboman/mason.nvim",
+    "windwp/nvim-autopairs",
+    "lewis6991/gitsigns.nvim",
+    "kylechui/nvim-surround",
+    "nvim-tree/nvim-web-devicons",
+    {
+      "MeanderingProgrammer/render-markdown.nvim",
+      dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+    },
+    -- TODO: Try out AI plugins
+    -- milanglacier/minuet-ai.nvim
+    -- yetone/avante.nvim
+    -- Kaiser-Yang/blink-cmp-avante
+  },
+  install = { colorscheme = { "everforest", "default" } },
+  checker = { enabled = false },
+  rocks = { enabled = false },
+})
+vim.cmd.packad("cfilter")
+
 require("fidget").setup({})
 require("grug-far").setup()
 require("aerial").setup()
 require("marks").setup()
+require("nvim-ts-autotag").setup()
+require("mason").setup()
+require("render-markdown").setup({ code = { border = "hide" }, completions = { lsp = { enabled = true } } })
+require("nvim-surround").setup()
+
+vim.cmd.colorscheme("everforest")
 
 -- [[ LSP ]]
 
+---@diagnostic disable-next-line: missing-fields
 require("lazydev").setup({
   library = {
     { path = "${3rd}/luv/library" },
@@ -300,12 +344,14 @@ local lspconfig = require("lspconfig")
 local servers = {
   clangd = { cmd = { "clangd", "--header-insertion=never" } },
   lua_ls = {},
+  html = {},
+  gopls = {},
   rust_analyzer = {
     settings = { ["rust-analyzer"] = { completion = { autoimport = { enable = false } } } },
   },
 }
 for server, settings in pairs(servers) do
-  settings.capabilities = require('blink.cmp').get_lsp_capabilities()
+  settings.capabilities = require("blink.cmp").get_lsp_capabilities()
   lspconfig[server].setup(settings)
 end
 vim.api.nvim_create_autocmd("LspAttach", {
@@ -349,26 +395,33 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 require("blink.cmp").setup({
   signature = { enabled = true, window = { show_documentation = true } },
-  completion = { documentation = { auto_show = true, auto_show_delay_ms = 500 }, list = { selection = { preselect = false } } },
+  completion = {
+    list = { selection = { preselect = false } },
+  },
   keymap = {
-    ["<C-l>"] = { 'snippet_forward', 'fallback' },
-    ["<C-h>"] = { 'snippet_backward', 'fallback' },
-    cmdline = {
-      ['<C-e>'] = { 'hide', 'fallback' },
-      ['<CR>'] = { 'accept', 'fallback' },
-      ['<C-p>'] = { 'select_prev', 'fallback' },
-      ['<C-n>'] = { 'select_next', 'fallback' },
-    }
-  }
+    ["<C-l>"] = { "snippet_forward", "fallback" },
+    ["<C-h>"] = { "snippet_backward", "fallback" },
+  },
+  cmdline = { enabled = false },
+  sources = {
+    default = { "lazydev", "lsp", "path", "snippets", "buffer" },
+    providers = {
+      lazydev = {
+        name = "LazyDev",
+        module = "lazydev.integrations.blink",
+        score_offset = 100,
+      },
+    },
+  },
 })
 
 -- [[ Fuzzy Finder ]]
 
-require("fzf-lua").setup()
+require("fzf-lua").setup("telescope")
 vim.keymap.set("n", "<leader>ff", "<cmd>FzfLua files<cr>", { desc = "Find Files" })
 vim.keymap.set("n", "<leader>fg", "<cmd>FzfLua live_grep_glob<cr>", { desc = "Live Grep" })
-vim.keymap.set("n", "<leader>fs", "<cmd>FzfLua lsp_document_symbols<cr>", { desc = "Live Grep" })
-vim.keymap.set("n", "<leader>fS", "<cmd>FzfLua lsp_workspace_symbols<cr>", { desc = "Live Grep" })
+vim.keymap.set("n", "<leader>fs", "<cmd>FzfLua treesitter<cr>", { desc = "Document Symbols (Treesitter)" })
+vim.keymap.set("n", "<leader>fS", "<cmd>FzfLua lsp_workspace_symbols<cr>", { desc = "Workspace Symbols (LSP)" })
 vim.keymap.set("n", "<leader>fb", "<cmd>FzfLua buffers<cr>", { desc = "Find Buffer" })
 vim.keymap.set("n", "<leader>fw", "<cmd>FzfLua grep_cword<cr>", { desc = "Grep Word" })
 vim.keymap.set("n", "<leader>fW", "<cmd>FzfLua grep_cWORD<cr>", { desc = "Grep WORD" })
@@ -376,7 +429,9 @@ vim.keymap.set("n", "<leader>/", "<cmd>FzfLua lgrep_curbuf<cr>", { desc = "Grep 
 vim.keymap.set("n", "<leader>fd", "<cmd>FzfLua diagnostics_document<cr>", { desc = "Find Document Diagnostics" })
 vim.keymap.set("n", "<leader>fD", "<cmd>FzfLua diagnostics_workspace<cr>", { desc = "Find Workspace Diagnostics" })
 vim.keymap.set("n", "<leader>fr", "<cmd>FzfLua lsp_references<cr>", { desc = "Find References" })
-vim.keymap.set("n", "<leader>fR", "<cmd>FzfLua resume<cr>", { desc = "Resume Last Find" })
+vim.keymap.set("n", "<leader>f.", "<cmd>FzfLua resume<cr>", { desc = "Resume Last Find" })
+vim.keymap.set("n", "<leader>fj", "<cmd>FzfLua jumps<cr>", { desc = "Find Jumps" })
+vim.keymap.set("n", "<leader>fm", "<cmd>FzfLua marks<cr>", { desc = "Find Marks" })
 
 vim.keymap.set("v", "<leader>f", "<cmd>FzfLua grep_visual<cr>", { desc = "Grep Visual Selection" })
 
@@ -386,8 +441,10 @@ require("fzf-lua").register_ui_select()
 
 ---@diagnostic disable-next-line: missing-fields
 require("nvim-treesitter.configs").setup({
-  ensure_installed = { "c", "cpp", "comment", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline" },
-  highlight = { enable = true },
+  ensure_installed = { "c", "cpp", "comment", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline", "python" },
+  auto_install = true,
+  -- indent = { enable = true },
+  highlight = { enable = true, additional_vim_regex_highlighting = { "python" } },
   textobjects = {
     select = {
       enable = true,
@@ -442,6 +499,15 @@ require("nvim-treesitter.configs").setup({
       },
     },
   },
+  incremental_selection = {
+    enable = true,
+    keymaps = {
+      init_selection = "<CR>",
+      scope_incremental = "<CR>",
+      node_incremental = "<TAB>",
+      node_decremental = "<S-TAB>",
+    },
+  },
 })
 
 -- [[ Formatting ]]
@@ -462,6 +528,8 @@ require("conform").setup({
   formatters_by_ft = {
     lua = { "stylua" },
     cpp = { "clang_format" },
+    html = { "prettier" },
+    go = { "gofmt" },
   },
 })
 vim.keymap.set("n", "<leader>cf", format, { desc = "Code Format" })
@@ -470,18 +538,18 @@ vim.keymap.set("n", "<leader>cf", format, { desc = "Code Format" })
 
 local neogen_item = require("neogen.types.template").item
 local cpp_annotation_convention = {
-  { nil,                   "/// @file $1",     { no_results = true, type = { "file" } } },
-  { nil,                   "/// $1",           { no_results = true, type = { "func", "file", "class" } } },
-  { nil,                   "",                 { no_results = true, type = { "file" } } },
-  { neogen_item.ClassName, "/// @class %s",    { type = { "class" } } },
-  { neogen_item.Type,      "/// @typedef %s",  { type = { "type" } } },
-  { nil,                   "/// $1",           { type = { "func", "class", "type" } } },
-  { nil,                   "///",              { no_results = true, type = { "func", "class", "type" } } },
-  { neogen_item.Tparam,    "/// @tparam %s $1" },
+  { nil, "/// @file $1", { no_results = true, type = { "file" } } },
+  { nil, "/// $1", { no_results = true, type = { "func", "file", "class" } } },
+  { nil, "", { no_results = true, type = { "file" } } },
+  { neogen_item.ClassName, "/// @class %s", { type = { "class" } } },
+  { neogen_item.Type, "/// @typedef %s", { type = { "type" } } },
+  { nil, "/// $1", { type = { "func", "class", "type" } } },
+  { nil, "///", { no_results = true, type = { "func", "class", "type" } } },
+  { neogen_item.Tparam, "/// @tparam %s $1" },
   { neogen_item.Parameter, "/// @param %s $1" },
 }
 require("neogen").setup({
-  snippet_engine = "luasnip",
+  snippet_engine = "nvim",
   languages = {
     cpp = {
       template = {
@@ -496,3 +564,88 @@ require("neogen").setup({
 
 require("oil").setup()
 vim.keymap.set("n", "-", "<cmd>Oil<cr>", { desc = "Open Explorer" })
+
+-- [[ Autopairs ]]
+
+local npairs = require("nvim-autopairs")
+local Rule = require("nvim-autopairs.rule")
+local cond = require("nvim-autopairs.conds")
+
+npairs.setup({ fast_wrap = {} })
+npairs.add_rule(Rule("<", ">", {
+  -- Deconflict with ts-autotag
+  "-html",
+  "-javascriptreact",
+  "-typescriptreact",
+}):with_pair(cond.before_regex("%a+:?:?$", 3)):with_move(function(opts)
+  return opts.char == ">"
+end))
+
+local function rule2(a1, ins, a2, lang)
+  npairs.add_rule(Rule(ins, ins, lang)
+    :with_pair(function(opts)
+      return a1 .. a2 == opts.line:sub(opts.col - #a1, opts.col + #a2 - 1)
+    end)
+    :with_move(cond.none())
+    :with_cr(cond.none())
+    :with_del(function(opts)
+      local col = vim.api.nvim_win_get_cursor(0)[2]
+      return a1 .. ins .. ins .. a2 == opts.line:sub(col - #a1 - #ins + 1, col + #ins + #a2)
+    end))
+end
+
+rule2("(", " ", ")")
+rule2("{", " ", "}")
+rule2("@{", " ", "@}", "cpp")
+
+-- [[ Git Sign Columns ]]
+
+require("gitsigns").setup({
+  worktrees = {
+    {
+      toplevel = vim.env.HOME,
+      gitdir = vim.env.HOME .. "/.dotfiles",
+    },
+  },
+  on_attach = function(bufnr)
+    local gitsigns = require("gitsigns")
+
+    local function map(mode, l, r, opts)
+      opts = opts or {}
+      opts.buffer = bufnr
+      vim.keymap.set(mode, l, r, opts)
+    end
+
+    map("n", "]c", function()
+      if vim.wo.diff then
+        vim.cmd.normal({ "]c", bang = true })
+      else
+        gitsigns.nav_hunk("next")
+      end
+    end)
+
+    map("n", "[c", function()
+      if vim.wo.diff then
+        vim.cmd.normal({ "[c", bang = true })
+      else
+        gitsigns.nav_hunk("prev")
+      end
+    end)
+
+    map("n", "<leader>gs", gitsigns.stage_hunk)
+    map("n", "<leader>gr", gitsigns.reset_hunk)
+    map("v", "<leader>gs", function()
+      gitsigns.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+    end)
+    map("v", "<leader>gr", function()
+      gitsigns.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+    end)
+    map("n", "<leader>gS", gitsigns.stage_buffer)
+    map("n", "<leader>gR", gitsigns.reset_buffer)
+    map("n", "<leader>gp", gitsigns.preview_hunk)
+    map("n", "<leader>gi", gitsigns.preview_hunk_inline)
+
+    map({ "o", "x" }, "ih", gitsigns.select_hunk, { desc = "Hunk Texthobject" })
+    map({ "o", "x" }, "ah", gitsigns.select_hunk, { desc = "Hunk Texthobject" })
+  end,
+})

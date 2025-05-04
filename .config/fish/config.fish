@@ -1,17 +1,24 @@
 if status is-interactive
-    # Add some abbreviations
-    abbr --add vi nvim
-    abbr --add vim nvim
-    abbr --add lg lazygit
-    abbr --add ld lazydocker
-    abbr --add cat bat
-    abbr --add dot git --git-dir=$HOME/.dotfiles --work-tree=$HOME
-    abbr --add ldot lazygit --git-dir=$HOME/.dotfiles --work-tree=$HOME
-    abbr --add ls eza
-    abbr --add cmake-ninja cmake -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-    abbr --add less less -R
+    # Add some abbreviations.
+    if command -sq nvim
+        abbr --add vi nvim
+        abbr --add vim nvim
+    end
+    if command -sq bat
+        abbr --add cat bat
+    end
+    if command -sq eza
+        abbr --add ls eza
+    end
 
-    # Add bin locations to path
+    abbr --add g git
+    abbr --add dot git --git-dir=$HOME/.dotfiles --work-tree=$HOME
+    abbr --add less less -R
+    abbr --add lg lazygit
+    abbr --add ldot lazygit --git-dir=$HOME/.dotfiles --work-tree=$HOME
+    abbr --add cmake-ninja cmake -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+
+    # Add bin locations to path.
     fish_add_path $HOME/bin
     fish_add_path $HOME/.cargo/bin
     fish_add_path $HOME/go/bin
@@ -62,27 +69,9 @@ if status is-interactive
         zoxide init --cmd j fish | source
     end
 
-    # Initialize conda if available
-    # TODO(Rob): would be nice if we could speed this up a bit
-    if test -f $HOME/miniconda3/bin/conda
-        eval $HOME/miniconda3/bin/conda "shell.fish" hook $argv | source
-        # activate dev environment if available (will print error if not found)
-        conda activate dev
-    end
-
-    # Activate mise environment if available (similar to asdf)
-    if test -f $HOME/.local/bin/mise
-        $HOME/.local/bin/mise activate fish | source
-    end
-
-    # Setup ghcup (haskell) environment
-    set -q GHCUP_INSTALL_BASE_PREFIX[1]; or set GHCUP_INSTALL_BASE_PREFIX $HOME ; set -gx PATH $HOME/.cabal/bin $HOME/.ghcup/bin $PATH
-
     # Source secrets file if available
     if test -f $HOME/.config/fish/secret.fish
         source $HOME/.config/fish/secret.fish
     end
-
-    source $HOME/.config/fish/wezterm.fish
 end
 
