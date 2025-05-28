@@ -7,8 +7,8 @@ if status is-interactive
     if command -sq bat
         abbr --add cat bat
     end
-    if command -sq eza
-        abbr --add ls eza
+    if command -sq exa
+        abbr --add ls exa
     end
 
     abbr --add g git
@@ -72,6 +72,11 @@ if status is-interactive
     # Source secrets file if available
     if test -f $HOME/.config/fish/secret.fish
         source $HOME/.config/fish/secret.fish
+    end
+
+    # Source theme file if available
+    if test -f $HOME/.config/fish/colors/nightfox.fish
+        source $HOME/.config/fish/colors/nightfox.fish
     end
 end
 

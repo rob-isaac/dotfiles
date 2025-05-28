@@ -15,26 +15,7 @@ vim.g.format_on_save = true
 
 vim.g.dispatch_compilers = { ninja = "gcc" }
 
-vim.g.gruvbox_material_background = "hard"
-vim.g.gruvbox_material_spell_foreground = "colored"
-vim.g.gruvbox_material_enable_italic = 1
-vim.g.gruvbox_material_enable_bold = 1
-vim.g.gruvbox_material_better_performance = 1
-vim.g.gruvbox_material_diagnotsic_text_highlight = 1
-
-vim.g.everforest_background = "hard"
-vim.g.everforest_spell_foreground = "colored"
-vim.g.everforest_enable_italic = 1
-vim.g.everforest_enable_bold = 1
-vim.g.everforest_better_performance = 1
-vim.g.everforest_diagnotsic_text_highlight = 1
-
-vim.g.mkdp_open_to_the_world = 1
-vim.g.mkdp_open_ip = "127.0.0.1"
-vim.g.mkdp_port = "9008"
-vim.g.mkdp_browser = "none"
-vim.g.mkdp_echo_preview_url = 1
-
+vim.o.cmdheight = 0
 vim.o.termguicolors = true
 vim.o.splitright = true
 vim.o.splitbelow = true
@@ -124,10 +105,10 @@ vim.keymap.set("n", "yof", function()
 end, { desc = "Toggle Format On Save" })
 
 vim.keymap.set("n", "]d", function()
-  vim.diagnostic.goto_next({ severity = vim.g.diagnostic_severity })
+  vim.diagnostic.jump({ count = 1, float = true, severity = vim.g.diagnostic_severity })
 end, { desc = "Next diagnostic" })
 vim.keymap.set("n", "[d", function()
-  vim.diagnostic.goto_prev({ severity = vim.g.diagnostic_severity })
+  vim.diagnostic.jump({ count = 1, float = true, severity = vim.g.diagnostic_severity })
 end, { desc = "Prev diagnostic" })
 
 vim.keymap.set({ "n", "v" }, "}", "<cmd>keepjumps normal! }<cr>", { desc = "No Jumplist on }" })
@@ -215,8 +196,8 @@ vim.api.nvim_create_autocmd({ "VimEnter", "WinEnter" }, {
 vim.api.nvim_create_autocmd({ "Filetype" }, {
   group = vim.api.nvim_create_augroup("disable_spelling", {}),
   pattern = { "help", "qf", "man", "checkhealth", "git" },
-  callback = function(args)
-    vim.api.nvim_set_option_value("spell", false, { win = args.win })
+  callback = function()
+    vim.api.nvim_set_option_value("spell", false, { win = 0 })
   end,
   desc = "Disable Spell",
 })
@@ -270,8 +251,7 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
   spec = {
     -- colorscheme
-    "sainnhe/everforest",
-    "sainnhe/gruvbox-material",
+    { "EdenEast/nightfox.nvim", priority = 1000, opts = { options = { transparent = true } } },
 
     -- vim plugins
     "tpope/vim-dispatch",
@@ -288,6 +268,7 @@ require("lazy").setup({
     -- nvim plugins
     "nvim-treesitter/nvim-treesitter",
     "nvim-treesitter/nvim-treesitter-textobjects",
+    "nvim-tree/nvim-web-devicons",
     "HiPhish/rainbow-delimiters.nvim",
     "windwp/nvim-ts-autotag",
     "MagicDuck/grug-far.nvim",
@@ -306,16 +287,13 @@ require("lazy").setup({
     "lewis6991/gitsigns.nvim",
     "kylechui/nvim-surround",
     "nvim-tree/nvim-web-devicons",
-    {
-      "MeanderingProgrammer/render-markdown.nvim",
-      dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
-    },
+
     -- TODO: Try out AI plugins
     -- milanglacier/minuet-ai.nvim
     -- yetone/avante.nvim
     -- Kaiser-Yang/blink-cmp-avante
   },
-  install = { colorscheme = { "everforest", "default" } },
+  install = { colorscheme = { "nightfox", "default" } },
   checker = { enabled = false },
   rocks = { enabled = false },
 })
@@ -327,10 +305,9 @@ require("aerial").setup()
 require("marks").setup()
 require("nvim-ts-autotag").setup()
 require("mason").setup()
-require("render-markdown").setup({ code = { border = "hide" }, completions = { lsp = { enabled = true } } })
 require("nvim-surround").setup()
 
-vim.cmd.colorscheme("everforest")
+vim.cmd.colorscheme("nightfox")
 
 -- [[ LSP ]]
 
@@ -443,8 +420,8 @@ require("fzf-lua").register_ui_select()
 require("nvim-treesitter.configs").setup({
   ensure_installed = { "c", "cpp", "comment", "lua", "vim", "vimdoc", "query", "markdown", "markdown_inline", "python" },
   auto_install = true,
-  -- indent = { enable = true },
-  highlight = { enable = true, additional_vim_regex_highlighting = { "python" } },
+  indent = { enable = true },
+  highlight = { enable = true },
   textobjects = {
     select = {
       enable = true,

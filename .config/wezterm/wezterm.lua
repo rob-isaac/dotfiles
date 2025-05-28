@@ -3,10 +3,12 @@ local wezterm = require("wezterm")
 local act = wezterm.action
 local mux = wezterm.mux
 local statusbar = require("statusbar")
-local colorscheme = require("colorscheme")
 local keybindings = require("keybindings")
 
 local config = wezterm.config_builder and wezterm.config_builder() or {}
+
+-- Set default shell to fish
+config.default_prog = { "/usr/bin/fish", "-l" }
 
 -- Start in maximized mode
 wezterm.on("gui-startup", function(cmd)
@@ -23,8 +25,8 @@ wezterm.on("update-status", function(window, pane)
 end)
 
 config.force_reverse_video_cursor = true
-config.colors = colorscheme.kanagawa
 config.font = wezterm.font("JetBrains Mono")
+config.color_scheme = "nightfox"
 config.window_padding = { left = 0, right = 0, bottom = 0, top = 0 }
 config.window_decorations = "RESIZE|INTEGRATED_BUTTONS"
 config.use_fancy_tab_bar = false
