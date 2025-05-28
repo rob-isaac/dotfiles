@@ -28,6 +28,7 @@
 	recurseSubmodules = on-demand
 [push]
 	recurseSubmodules = check
+	autoSetupRemote = true
 [submodule]
 	recurse = true
 

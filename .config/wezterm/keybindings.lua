@@ -59,6 +59,34 @@ return {
     },
     -- Relative tab switching
     {
+      key = "n",
+      mods = "LEADER|CTRL",
+      action = act.Multiple({
+        act.ActivateTabRelative(1),
+        act.ActivateKeyTable({
+          name = "switch_tabs",
+          timeout_milliseconds = 1000,
+          one_shot = false,
+          until_unknown = true,
+        }),
+      }),
+    },
+    -- Relative tab switching
+    {
+      key = "p",
+      mods = "LEADER|CTRL",
+      action = act.Multiple({
+        act.ActivateTabRelative(-1),
+        act.ActivateKeyTable({
+          name = "switch_tabs",
+          timeout_milliseconds = 1000,
+          one_shot = false,
+          until_unknown = true,
+        }),
+      }),
+    },
+    -- Relative tab switching
+    {
       key = "l",
       mods = "LEADER|CTRL",
       action = act.Multiple({
