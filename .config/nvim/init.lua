@@ -14,9 +14,11 @@ vim.g.diagnostic_severity = vim.diagnostic.severity.ERROR
 vim.g.format_on_save = true
 
 vim.g.dispatch_compilers = { ninja = "gcc" }
+vim.g.slime_target = "tmux"
+vim.g.slime_bracketed_paste = true
 
 vim.o.cmdheight = 0
-vim.o.termguicolors = true
+vim.o.winborder = "rounded"
 vim.o.splitright = true
 vim.o.splitbelow = true
 vim.o.smartcase = true
