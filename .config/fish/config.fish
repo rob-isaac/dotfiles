@@ -69,6 +69,16 @@ if status is-interactive
         zoxide init --cmd j fish | source
     end
 
+    # Init mise
+    if command -sq mise
+        mise activate fish | source
+    end
+
+    # Init fzf keybindings
+    if command -sq fzf
+        fzf --fish | source
+    end
+
     # Source secrets file if available
     if test -f $HOME/.config/fish/secret.fish
         source $HOME/.config/fish/secret.fish
@@ -77,6 +87,11 @@ if status is-interactive
     # Source theme file if available
     if test -f $HOME/.config/fish/colors/nightfox.fish
         source $HOME/.config/fish/colors/nightfox.fish
+    end
+
+    # Activate venv if available
+    if test -f $HOME/venv-dev/bin/activate.fish
+        source $HOME/venv-dev/bin/activate.fish
     end
 end
 
