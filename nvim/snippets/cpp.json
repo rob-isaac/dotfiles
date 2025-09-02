@@ -1,0 +1,18 @@
+{
+  "fori": {
+    "prefix": "fori",
+    "body": [
+      "for (U64 ${1:i} = ${2:0}; ${1:i} < ${3:0}; ++${1:i}) {",
+      "  $0",
+      "}"
+    ]
+  },
+  "ndb": {
+    "prefix": "ndb",
+    "body": ["[[nodiscard]] bool"]
+  },
+  "main": {
+    "prefix": "main",
+    "body": ["int main(int argc, char** argv) {", "  $0", "}"]
+  }
+}

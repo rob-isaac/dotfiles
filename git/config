@@ -1,0 +1,15 @@
+[user]
+	email = robert.a.isaac@gmail.com
+	name = Rob Isaac
+[alias]
+	st = status -s
+	l = log --pretty=format:"%C(yellow)%h\\ %ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=short
+	s = switch
+	d = diff
+	c = commit
+	ca = commit --amend
+	a = add
+[push]
+	autoSetupRemote = true
+[commit]
+	verbose = true
