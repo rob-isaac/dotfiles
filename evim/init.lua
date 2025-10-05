@@ -38,12 +38,14 @@ vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Quick Switch Windows" })
 vim.keymap.set("c", "<C-k>", "<Up>", { desc = "Quick Scroll History" })
 vim.keymap.set("c", "<C-j>", "<Down>", { desc = "Quick Scroll History" })
 
+vim.keymap.set("n", "<Leader>q", "<cmd>ToggleQf<cr>", { desc = "Toggle Quickfix List" })
+vim.keymap.set("n", "<Leader>l", "<cmd>ToggleLoc<cr>", { desc = "Toggle Location List" })
+
 require("user_commands")
 require("autocmds")
 
 vim.cmd.cabbr("h", "vert help")
 vim.cmd.cabbr("Man", "vert Man")
-vim.cmd.cabbr("cc", "CodeCompanion")
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
@@ -79,6 +81,7 @@ require("lazy").setup({
 		"wellle/targets.vim",
 		"junegunn/vim-easy-align",
 		"chaoren/vim-wordmotion",
+
 		{
 			"saghen/blink.cmp",
 			version = "*",
@@ -99,7 +102,7 @@ require("lazy").setup({
 		{ "saghen/blink.indent", opts = {} },
 
 		{ "nvim-treesitter/nvim-treesitter", branch = "master", build = ":TSUpdate" },
-		{ "nvim-treesitter/nvim-treesitter-context", opts = {} },
+		{ "nvim-treesitter/nvim-treesitter-context", opts = { max_lines = 3 } },
 		{ "nvim-treesitter/nvim-treesitter-textobjects" },
 
 		{
@@ -119,7 +122,7 @@ require("lazy").setup({
 
 		{ "kylechui/nvim-surround", opts = {} },
 		{ "nvim-tree/nvim-web-devicons", opts = {} },
-		{ "lewis6991/gitsigns.nvim", opts = {} },
+		{ "lewis6991/gitsigns.nvim" },
 		{ "nvim-lualine/lualine.nvim", opts = {} },
 		{ "stevearc/aerial.nvim", opts = {} },
 		{ "stevearc/quicker.nvim", opts = {} },
@@ -198,7 +201,13 @@ vim.keymap.set({ "n", "v", "i" }, "<C-x><C-f>", function()
 end, { silent = true, desc = "Fuzzy complete path" })
 require("fzf-lua").register_ui_select()
 
-vim.keymap.set({ "n", "x" }, "<Leader>a", "<cmd>CodeCompanionChat Toggle<cr>", { silent = true })
+vim.keymap.set(
+	{ "n", "x" },
+	"<Leader>cc",
+	"<cmd>CodeCompanionChat Toggle<cr>",
+	{ silent = true, desc = "Code Companion Chat" }
+)
+vim.keymap.set({ "n", "x" }, "<Leader>ca", ":CodeCompanion ", { desc = "Code Companion" })
 vim.keymap.set({ "n", "v" }, "ga", "<Plug>(EasyAlign)", { desc = "Easy Align" })
 
 -- Treesitter {{{
@@ -252,7 +261,7 @@ require("nvim-treesitter.configs").setup({
 })
 -- }}}
 
---- Hydra {{{
+-- Hydra {{{
 local Hydra = require("hydra")
 local gitsigns = require("gitsigns")
 
@@ -290,7 +299,7 @@ Hydra({
 		end,
 	},
 	mode = { "n", "x" },
-	body = "<leader>g",
+	body = "<leader>hg",
 	heads = {
 		{
 			"J",
@@ -404,4 +413,77 @@ Hydra({
 })
 
 -- }}}
+
+-- Gitsigns {{{
+local gitsigns = require("gitsigns")
+gitsigns.setup({
+	word_diff = true,
+	on_attach = function(bufnr)
+		local function map(mode, l, r, opts)
+			opts = opts or {}
+			opts.buffer = bufnr
+			vim.keymap.set(mode, l, r, opts)
+		end
+
+		-- Navigation
+		map("n", "]c", function()
+			if vim.wo.diff then
+				vim.cmd.normal({ "]c", bang = true })
+			else
+				gitsigns.nav_hunk("next")
+			end
+		end)
+
+		map("n", "[c", function()
+			if vim.wo.diff then
+				vim.cmd.normal({ "[c", bang = true })
+			else
+				gitsigns.nav_hunk("prev")
+			end
+		end)
+
+		-- Actions
+		map("n", "<leader>gs", gitsigns.stage_hunk)
+		map("n", "<leader>gr", gitsigns.reset_hunk)
+
+		map("v", "<leader>gs", function()
+			gitsigns.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+		end)
+		map("v", "<leader>gr", function()
+			gitsigns.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+		end)
+
+		map("n", "<leader>gS", gitsigns.stage_buffer)
+		map("n", "<leader>gR", gitsigns.reset_buffer)
+		map("n", "<leader>gp", gitsigns.preview_hunk)
+		map("n", "<leader>gi", gitsigns.preview_hunk_inline)
+
+		map("n", "<leader>gb", function()
+			gitsigns.blame_line({ full = true })
+		end)
+
+		map("n", "<leader>gd", gitsigns.diffthis)
+
+		map("n", "<leader>gD", function()
+			gitsigns.diffthis("~")
+		end)
+
+		map("n", "<leader>gQ", function()
+			gitsigns.setqflist("all")
+		end)
+		map("n", "<leader>gq", gitsigns.setqflist)
+
+		-- Text object
+		map({ "o", "x" }, "ih", gitsigns.select_hunk)
+	end,
+	worktrees = {
+		{
+			toplevel = vim.env.HOME .. "/.config",
+			gitdir = vim.env.HOME .. "/.cfg",
+		},
+	},
+})
+
+-- }}}
+
 -- vim: sw=2 ts=2 foldmethod=marker
