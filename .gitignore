@@ -1,0 +1,22 @@
+# Gitignore for config bare repo. We want to ignore everything by default, but selectively re-enable specific files/subdirectories.
+
+# Ignore everything by default.
+/*
+
+# Track this .gitignore.
+!.gitignore
+
+# Track .github subdirectory for readme.
+!.github/
+
+# Track .config dir but nothing in it by default.
+!.config/
+.config/*
+
+# Subdirectories to track within .config dir.
+!.config/git/
+!.config/fish/
+!.config/nvim/
+!.config/tmux/
+!.config/tmux-powerline/
+!.config/kitty/
