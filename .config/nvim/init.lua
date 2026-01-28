@@ -277,7 +277,7 @@ vim.diagnostic.config({
   },
 })
 
--- Fuzzy Finder
+-- Fuzzy Finder.
 require("fzf-lua").register_ui_select()
 vim.keymap.set("n", "<leader><leader>", function()
   require("fzf-lua").global()
@@ -286,7 +286,7 @@ vim.keymap.set("n", "<leader>fb", function()
   require("fzf-lua").buffers()
 end)
 
--- Git
+-- Git.
 require("gitsigns").setup({
   worktrees = {
     {
@@ -296,10 +296,18 @@ require("gitsigns").setup({
   },
   on_attach = function(bufnr)
     vim.keymap.set("n", "]c", function()
-      require("gitsigns").nav_hunk("next")
+      if vim.wo.diff then
+        vim.cmd.normal({ "]c", bang = true })
+      else
+        require("gitsigns").nav_hunk("next")
+      end
     end, { buffer = bufnr })
     vim.keymap.set("n", "[c", function()
-      require("gitsigns").nav_hunk("prev")
+      if vim.wo.diff then
+        vim.cmd.normal({ "[c", bang = true })
+      else
+        require("gitsigns").nav_hunk("prev")
+      end
     end, { buffer = bufnr })
   end,
 })
