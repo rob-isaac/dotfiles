@@ -23,3 +23,5 @@
   format = ssh
 [user]
   signingkey = $HOME/.ssh/id_ed25519.pub
+[mergetool]
+	keepBackup = false

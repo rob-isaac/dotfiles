@@ -54,6 +54,21 @@ if status is-interactive
         source "$HOME/.cargo/env.fish"
     end
 
+    # Mise setup.
+    if command -q mise
+        mise activate fish | source
+    end
+
+    # Starship setup.
+    if command -q starship
+        starship init fish | source
+    end
+
+    # Duck-db.
+    if test -d "$HOME/.duckdb/cli/latest"
+        fish_add_path "$HOME/.duckdb/cli/latest"
+    end
+
     # Personal scripts setup.
     if test -d "$HOME/Code/scripts/"
         fish_add_path "$HOME/Code/scripts/"

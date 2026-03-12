@@ -1,10 +1,10 @@
-vim.api.nvim_create_autocmd("BufRead", {
+vim.api.nvim_create_autocmd("BufReadPre", {
   callback = function(opts)
-    vim.api.nvim_create_autocmd("BufWinEnter", {
+    vim.api.nvim_create_autocmd("FileType", {
       once = true,
       buffer = opts.buf,
-      callback = function()
-        local ft = vim.bo[opts.buf].filetype
+      callback = function(args)
+        local ft = args.match
         local last_known_line = vim.api.nvim_buf_get_mark(opts.buf, '"')[1]
         if
           not (ft:match("commit") and ft:match("rebase"))
@@ -18,6 +18,7 @@ vim.api.nvim_create_autocmd("BufRead", {
   end,
   desc = "Restore Cursor Position",
 })
+
 vim.api.nvim_create_autocmd("TextYankPost", {
   callback = function()
     vim.hl.on_yank()

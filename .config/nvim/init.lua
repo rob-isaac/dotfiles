@@ -56,6 +56,13 @@ vim.keymap.set({ "n", "v" }, "<leader>Y", '"+Y', { desc = "quick yank to system 
 vim.keymap.set({ "n", "v" }, "<leader>p", '"+p', { desc = "quick paste from system clipboard" })
 vim.keymap.set({ "n", "v" }, "<leader>P", '"+P', { desc = "quick paste from system clipboard" })
 
+vim.keymap.set("n", "<leader>tc", "<cmd>tabclose<cr>", { desc = "quick close tab" })
+vim.keymap.set("n", "<leader>tn", "<cmd>tabnext<cr>", { desc = "quick next tab" })
+vim.keymap.set("n", "<leader>tp", "<cmd>tabprev<cr>", { desc = "quick prev tab" })
+vim.keymap.set("n", "<leader>tt", "<cmd>tabnew<cr>", { desc = "quick new tab" })
+
+vim.keymap.set("n", "<leader>wc", "<cmd>winclose<cr>", { desc = "quick close window" })
+
 -- [[ Install `lazy.nvim` ]]
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -71,6 +78,7 @@ vim.opt.rtp:prepend(lazypath)
 -- [[ Plugins ]]
 
 require("lazy").setup({
+  "junegunn/vim-easy-align",
   "justinmk/vim-dirvish",
   "justinmk/vim-sneak",
   "tpope/vim-abolish",
@@ -81,11 +89,24 @@ require("lazy").setup({
   "tpope/vim-obsession",
   "tpope/vim-projectionist",
   "tpope/vim-repeat",
+  "tpope/vim-rhubarb",
+  "tpope/vim-rsi",
   "tpope/vim-sleuth",
   "tpope/vim-speeddating",
   "tpope/vim-unimpaired",
   "wellle/targets.vim",
+  "farhanmustar/fugitive-delta.nvim",
+  "romainl/vim-qf",
 
+  {
+    "aymericbeaumet/vim-symlink",
+    dependencies = { "moll/vim-bbye" },
+  },
+
+  "stevearc/aerial.nvim",
+  "stevearc/stickybuf.nvim",
+  "stevearc/quicker.nvim",
+  "rob-isaac/alternator.nvim",
   "WhoIsSethDaniel/mason-tool-installer.nvim",
   "folke/lazydev.nvim",
   "ibhagwan/fzf-lua",
@@ -96,12 +117,11 @@ require("lazy").setup({
   "neovim/nvim-lspconfig",
   "nvim-lualine/lualine.nvim",
   "nvim-tree/nvim-web-devicons",
-  "nvim-treesitter/nvim-treesitter-context",
-  "nvim-treesitter/nvim-treesitter-textobjects",
   "stevearc/conform.nvim",
   { "EdenEast/nightfox.nvim", priority = 1000 },
   { "L3MON4D3/LuaSnip", version = "*", build = "make install_jsregexp" },
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+  { "nvim-treesitter/nvim-treesitter-textobjects", branch = "main" },
   { "saghen/blink.cmp", version = "*" },
   install = { colorscheme = { "nightfox", "default" } },
   checker = { enabled = false },
@@ -113,8 +133,15 @@ require("autocmds")
 require("usercmds")
 
 -- Simple packages.
+vim.cmd.packadd("cfilter")
+
 require("mason").setup()
 require("nvim-surround").setup()
+require("aerial").setup()
+require("stickybuf").setup()
+
+vim.keymap.set("n", "ga", "<Plug>(EasyAlign)", { desc = "Easy Align" })
+vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle<cr>", { desc = "Toggle Aerial" })
 
 -- UI.
 require("nightfox").setup({
@@ -127,25 +154,28 @@ require("nightfox").setup({
   },
 })
 vim.cmd.colorscheme("nightfox")
-require("lualine").setup({})
+require("lualine").setup({ sections = { lualine_c = { { "filename", path = 1, shortening_target = 30 } } } })
 
 -- Tool Installer.
+local tool_list = {
+  -- Language servers.
+  "lua_ls",
+  "clangd",
+  "bashls",
+  "jsonls",
+  "fish_lsp",
+  "ty",
+  -- Formatters.
+  "stylua",
+  "clang-format",
+  "shfmt",
+  "ruff",
+  -- Spell-check.
+  "harper_ls",
+  "codespell",
+}
 require("mason-tool-installer").setup({
-  ensure_installed = {
-    -- Language servers.
-    "lua_ls",
-    "clangd",
-    "bashls",
-    "jsonls",
-    "fish_lsp",
-    -- Formatters.
-    "stylua",
-    "clang-format",
-    "shfmt",
-    -- Spell-check.
-    "harper_ls",
-    "codespell",
-  },
+  ensure_installed = tool_list,
 })
 
 -- Formatting.
@@ -154,6 +184,7 @@ require("conform").setup({
     lua = { "stylua" },
     sh = { "shfmt", "shellcheck" },
     cpp = { "clang-format" },
+    python = { "ruff_format" },
   },
   format_on_save = {
     lsp_format = "fallback",
@@ -278,6 +309,7 @@ vim.diagnostic.config({
 })
 
 -- Fuzzy Finder.
+require("fzf-lua").setup()
 require("fzf-lua").register_ui_select()
 vim.keymap.set("n", "<leader><leader>", function()
   require("fzf-lua").global()
@@ -311,5 +343,165 @@ require("gitsigns").setup({
     end, { buffer = bufnr })
   end,
 })
+
+-- Treesitter.
+local ts_filetypes = {
+  "vimdoc",
+  "c",
+  "cpp",
+  "comment",
+  "python",
+  "markdown",
+  "markdown_inline",
+  "bash",
+  "fish",
+  "gitcommit",
+  "toml",
+  "yaml",
+  "json",
+}
+require("nvim-treesitter").install(ts_filetypes)
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = ts_filetypes,
+  callback = function()
+    vim.treesitter.start()
+    vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+  end,
+})
+
+vim.keymap.set({ "x", "o" }, "am", function()
+  require("nvim-treesitter-textobjects.select").select_textobject("@function.outer", "textobjects")
+end)
+vim.keymap.set({ "x", "o" }, "im", function()
+  require("nvim-treesitter-textobjects.select").select_textobject("@function.inner", "textobjects")
+end)
+vim.keymap.set({ "x", "o" }, "ac", function()
+  require("nvim-treesitter-textobjects.select").select_textobject("@class.outer", "textobjects")
+end)
+vim.keymap.set({ "x", "o" }, "ic", function()
+  require("nvim-treesitter-textobjects.select").select_textobject("@class.inner", "textobjects")
+end)
+vim.keymap.set({ "x", "o" }, "as", function()
+  require("nvim-treesitter-textobjects.select").select_textobject("@local.scope", "locals")
+end)
+
+vim.keymap.set("n", "<leader>a", function()
+  require("nvim-treesitter-textobjects.swap").swap_next("@parameter.inner")
+end)
+vim.keymap.set("n", "<leader>A", function()
+  require("nvim-treesitter-textobjects.swap").swap_previous("@parameter.outer")
+end)
+
+vim.keymap.set({ "n", "x", "o" }, "]m", function()
+  require("nvim-treesitter-textobjects.move").goto_next_start("@function.outer", "textobjects")
+end)
+vim.keymap.set({ "n", "x", "o" }, "]]", function()
+  require("nvim-treesitter-textobjects.move").goto_next_start("@class.outer", "textobjects")
+end)
+vim.keymap.set({ "n", "x", "o" }, "]o", function()
+  require("nvim-treesitter-textobjects.move").goto_next_start({ "@loop.inner", "@loop.outer" }, "textobjects")
+end)
+vim.keymap.set({ "n", "x", "o" }, "]s", function()
+  require("nvim-treesitter-textobjects.move").goto_next_start("@local.scope", "locals")
+end)
+vim.keymap.set({ "n", "x", "o" }, "]M", function()
+  require("nvim-treesitter-textobjects.move").goto_next_end("@function.outer", "textobjects")
+end)
+vim.keymap.set({ "n", "x", "o" }, "][", function()
+  require("nvim-treesitter-textobjects.move").goto_next_end("@class.outer", "textobjects")
+end)
+
+vim.keymap.set({ "n", "x", "o" }, "[m", function()
+  require("nvim-treesitter-textobjects.move").goto_previous_start("@function.outer", "textobjects")
+end)
+vim.keymap.set({ "n", "x", "o" }, "[]", function()
+  require("nvim-treesitter-textobjects.move").goto_previous_start("@class.outer", "textobjects")
+end)
+vim.keymap.set({ "n", "x", "o" }, "[o", function()
+  require("nvim-treesitter-textobjects.move").goto_previous_start({ "@loop.inner", "@loop.outer" }, "textobjects")
+end)
+vim.keymap.set({ "n", "x", "o" }, "[s", function()
+  require("nvim-treesitter-textobjects.move").goto_previous_start("@local.scope", "locals")
+end)
+vim.keymap.set({ "n", "x", "o" }, "[M", function()
+  require("nvim-treesitter-textobjects.move").goto_previous_end("@function.outer", "textobjects")
+end)
+vim.keymap.set({ "n", "x", "o" }, "[[", function()
+  require("nvim-treesitter-textobjects.move").goto_previous_end("@class.outer", "textobjects")
+end)
+
+local ts_repeat_move = require("nvim-treesitter-textobjects.repeatable_move")
+
+vim.keymap.set({ "n", "x", "o" }, ";", ts_repeat_move.repeat_last_move)
+vim.keymap.set({ "n", "x", "o" }, ",", ts_repeat_move.repeat_last_move_opposite)
+vim.keymap.set({ "n", "x", "o" }, "f", ts_repeat_move.builtin_f_expr, { expr = true })
+vim.keymap.set({ "n", "x", "o" }, "F", ts_repeat_move.builtin_F_expr, { expr = true })
+vim.keymap.set({ "n", "x", "o" }, "t", ts_repeat_move.builtin_t_expr, { expr = true })
+vim.keymap.set({ "n", "x", "o" }, "T", ts_repeat_move.builtin_T_expr, { expr = true })
+
+-- Alternator.
+local alternator_transformations = {
+  {
+    pattern = "(.-)[-_]test%.cpp",
+    transformations = {
+      test = "%0",
+      source = "%1.cpp",
+      header = "%1.h",
+    },
+  },
+  {
+    pattern = "(.-)%.cpp",
+    transformations = {
+      test = { "%1-test.cpp", "%1_test.cpp" },
+      source = "%0",
+      header = "%1.h",
+    },
+  },
+  {
+    pattern = "(.-)%.h",
+    transformations = {
+      test = { "%1-test.cpp", "%1_test.cpp" },
+      source = "%1.cpp",
+      header = "%0",
+    },
+  },
+}
+
+require("alternator").setup({
+  transformations = alternator_transformations,
+  mappings = {
+    test = "<leader>et",
+    header = "<leader>eh",
+    source = "<leader>es",
+  },
+})
+vim.keymap.set("n", "<leader>ea", "<cmd>e #<cr>")
+
+-- Quicker.
+
+require("quicker").setup({
+  keys = {
+    {
+      ">",
+      function()
+        require("quicker").expand({ before = 2, after = 2, add_to_existing = true })
+      end,
+      desc = "Expand quickfix context",
+    },
+    {
+      "<",
+      function()
+        require("quicker").collapse()
+      end,
+      desc = "Collapse quickfix context",
+    },
+  },
+})
+vim.keymap.set("n", "<leader>q", function()
+  require("quicker").toggle()
+end, { desc = "Quick Toggle Quickfix List" })
+vim.keymap.set("n", "<leader>l", function()
+  require("quicker").toggle({ loclist = true })
+end, { desc = "Quick Toggle Location List" })
 
 -- vim: ts=2 sts=2 sw=2 et
