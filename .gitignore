@@ -20,3 +20,4 @@
 !.config/tmux/
 !.config/tmux-powerline/
 !.config/kitty/
+!.config/starship.toml

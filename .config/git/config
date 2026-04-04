@@ -3,25 +3,46 @@
   email = robert.a.isaac@gmail.com
 [core]
   pager = delta
+[commit]
+  verbose = true
 [interactive]
   diffFilter = delta --color-only
 [delta]
   navigate = true
 [merge]
   conflictStyle = zdiff3
+  tool = nvimdiff
+[mergetool]
+  hideResolved = true
+  keepBackup = true ; clean with clean-orig
+  keepTemporaries = false
+  prompt = false
+[mergetool "nvimdiff"]
+  layout = LOCAL,@REMOTE + BASE,LOCAL + BASE,REMOTE + MERGED
+  trustExitCode = false
 [alias]
   st = status --short
   a = add
   c = commit
+  l = log --oneline -20
+  fs = "!f() { git fetch origin "$1" && git switch "$1"; }; f"
+  check-rebase = range-diff
+  check-rebase = "!f() {\
+    MAIN_OR_MASTER=$(git rev-parse --abbrev-ref origin/HEAD);\
+    UPSTREAM_MERGE_BASE=$(git merge-base @{u} $MAIN_OR_MASTER);\
+    HEAD_MERGE_BASE=$(git merge-base HEAD $MAIN_OR_MASTER);\
+    git -c diff.context=0 range-diff $UPSTREAM_MERGE_BASE..@{u} $HEAD_MERGE_BASE..HEAD;\
+  }; f"
+  unmerge = "!f() { git checkout --conflict=merge $@; }; f"
+  clean-orig = "!f() { find . -name '*.orig' -type f -delete; }; f"
 [push]
   autoSetupRemote = true
 [diff]
   mnemonicprefix = true
+  ; external = difft
 
 # SSH signing.
 [gpg]
   format = ssh
 [user]
   signingkey = $HOME/.ssh/id_ed25519.pub
-[mergetool]
-	keepBackup = false
