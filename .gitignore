@@ -13,11 +13,25 @@
 !.config/
 .config/*
 
+# Same thing for cursor config dir.
+!.cursor/
+.cursor/*
+
 # Subdirectories to track within .config dir.
 !.config/git/
 !.config/fish/
 !.config/nvim/
 !.config/tmux/
 !.config/tmux-powerline/
-!.config/kitty/
 !.config/starship.toml
+
+# Skip some parts of fish.
+.config/fish/completions/
+.config/fish/conf.d/
+.config/fish/fish_variables
+.config/fish/functions/
+.config/fish/secrets.fish
+
+# Subset of cursor config to track.
+!.cursor/rules/
+!.cursor/hooks.json

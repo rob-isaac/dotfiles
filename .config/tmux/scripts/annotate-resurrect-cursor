@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+import os
+import shlex
+import subprocess
+import sys
+import tempfile
+
+
+def pane_chat_id(session: str, window: str, pane: str) -> str | None:
+    target = f"={session}:{window}.{pane}"
+    result = subprocess.run(
+        ["tmux", "show-option", "-p", "-v", "-t", target, "@cursor_chat_id"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def main() -> None:
+    if len(sys.argv) != 2:
+        raise SystemExit("usage: annotate-resurrect-cursor STATE_FILE")
+
+    state_path = sys.argv[1]
+    state_dir = os.path.dirname(state_path)
+    with open(state_path, encoding="utf-8") as state_file:
+        lines = state_file.readlines()
+
+    rewritten: list[str] = []
+    for line in lines:
+        fields = line.rstrip("\n").split("\t")
+        if len(fields) >= 11 and fields[0] == "pane":
+            chat_id = pane_chat_id(fields[1], fields[2], fields[5])
+            if chat_id:
+                fields[10] = f":cursor-agent --resume {shlex.quote(chat_id)}"
+                line = "\t".join(fields) + "\n"
+        rewritten.append(line)
+
+    descriptor, temporary_path = tempfile.mkstemp(
+        dir=state_dir, prefix=".cursor-resurrect-"
+    )
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as temporary_file:
+            temporary_file.writelines(rewritten)
+        os.chmod(temporary_path, os.stat(state_path).st_mode)
+        os.replace(temporary_path, state_path)
+    finally:
+        if os.path.exists(temporary_path):
+            os.unlink(temporary_path)
+
+
+if __name__ == "__main__":
+    main()

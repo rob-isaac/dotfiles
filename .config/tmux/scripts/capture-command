@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+set -eu
+
+capture_file="${TMUX_COMMAND_CAPTURE_FILE:-/tmp/tmux-prev-command-capture.txt}"
+cat >"$capture_file"

@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+
+When implementing features:
+- prefer the "proper" change over the easiest change
+- don't over-engineer solutions; choose the simplest method of accomplishing the task
+- verify all non-trivial code changes with the user before implementation (e.g. more than 50 lines of code)
+- prefer to re-use existing code over writing new code
+- prefer using existing patterns unless otherwise directed
+- prefer fewer larger functions with comments over small one-off functions
+- prefer fewer larger files over many smaller files
+- prefer restructuring the code to avoid conditionals rather than scattering-around conditionals
+- avoid multiple sources-of-truth/coupled-variables
+- avoid default values

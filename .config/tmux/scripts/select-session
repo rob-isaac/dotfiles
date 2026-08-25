@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+current_session="$(tmux display-message -p '#{session_name}')"
+mode="${1:-picker}"
+
+list_sessions() {
+  tmux list-sessions -F '#{session_last_attached}	#{session_name}	#{b:session_name}	#{session_windows} windows	#{session_attached} clients' |
+    sort -t $'\t' -k1,1nr |
+    awk -F '\t' -v OFS='\t' '
+      {
+        epoch[NR] = $1
+        name[NR] = $2
+        display[NR] = $3
+        windows[NR] = $4
+        clients[NR] = $5
+        if (length($3) > name_width) name_width = length($3)
+        if (length($4) > windows_width) windows_width = length($4)
+        if (length($5) > clients_width) clients_width = length($5)
+      }
+      END {
+        for (i = 1; i <= NR; i++) {
+          formatted = sprintf("%-*s  %-*s  %-*s", name_width, display[i], windows_width, windows[i], clients_width, clients[i])
+          print epoch[i], name[i], formatted
+        }
+      }
+    '
+}
+
+if [[ "$mode" == "--mru" ]]; then
+  target="$(
+    list_sessions |
+      awk -F '\t' -v current="$current_session" '$2 != current { print $2; exit }'
+  )"
+  [[ -n "$target" ]] && tmux switch-client -t "=$target"
+  exit 0
+fi
+
+selection="$(
+  list_sessions |
+    fzf \
+      --delimiter=$'\t' \
+      --with-nth=3 \
+      --prompt='session> ' \
+      --preview='tmux capture-pane -ep -t {2}: -S -200' \
+      --preview-window='right,65%,wrap'
+)" || exit 0
+
+target="$(cut -f2 <<<"$selection")"
+[[ -n "$target" ]] && tmux switch-client -t "=$target"

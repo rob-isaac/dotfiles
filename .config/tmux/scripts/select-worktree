@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+root="${TMUX_WORKTREE_ROOT:-$HOME/Code}"
+[[ -d "$root" ]] || {
+  tmux display-message "Worktree root does not exist: $root"
+  exit 1
+}
+
+paths_file="$(mktemp)"
+rows_file="$(mktemp)"
+formatted_file="$(mktemp)"
+trap 'rm -f "$paths_file" "$rows_file" "$formatted_file"' EXIT
+
+while IFS= read -r git_marker; do
+  git_marker="${git_marker%/}"
+  repo="${git_marker%/.git}"
+  worktrees="$(git -C "$repo" worktree list --porcelain 2>/dev/null)" || continue
+  awk '
+    function emit() {
+      if (path == "") return
+      if (branch == "") branch = "detached@" substr(head, 1, 7)
+      print path "\t" branch
+    }
+    /^worktree / {
+      emit()
+      path = substr($0, 10)
+      head = ""
+      branch = ""
+      next
+    }
+    /^HEAD / { head = substr($0, 6); next }
+    /^branch / {
+      branch = substr($0, 8)
+      sub(/^refs\/heads\//, "", branch)
+      next
+    }
+    END { emit() }
+  ' <<<"$worktrees" >>"$paths_file"
+done < <(
+  fd -HI -t d \
+    -E node_modules \
+    -E .venv \
+    -E venv \
+    -E vendor \
+    -E target \
+    -E .cache \
+    '^\.git$' "$root"
+)
+
+sort -t $'\t' -k1,1 -u "$paths_file" | while IFS=$'\t' read -r worktree branch; do
+  [[ -d "$worktree" ]] || continue
+  modified="$(stat -f '%m' "$worktree")"
+  printf '%s\t%s\t%s\n' "$modified" "$worktree" "$branch"
+done | sort -t $'\t' -k1,1nr >"$rows_file"
+
+awk -F '\t' -v OFS='\t' -v root="$root" '
+  function relative(path, base,    base_parts, path_parts, base_count, path_count, common, i, result) {
+    if (path == base) return "."
+    if (substr(path, 1, length(base) + 1) == base "/") {
+      return substr(path, length(base) + 2)
+    }
+
+    base_count = split(base, base_parts, "/")
+    path_count = split(path, path_parts, "/")
+    for (common = 1; base_parts[common] == path_parts[common]; common++);
+    for (i = common; i <= base_count; i++) {
+      if (base_parts[i] != "") result = result "../"
+    }
+    for (i = common; i <= path_count; i++) {
+      if (path_parts[i] != "") {
+        if (result != "" && substr(result, length(result), 1) != "/") result = result "/"
+        result = result path_parts[i]
+      }
+    }
+    return result
+  }
+  {
+    epoch[NR] = $1
+    path[NR] = $2
+    display_path[NR] = relative($2, root)
+    branch[NR] = $3
+    if (length(display_path[NR]) > path_width) path_width = length(display_path[NR])
+    if (length(branch[NR]) > branch_width) branch_width = length(branch[NR])
+  }
+  END {
+    for (i = 1; i <= NR; i++) {
+      display = sprintf("%-*s  %-*s", path_width, display_path[i], branch_width, branch[i])
+      print epoch[i], path[i], display
+    }
+  }
+' "$rows_file" >"$formatted_file"
+
+selection="$(
+  fzf \
+    --delimiter=$'\t' \
+    --with-nth=3 \
+    --prompt='worktree> ' \
+    --preview='git -C {2} status --short --branch; printf "\nRecent commits\n"; git -C {2} log --oneline --decorate -10' \
+    --preview-window='right,65%,wrap' \
+    <"$formatted_file"
+)" || exit 0
+
+worktree="$(cut -f2 <<<"$selection")"
+[[ -n "$worktree" ]] || exit 0
+
+target="$(
+  tmux list-sessions -F '#{session_name}	#{@worktree_path}	#{session_path}' |
+    awk -F '\t' -v path="$worktree" '$1 == path || $2 == path || $3 == path { print $1; exit }'
+)"
+
+if [[ -z "$target" ]]; then
+  base_name="${worktree//[.:]/_}"
+  target="$base_name"
+  suffix=2
+  while tmux has-session -t "=$target" 2>/dev/null; do
+    target="${base_name}-${suffix}"
+    ((suffix += 1))
+  done
+  tmux new-session -d -s "$target" -c "$worktree"
+fi
+
+tmux set-option -t "=$target:" @worktree_path "$worktree"
+tmux switch-client -t "=$target"

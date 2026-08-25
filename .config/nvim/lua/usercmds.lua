@@ -21,3 +21,16 @@ vim.api.nvim_create_user_command("SwapWords", function(opts)
     )
   )
 end, { nargs = "*", range = true, desc = "Swap Two Words" })
+
+vim.api.nvim_create_user_command("PRDiff", function()
+  local base = vim
+    .system({ "gh", "pr", "view", "--json", "baseRefName", "--jq", ".baseRefName" }, { text = true })
+    :wait()
+
+  if base.code ~= 0 then
+    vim.notify("Failed to determine PR base branch", vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd(("G diff origin/%s...HEAD"):format(vim.trim(base.stdout)))
+end, {})

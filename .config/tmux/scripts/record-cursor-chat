@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+payload="$(cat)"
+session_id="$(jq -r '.session_id // .conversation_id // empty' <<<"$payload")"
+
+if [[ -n "${TMUX_PANE:-}" && -n "$session_id" ]]; then
+  tmux set-option -p -t "$TMUX_PANE" @cursor_chat_id "$session_id"
+fi
+
+printf '{}\n'

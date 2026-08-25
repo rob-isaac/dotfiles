@@ -25,3 +25,10 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
   desc = "Highlight on Yank",
 })
+
+vim.api.nvim_create_autocmd("VimResized", {
+  callback = function()
+    vim.cmd("wincmd =")
+  end,
+  desc = "Auto-resize windows",
+})

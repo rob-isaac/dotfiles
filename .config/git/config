@@ -9,6 +9,7 @@
   diffFilter = delta --color-only
 [delta]
   navigate = true
+  keep-plus-minus-markers = true
 [merge]
   conflictStyle = zdiff3
   tool = nvimdiff
@@ -21,12 +22,12 @@
   layout = LOCAL,@REMOTE + BASE,LOCAL + BASE,REMOTE + MERGED
   trustExitCode = false
 [alias]
-  st = status --short
   a = add
   c = commit
+  ca = commit --amend
   l = log --oneline -20
+  st = status --short
   fs = "!f() { git fetch origin "$1" && git switch "$1"; }; f"
-  check-rebase = range-diff
   check-rebase = "!f() {\
     MAIN_OR_MASTER=$(git rev-parse --abbrev-ref origin/HEAD);\
     UPSTREAM_MERGE_BASE=$(git merge-base @{u} $MAIN_OR_MASTER);\
@@ -35,14 +36,71 @@
   }; f"
   unmerge = "!f() { git checkout --conflict=merge $@; }; f"
   clean-orig = "!f() { find . -name '*.orig' -type f -delete; }; f"
+  use-ssh = "!f() {\
+    url=$(git remote get-url origin);\
+    new=$(echo \"$url\" | sed -E \"s#https://github.com/#git@github.com:#\");\
+    git remote set-url origin \"$new\";\
+  }; f"
+  use-https = "!f() {\
+    url=$(git remote get-url origin);\
+    new=$(echo \"$url\" | sed -E \"s#git@github.com:#https://github.com/#\");\
+    git remote set-url origin \"$new\";\
+  }; f"
+  list-authors = "!gh api repos/:owner/:repo/contributors --paginate --jq \".[] | .login\""
+  stack-tree = "!~/.config/git/stack-tree.sh"
+  clone-bare = "!f() { \
+    url=\"$1\"; \
+    dir=\"${2:-$(basename \"$url\" .git)/.git}\"; \
+    git clone --bare \"$url\" \"$dir\" && \
+    git -C \"$dir\" config remote.origin.fetch \"+refs/heads/*:refs/remotes/origin/*\" && \
+    git -C \"$dir\" fetch --all; \
+  }; f"
+  difft = "!f() { git -c diff.external=difft diff $@; }; f"
+  p = "!f() { \
+    b=$(git rev-parse --abbrev-ref HEAD);\
+    if u=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null); then\
+      r=${u%%/*}; br=${u#*/};\
+    else\
+      r=origin; br=$b;\
+    fi;\
+    git fetch \"$r\" \"$br\" && git rebase \"$r/$br\";\
+  }; f"
+  review-save = "!f() { \
+    b=$(git rev-parse --abbrev-ref HEAD); \
+    u=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo origin/main); \
+    r=review/$b; \
+    git branch -f $r HEAD && \
+    git fetch ${u%/*} ${u#*/} && \
+    git reset --hard $u; \
+  }; f"
+  review-diff = "!f() { \
+    b=$(git rev-parse --abbrev-ref HEAD); \
+    base=${1:-origin/main}; \
+    r=review/$b; \
+    if git show-ref --verify --quiet refs/heads/$r; then \
+      old=$r; \
+    else \
+      old=$base; \
+    fi; \
+    git diff \
+      $(git merge-base $old $base) $old \
+      $(git merge-base HEAD $base) HEAD; \
+  }; f"
+  recommit = commit -C ORIG_HEAD
 [push]
   autoSetupRemote = true
 [diff]
-  mnemonicprefix = true
-  ; external = difft
+  mnemonicPrefix = 1
+  algorithm = histogram
+  colorMoved = dimmed-zebra
+  colorMovedWS = allow-indentation-change
 
 # SSH signing.
 [gpg]
   format = ssh
 [user]
   signingkey = $HOME/.ssh/id_ed25519.pub
+[rebase]
+  updateRefs = 1
+[url "git@github.com:"]
+  insteadOf = https://github.com/
