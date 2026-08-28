@@ -35,3 +35,4 @@
 # Subset of cursor config to track.
 !.cursor/rules/
 !.cursor/hooks.json
+!.cursor/.gitignore

@@ -2,10 +2,17 @@
 alwaysApply: true
 ---
 
+When talking to the user:
+- be concise; avoid excess verbiage
+- provide explicit references to code/logs/etc. to provide context for answers
+- use diagrams when explaining flows/traces
+
 When implementing features:
 - prefer the "proper" change over the easiest change
 - don't over-engineer solutions; choose the simplest method of accomplishing the task
 - verify all non-trivial code changes with the user before implementation (e.g. more than 50 lines of code)
+- never guess answers; read code and run tests/experiments to verify theories
+- always ask the user before running any experiments which may cost money (e.g. runs cloud compute or makes llm-api calls), and report an upper bound for the cost of the experiment
 - prefer to re-use existing code over writing new code
 - prefer using existing patterns unless otherwise directed
 - prefer fewer larger functions with comments over small one-off functions
@@ -13,3 +20,7 @@ When implementing features:
 - prefer restructuring the code to avoid conditionals rather than scattering-around conditionals
 - avoid multiple sources-of-truth/coupled-variables
 - avoid default values
+
+When executing plans:
+- prefer using `composer-2.5` (non-fast) subagents for implementation to save context and money
+  - if the subagents are repeatedly screwing up step-in and implement the code yourself

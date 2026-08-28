@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "/Users/robisaac/.config/tmux/scripts/record-cursor-chat"
+      }
+    ]
+  },
+  "version": 1
+}

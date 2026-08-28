@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+direction="${1:?usage: move-pane-edge <H|J|K|L|step-left|step-right|step-up|step-down>}"
+
+dock_pane_to_edge() {
+  local -a join_flags=("$@")
+
+  if (( $(tmux display -p '#{window_panes}') <= 1 )); then
+    exit 0
+  fi
+
+  local pane window
+  pane="$(tmux display -p '#{pane_id}')"
+  window="$(tmux display -p '#{window_id}')"
+
+  tmux break-pane -d -s "$pane"
+  tmux join-pane "${join_flags[@]}" -s "$pane" -t "$window"
+  tmux select-pane -t "$pane"
+  tmux select-layout -E
+}
+
+step_target_left() {
+  local current_left="$1"
+  tmux list-panes -F '#{pane_left} #{pane_id}' |
+    awk -v current="$current_left" '$1 < current {print}' |
+    sort -nr |
+    head -1 |
+    awk '{print $2}'
+}
+
+step_target_right() {
+  local current_right="$1"
+  tmux list-panes -F '#{pane_left} #{pane_width} #{pane_id}' |
+    awk -v current="$current_right" '{right = $1 + $2; if (right > current) print right, $3}' |
+    sort -n |
+    head -1 |
+    awk '{print $2}'
+}
+
+step_target_up() {
+  local current_top="$1"
+  tmux list-panes -F '#{pane_top} #{pane_id}' |
+    awk -v current="$current_top" '$1 < current {print}' |
+    sort -nr |
+    head -1 |
+    awk '{print $2}'
+}
+
+step_target_down() {
+  local current_bottom="$1"
+  tmux list-panes -F '#{pane_top} #{pane_height} #{pane_id}' |
+    awk -v current="$current_bottom" '{bottom = $1 + $2; if (bottom > current) print bottom, $3}' |
+    sort -n |
+    head -1 |
+    awk '{print $2}'
+}
+
+pane_right_edge() {
+  echo $(( $(tmux display -p '#{pane_left}') + $(tmux display -p '#{pane_width}') ))
+}
+
+pane_bottom_edge() {
+  echo $(( $(tmux display -p '#{pane_top}') + $(tmux display -p '#{pane_height}') ))
+}
+
+case "$direction" in
+  H)
+    dock_pane_to_edge -h -b -f
+    ;;
+  L)
+    dock_pane_to_edge -h -f
+    ;;
+  K)
+    dock_pane_to_edge -v -b -f
+    ;;
+  J)
+    dock_pane_to_edge -v -f
+    ;;
+  step-left)
+    target="$(step_target_left "$(tmux display -p '#{pane_left}')")"
+    [[ -n "$target" ]] || exit 0
+    tmux move-pane -h -b -t "$target"
+    ;;
+  step-right)
+    target="$(step_target_right "$(pane_right_edge)")"
+    [[ -n "$target" ]] || exit 0
+    tmux move-pane -h -t "$target"
+    ;;
+  step-up)
+    target="$(step_target_up "$(tmux display -p '#{pane_top}')")"
+    [[ -n "$target" ]] || exit 0
+    tmux move-pane -v -b -t "$target"
+    ;;
+  step-down)
+    target="$(step_target_down "$(pane_bottom_edge)")"
+    [[ -n "$target" ]] || exit 0
+    tmux move-pane -v -t "$target"
+    ;;
+  *)
+    tmux display-message "Unknown direction: $direction"
+    exit 1
+    ;;
+esac

@@ -1,0 +1,283 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+root="${TMUX_WORKTREE_ROOT:-$HOME/Code}"
+review_all=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --all)
+      review_all=true
+      shift
+      ;;
+    -h | --help)
+      cat <<'EOF'
+Select an open pull request and open it in a tmux session.
+
+By default, lists PRs that request your review. Pass --all to list every open PR
+for locally cloned repositories.
+
+Environment:
+  TMUX_WORKTREE_ROOT  Root directory to search for git repositories (default: ~/Code)
+EOF
+      exit 0
+      ;;
+    *)
+      tmux display-message "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
+[[ -d "$root" ]] || {
+  tmux display-message "Worktree root does not exist: $root"
+  exit 1
+}
+
+command -v gh >/dev/null || {
+  tmux display-message "gh CLI is required"
+  exit 1
+}
+
+remote_slug() {
+  local url
+  url="$(git -C "$1" remote get-url origin 2>/dev/null)" || return 1
+  if [[ "$url" =~ ^git@([^:]+):([^/]+)/(.+)$ ]]; then
+    echo "${BASH_REMATCH[2]}/${BASH_REMATCH[3]%.git}"
+  elif [[ "$url" =~ ^https?://[^/]+/([^/]+)/([^/.]+) ]]; then
+    echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]%.git}"
+  else
+    return 1
+  fi
+}
+
+iso_to_epoch() {
+  date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "${1%Z}Z" "+%s" 2>/dev/null || echo 0
+}
+
+worktree_for_branch() {
+  local repo="$1" branch="$2"
+  git -C "$repo" worktree list --porcelain 2>/dev/null | awk -v branch="$branch" '
+    /^worktree / { path = substr($0, 10) }
+    /^branch refs\/heads\// {
+      current = substr($0, 8)
+      sub(/^refs\/heads\//, "", current)
+      if (current == branch) {
+        print path
+        exit
+      }
+    }
+  '
+}
+
+worktree_for_pr() {
+  local repo="$1" pr_number="$2"
+  local suffix="-pr-${pr_number}"
+  git -C "$repo" worktree list --porcelain 2>/dev/null | awk -v suffix="$suffix" '
+    /^worktree / {
+      path = substr($0, 10)
+      if (substr(path, length(path) - length(suffix) + 1) == suffix) {
+        print path
+        exit
+      }
+    }
+  '
+}
+
+display_error() {
+  tmux display-message "$1"
+}
+
+update_worktree_from_pr() {
+  local worktree_path="$1" pr_number="$2"
+  git -C "$worktree_path" fetch -q origin "pull/${pr_number}/head" \
+    || return 1
+  git -C "$worktree_path" merge -q --ff-only FETCH_HEAD \
+    || git -C "$worktree_path" reset -q --hard FETCH_HEAD \
+    || return 1
+}
+
+ensure_pr_worktree() {
+  local repo_path="$1" repo_slug="$2" pr_number="$3"
+  local local_branch="pr-review-${pr_number}"
+  local worktree_path head_ref existing err_file
+
+  err_file="$(mktemp)"
+  trap 'rm -f "$err_file"' RETURN
+
+  head_ref="$(gh pr view "$pr_number" -R "$repo_slug" --json headRefName -q .headRefName)" \
+    || {
+      display_error "Failed to load PR #${pr_number}"
+      return 1
+    }
+
+  existing="$(worktree_for_branch "$repo_path" "$local_branch")"
+  [[ -n "$existing" ]] || existing="$(worktree_for_branch "$repo_path" "$head_ref")"
+  [[ -n "$existing" ]] || existing="$(worktree_for_pr "$repo_path" "$pr_number")"
+
+  if [[ -n "$existing" && -d "$existing" ]]; then
+    update_worktree_from_pr "$existing" "$pr_number" \
+      || {
+        display_error "Failed to update worktree for PR #${pr_number}"
+        return 1
+      }
+    printf '%s' "$existing"
+    return 0
+  fi
+
+  worktree_path="${repo_path}-pr-${pr_number}"
+  if [[ -e "$worktree_path" ]]; then
+    if git -C "$worktree_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      update_worktree_from_pr "$worktree_path" "$pr_number" \
+        || {
+          display_error "Failed to update worktree for PR #${pr_number}"
+          return 1
+        }
+      printf '%s' "$worktree_path"
+      return 0
+    fi
+    display_error "Path exists but is not a git worktree: ${worktree_path}"
+    return 1
+  fi
+
+  if git -C "$repo_path" show-ref --verify --quiet "refs/heads/${local_branch}"; then
+    if ! git -C "$repo_path" worktree add "$worktree_path" "$local_branch" 2>"$err_file"; then
+      existing="$(worktree_for_branch "$repo_path" "$local_branch")"
+      if [[ -n "$existing" && -d "$existing" ]]; then
+        update_worktree_from_pr "$existing" "$pr_number" \
+          || {
+            display_error "Failed to update worktree for PR #${pr_number}"
+            return 1
+          }
+        printf '%s' "$existing"
+        return 0
+      fi
+      display_error "Failed to create worktree: $(tr '\n' ' ' <"$err_file")"
+      return 1
+    fi
+  else
+    if ! git -C "$repo_path" fetch -q origin "pull/${pr_number}/head:${local_branch}"; then
+      display_error "Failed to fetch PR #${pr_number}"
+      return 1
+    fi
+    if ! git -C "$repo_path" worktree add "$worktree_path" "$local_branch" 2>"$err_file"; then
+      display_error "Failed to create worktree: $(tr '\n' ' ' <"$err_file")"
+      return 1
+    fi
+  fi
+
+  update_worktree_from_pr "$worktree_path" "$pr_number" \
+    || {
+      display_error "Failed to update worktree for PR #${pr_number}"
+      return 1
+    }
+  printf '%s' "$worktree_path"
+}
+
+repos_file="$(mktemp)"
+rows_file="$(mktemp)"
+formatted_file="$(mktemp)"
+trap 'rm -f "$repos_file" "$rows_file" "$formatted_file"' EXIT
+
+while IFS= read -r git_marker; do
+  git_marker="${git_marker%/}"
+  repo="${git_marker%/.git}"
+  slug="$(remote_slug "$repo")" || continue
+  printf '%s\t%s\n' "$slug" "$repo"
+done < <(
+  fd -HI -t d \
+    -E node_modules \
+    -E .venv \
+    -E venv \
+    -E vendor \
+    -E target \
+    -E .cache \
+    '^\.git$' "$root"
+) >"$repos_file"
+
+if [[ ! -s "$repos_file" ]]; then
+  tmux display-message "No git repositories found under $root"
+  exit 1
+fi
+
+search_args=(search prs --state=open --limit=200 --json number,title,repository,author,updatedAt)
+if [[ "$review_all" == false ]]; then
+  search_args+=(--review-requested=@me)
+fi
+
+while IFS=$'\t' read -r updated_at repo_slug pr_number author title; do
+  repo_path="$(awk -F '\t' -v slug="$repo_slug" '$1 == slug { print $2; exit }' "$repos_file")"
+  [[ -n "$repo_path" ]] || continue
+  epoch="$(iso_to_epoch "$updated_at")"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$epoch" "$repo_slug" "$pr_number" "$repo_path" "$author" "$title"
+done < <(gh "${search_args[@]}" --jq '.[] | [.updatedAt, .repository.nameWithOwner, (.number|tostring), .author.login, .title] | @tsv') \
+  | sort -t $'\t' -k1,1nr >"$rows_file"
+
+if [[ ! -s "$rows_file" ]]; then
+  if [[ "$review_all" == false ]]; then
+    tmux display-message "No open pull requests requesting your review in local repos"
+  else
+    tmux display-message "No open pull requests found in local repos"
+  fi
+  exit 0
+fi
+
+awk -F '\t' -v OFS='\t' '
+  {
+    epoch[NR] = $1
+    repo_slug[NR] = $2
+    pr_number[NR] = $3
+    repo_path[NR] = $4
+    author[NR] = $5
+    title[NR] = $6
+    display[NR] = sprintf("%s #%s  %s  %s", $2, $3, $5, $6)
+    if (length(display[NR]) > display_width) display_width = length(display[NR])
+  }
+  END {
+    for (i = 1; i <= NR; i++) {
+      print epoch[i], repo_slug[i], pr_number[i], repo_path[i], display[i]
+    }
+  }
+' "$rows_file" >"$formatted_file"
+
+selection="$(
+  fzf \
+    --delimiter=$'\t' \
+    --with-nth=5 \
+    --prompt='pr-review> ' \
+    --preview='gh pr view {3} -R {2}; printf "\nFiles\n"; gh pr diff {3} -R {2} --name-only' \
+    --preview-window='right,65%,wrap' \
+    <"$formatted_file"
+)" || exit 0
+
+repo_slug="$(cut -f2 <<<"$selection")"
+pr_number="$(cut -f3 <<<"$selection")"
+repo_path="$(cut -f4 <<<"$selection")"
+[[ -n "$repo_slug" && -n "$pr_number" && -n "$repo_path" ]] || exit 0
+
+worktree="$(ensure_pr_worktree "$repo_path" "$repo_slug" "$pr_number")"
+[[ -n "$worktree" && -d "$worktree" ]] || exit 1
+
+target="$(
+  tmux list-sessions -F '#{session_name}	#{@worktree_path}	#{@pr_number}	#{@pr_repo}	#{session_path}' |
+    awk -F '\t' -v path="$worktree" -v pr="$pr_number" -v slug="$repo_slug" '
+      $2 == path || $5 == path || ($3 == pr && $4 == slug) { print $1; exit }
+    '
+)"
+
+if [[ -z "$target" ]]; then
+  base_name="${worktree//[.:]/_}"
+  target="$base_name"
+  suffix=2
+  while tmux has-session -t "=$target" 2>/dev/null; do
+    target="${base_name}-${suffix}"
+    ((suffix += 1))
+  done
+  tmux new-session -d -s "$target" -c "$worktree"
+fi
+
+tmux set-option -t "=$target:" @worktree_path "$worktree"
+tmux set-option -t "=$target:" @pr_number "$pr_number"
+tmux set-option -t "=$target:" @pr_repo "$repo_slug"
+tmux switch-client -t "=$target"
