@@ -11,11 +11,211 @@ root="${TMUX_WORKTREE_ROOT:-$HOME/Code}"
 paths_file="$(mktemp)"
 rows_file="$(mktemp)"
 formatted_file="$(mktemp)"
-trap 'rm -f "$paths_file" "$rows_file" "$formatted_file"' EXIT
+repos_file="$(mktemp)"
+repos_formatted="$(mktemp)"
+trap 'rm -f "$paths_file" "$rows_file" "$formatted_file" "$repos_file" "$repos_formatted"' EXIT
+
+display_error() {
+  tmux display-message "$1"
+}
+
+sanitize_name() {
+  printf '%s' "$1" | tr '/:' '-'
+}
+
+relative_to_root() {
+  local path="$1"
+  if [[ "$path" == "$root" ]]; then
+    printf '.'
+  elif [[ "$path" == "$root"/* ]]; then
+    printf '%s' "${path#"$root"/}"
+  else
+    printf '%s' "$path"
+  fi
+}
+
+git_common_dir() {
+  local dir="$1" common
+  common="$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || true
+  if [[ -z "$common" ]]; then
+    common="$(git -C "$dir" rev-parse --git-common-dir 2>/dev/null)" || true
+    if [[ -n "$common" && "$common" != /* ]]; then
+      common="$(cd "$dir" && realpath "$common")"
+    fi
+  fi
+  printf '%s' "$common"
+}
+
+pick_main_worktree() {
+  local git_root="$1" list paths p named="" under="" first=""
+  list="$(git -C "$git_root" worktree list --porcelain 2>/dev/null)" || return 1
+  paths="$(
+    awk '
+      function emit() {
+        if (path != "" && !bare) print path
+      }
+      /^worktree / {
+        emit()
+        path = substr($0, 10)
+        bare = 0
+        next
+      }
+      /^bare/ { bare = 1; next }
+      END { emit() }
+    ' <<<"$list"
+  )"
+  [[ -n "$paths" ]] || return 1
+  while IFS= read -r p; do
+    [[ -d "$p" ]] || continue
+    if [[ -z "$first" ]]; then
+      first="$p"
+    fi
+    if [[ "$(basename "$p")" == "main" ]]; then
+      named="$p"
+    fi
+    if [[ -z "$under" ]]; then
+      if [[ "$p" == "$git_root" || "$p" == "$git_root"/* ]]; then
+        under="$p"
+      fi
+    fi
+  done <<<"$paths"
+  if [[ -n "$named" ]]; then
+    printf '%s' "$named"
+  elif [[ -n "$under" ]]; then
+    printf '%s' "$under"
+  elif [[ -n "$first" ]]; then
+    printf '%s' "$first"
+  else
+    return 1
+  fi
+}
+
+switch_to_worktree() {
+  local worktree="$1" target base_name suffix
+  [[ -n "$worktree" && -d "$worktree" ]] || exit 0
+
+  target="$(
+    tmux list-sessions -F '#{session_name}	#{@worktree_path}	#{session_path}' |
+      awk -F '\t' -v path="$worktree" '$1 == path || $2 == path || $3 == path { print $1; exit }'
+  )"
+
+  if [[ -z "$target" ]]; then
+    base_name="${worktree//[.:]/_}"
+    target="$base_name"
+    suffix=2
+    while tmux has-session -t "=$target" 2>/dev/null; do
+      target="${base_name}-${suffix}"
+      ((suffix += 1))
+    done
+    tmux new-session -d -s "$target" -c "$worktree"
+  fi
+
+  tmux set-option -t "=$target:" @worktree_path "$worktree"
+  # Popup teardown races with switch-client (especially after creating a new
+  # session). Switch now and again after the popup client is gone.
+  tmux switch-client -t "=$target" 2>/dev/null || true
+  (
+    sleep 0.15
+    tmux switch-client -t "=$target"
+  ) >/dev/null 2>&1 &
+}
+
+create_worktree() {
+  local highlighted="${1:-}"
+  local preferred_common="" repo_rows repo_selection main_path repo_label
+  local name_out name worktree_path err_file
+
+  if [[ -n "$highlighted" && -d "$highlighted" ]]; then
+    preferred_common="$(git_common_dir "$highlighted")"
+  fi
+
+  [[ -s "$repos_formatted" ]] || {
+    display_error "No repositories found under $root"
+    exit 1
+  }
+
+  repo_rows="$(
+    {
+      if [[ -n "$preferred_common" ]]; then
+        awk -F '\t' -v pref="$preferred_common" '$4 == pref' "$repos_formatted"
+      fi
+      awk -F '\t' -v pref="$preferred_common" '$4 != pref' "$repos_formatted"
+    }
+  )"
+
+  repo_selection="$(
+    fzf \
+      --delimiter=$'\t' \
+      --with-nth=3 \
+      --prompt='repo> ' \
+      --header='enter: select repo  esc: cancel' \
+      --preview='git -C {1} status --short --branch; printf "\nRecent commits\n"; git -C {1} log --oneline --decorate -10' \
+      --preview-window='right,65%,wrap' \
+      <<<"$repo_rows"
+  )" || exit 0
+
+  main_path="$(cut -f1 <<<"$repo_selection")"
+  repo_label="$(cut -f2 <<<"$repo_selection")"
+  [[ -n "$main_path" && -d "$main_path" ]] || exit 0
+
+  name_out="$(
+    fzf \
+      --print-query \
+      --disabled \
+      --prompt='worktree name> ' \
+      --header="repo: ${repo_label}  enter: create  esc: cancel" \
+      --bind 'enter:print-query+accept' \
+      </dev/null
+  )" || exit 0
+
+  name="$(printf '%s\n' "$name_out" | sed -n '1p')"
+  name="${name#"${name%%[![:space:]]*}"}"
+  name="${name%"${name##*[![:space:]]}"}"
+  [[ -n "$name" ]] || exit 0
+
+  worktree_path="$(dirname "$main_path")/$(sanitize_name "$name")"
+  if [[ -e "$worktree_path" ]]; then
+    display_error "Path already exists: ${worktree_path}"
+    exit 1
+  fi
+
+  err_file="$(mktemp)"
+  if git -C "$main_path" show-ref --verify --quiet "refs/heads/${name}"; then
+    git -C "$main_path" worktree add -q "$worktree_path" "$name" >/dev/null 2>"$err_file" || {
+      display_error "Failed to create worktree: $(tr '\n' ' ' <"$err_file")"
+      rm -f "$err_file"
+      exit 1
+    }
+  elif git -C "$main_path" show-ref --verify --quiet "refs/remotes/origin/${name}"; then
+    git -C "$main_path" worktree add -q -b "$name" "$worktree_path" "origin/${name}" >/dev/null 2>"$err_file" || {
+      display_error "Failed to create worktree: $(tr '\n' ' ' <"$err_file")"
+      rm -f "$err_file"
+      exit 1
+    }
+  else
+    git -C "$main_path" worktree add -q -b "$name" "$worktree_path" >/dev/null 2>"$err_file" || {
+      display_error "Failed to create worktree: $(tr '\n' ' ' <"$err_file")"
+      rm -f "$err_file"
+      exit 1
+    }
+  fi
+  rm -f "$err_file"
+
+  switch_to_worktree "$worktree_path"
+}
 
 while IFS= read -r git_marker; do
   git_marker="${git_marker%/}"
   repo="${git_marker%/.git}"
+  main_path="$(pick_main_worktree "$repo")" || true
+  if [[ -n "$main_path" && -d "$main_path" ]]; then
+    printf '%s\t%s\t%s\t%s\n' \
+      "$main_path" \
+      "$(basename "$repo")" \
+      "$(relative_to_root "$main_path")" \
+      "$(git_common_dir "$main_path")" >>"$repos_file"
+  fi
+
   worktrees="$(git -C "$repo" worktree list --porcelain 2>/dev/null)" || continue
   awk '
     function emit() {
@@ -48,6 +248,23 @@ done < <(
     -E .cache \
     '^\.git$' "$root"
 )
+
+sort -t $'\t' -k1,1 -u "$repos_file" | sort -t $'\t' -k2,2 | awk -F '\t' -v OFS='\t' '
+  {
+    path[NR] = $1
+    label[NR] = $2
+    rel[NR] = $3
+    common[NR] = $4
+    if (length($2) > label_width) label_width = length($2)
+    if (length($3) > rel_width) rel_width = length($3)
+  }
+  END {
+    for (i = 1; i <= NR; i++) {
+      display = sprintf("%-*s  %-*s", label_width, label[i], rel_width, rel[i])
+      print path[i], label[i], display, common[i]
+    }
+  }
+' >"$repos_formatted"
 
 sort -t $'\t' -k1,1 -u "$paths_file" | while IFS=$'\t' read -r worktree branch; do
   [[ -d "$worktree" ]] || continue
@@ -92,34 +309,26 @@ awk -F '\t' -v OFS='\t' -v root="$root" '
   }
 ' "$rows_file" >"$formatted_file"
 
-selection="$(
+result="$(
   fzf \
     --delimiter=$'\t' \
     --with-nth=3 \
     --prompt='worktree> ' \
+    --header='enter: switch  alt-enter: create' \
+    --expect=alt-enter \
     --preview='git -C {2} status --short --branch; printf "\nRecent commits\n"; git -C {2} log --oneline --decorate -10' \
     --preview-window='right,65%,wrap' \
     <"$formatted_file"
 )" || exit 0
 
-worktree="$(cut -f2 <<<"$selection")"
-[[ -n "$worktree" ]] || exit 0
+key="$(printf '%s\n' "$result" | sed -n '1p')"
+selection="$(printf '%s\n' "$result" | sed -n '2p')"
 
-target="$(
-  tmux list-sessions -F '#{session_name}	#{@worktree_path}	#{session_path}' |
-    awk -F '\t' -v path="$worktree" '$1 == path || $2 == path || $3 == path { print $1; exit }'
-)"
-
-if [[ -z "$target" ]]; then
-  base_name="${worktree//[.:]/_}"
-  target="$base_name"
-  suffix=2
-  while tmux has-session -t "=$target" 2>/dev/null; do
-    target="${base_name}-${suffix}"
-    ((suffix += 1))
-  done
-  tmux new-session -d -s "$target" -c "$worktree"
+if [[ "$key" == "alt-enter" ]]; then
+  create_worktree "$(cut -f2 <<<"$selection")"
+  exit 0
 fi
 
-tmux set-option -t "=$target:" @worktree_path "$worktree"
-tmux switch-client -t "=$target"
+worktree="$(cut -f2 <<<"$selection")"
+[[ -n "$worktree" ]] || exit 0
+switch_to_worktree "$worktree"

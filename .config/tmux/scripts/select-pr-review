@@ -3,20 +3,25 @@
 set -euo pipefail
 
 root="${TMUX_WORKTREE_ROOT:-$HOME/Code}"
-review_all=false
+cache_json="${XDG_CACHE_HOME:-$HOME/.cache}/tmux/pr-status.json"
+scripts_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --all)
-      review_all=true
-      shift
-      ;;
     -h | --help)
       cat <<'EOF'
 Select an open pull request and open it in a tmux session.
 
-By default, lists PRs that request your review. Pass --all to list every open PR
-for locally cloned repositories.
+Lists the same PRs as the tmux status-bar pill, labeled by category:
+  inbox   review requested of you (including re-requests)
+  ready   your PRs that can merge
+  review  your PRs blocked on review
+  running your PRs with CI still in progress
+  ci      your PRs with failed CI or merge conflicts
+
+In the picker:
+  alt-a  all          alt-i  inbox          alt-m  ready
+  alt-r  review       alt-p  running        alt-c  ci
 
 Environment:
   TMUX_WORKTREE_ROOT  Root directory to search for git repositories (default: ~/Code)
@@ -38,22 +43,6 @@ done
 command -v gh >/dev/null || {
   tmux display-message "gh CLI is required"
   exit 1
-}
-
-remote_slug() {
-  local url
-  url="$(git -C "$1" remote get-url origin 2>/dev/null)" || return 1
-  if [[ "$url" =~ ^git@([^:]+):([^/]+)/(.+)$ ]]; then
-    echo "${BASH_REMATCH[2]}/${BASH_REMATCH[3]%.git}"
-  elif [[ "$url" =~ ^https?://[^/]+/([^/]+)/([^/.]+) ]]; then
-    echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]%.git}"
-  else
-    return 1
-  fi
-}
-
-iso_to_epoch() {
-  date -j -u -f "%Y-%m-%dT%H:%M:%SZ" "${1%Z}Z" "+%s" 2>/dev/null || echo 0
 }
 
 worktree_for_branch() {
@@ -89,164 +78,205 @@ display_error() {
   tmux display-message "$1"
 }
 
-update_worktree_from_pr() {
-  local worktree_path="$1" pr_number="$2"
-  git -C "$worktree_path" fetch -q origin "pull/${pr_number}/head" \
-    || return 1
-  git -C "$worktree_path" merge -q --ff-only FETCH_HEAD \
-    || git -C "$worktree_path" reset -q --hard FETCH_HEAD \
-    || return 1
+sanitize_branch() {
+  printf '%s' "$1" | tr '/:' '-'
 }
 
 ensure_pr_worktree() {
-  local repo_path="$1" repo_slug="$2" pr_number="$3"
-  local local_branch="pr-review-${pr_number}"
-  local worktree_path head_ref existing err_file
+  local repo_path="$1" repo_slug="$2" pr_number="$3" head_ref="$4"
+  local local_branch worktree_path existing err_file
 
-  err_file="$(mktemp)"
-  trap 'rm -f "$err_file"' RETURN
-
-  head_ref="$(gh pr view "$pr_number" -R "$repo_slug" --json headRefName -q .headRefName)" \
-    || {
-      display_error "Failed to load PR #${pr_number}"
-      return 1
-    }
-
-  existing="$(worktree_for_branch "$repo_path" "$local_branch")"
-  [[ -n "$existing" ]] || existing="$(worktree_for_branch "$repo_path" "$head_ref")"
-  [[ -n "$existing" ]] || existing="$(worktree_for_pr "$repo_path" "$pr_number")"
-
-  if [[ -n "$existing" && -d "$existing" ]]; then
-    update_worktree_from_pr "$existing" "$pr_number" \
+  if [[ -z "$head_ref" ]]; then
+    head_ref="$(gh pr view "$pr_number" -R "$repo_slug" --json headRefName -q .headRefName)" \
       || {
-        display_error "Failed to update worktree for PR #${pr_number}"
+        display_error "Failed to load PR #${pr_number}"
         return 1
       }
+  fi
+
+  local_branch="$head_ref"
+  worktree_path="${repo_path}/$(sanitize_branch "$head_ref")"
+  err_file="$(mktemp)"
+
+  existing="$(worktree_for_branch "$repo_path" "$local_branch")"
+  [[ -n "$existing" ]] || existing="$(worktree_for_pr "$repo_path" "$pr_number")"
+  if [[ -z "$existing" && -d "$worktree_path" ]]; then
+    existing="$worktree_path"
+  fi
+
+  if [[ -n "$existing" && -d "$existing" ]]; then
+    rm -f "$err_file"
     printf '%s' "$existing"
     return 0
   fi
 
-  worktree_path="${repo_path}-pr-${pr_number}"
+  echo "Creating worktree ${local_branch}..." >&2
+
   if [[ -e "$worktree_path" ]]; then
-    if git -C "$worktree_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-      update_worktree_from_pr "$worktree_path" "$pr_number" \
-        || {
-          display_error "Failed to update worktree for PR #${pr_number}"
-          return 1
-        }
-      printf '%s' "$worktree_path"
-      return 0
-    fi
+    rm -f "$err_file"
     display_error "Path exists but is not a git worktree: ${worktree_path}"
     return 1
   fi
 
   if git -C "$repo_path" show-ref --verify --quiet "refs/heads/${local_branch}"; then
-    if ! git -C "$repo_path" worktree add "$worktree_path" "$local_branch" 2>"$err_file"; then
+    if ! git -C "$repo_path" worktree add -q "$worktree_path" "$local_branch" >/dev/null 2>"$err_file"; then
       existing="$(worktree_for_branch "$repo_path" "$local_branch")"
       if [[ -n "$existing" && -d "$existing" ]]; then
-        update_worktree_from_pr "$existing" "$pr_number" \
-          || {
-            display_error "Failed to update worktree for PR #${pr_number}"
-            return 1
-          }
+        rm -f "$err_file"
         printf '%s' "$existing"
         return 0
       fi
       display_error "Failed to create worktree: $(tr '\n' ' ' <"$err_file")"
+      rm -f "$err_file"
       return 1
     fi
-  else
-    if ! git -C "$repo_path" fetch -q origin "pull/${pr_number}/head:${local_branch}"; then
-      display_error "Failed to fetch PR #${pr_number}"
-      return 1
-    fi
-    if ! git -C "$repo_path" worktree add "$worktree_path" "$local_branch" 2>"$err_file"; then
-      display_error "Failed to create worktree: $(tr '\n' ' ' <"$err_file")"
-      return 1
-    fi
+    rm -f "$err_file"
+    printf '%s' "$worktree_path"
+    return 0
   fi
 
-  update_worktree_from_pr "$worktree_path" "$pr_number" \
-    || {
-      display_error "Failed to update worktree for PR #${pr_number}"
-      return 1
-    }
+  if ! git -C "$repo_path" fetch -q origin "pull/${pr_number}/head:${local_branch}" 2>"$err_file"; then
+    existing="$(worktree_for_branch "$repo_path" "$local_branch")"
+    if [[ -n "$existing" && -d "$existing" ]]; then
+      rm -f "$err_file"
+      printf '%s' "$existing"
+      return 0
+    fi
+    display_error "Failed to fetch PR #${pr_number}"
+    rm -f "$err_file"
+    return 1
+  fi
+  if ! git -C "$repo_path" worktree add -q "$worktree_path" "$local_branch" >/dev/null 2>"$err_file"; then
+    display_error "Failed to create worktree: $(tr '\n' ' ' <"$err_file")"
+    rm -f "$err_file"
+    return 1
+  fi
+  rm -f "$err_file"
   printf '%s' "$worktree_path"
 }
 
-repos_file="$(mktemp)"
-rows_file="$(mktemp)"
-formatted_file="$(mktemp)"
-trap 'rm -f "$repos_file" "$rows_file" "$formatted_file"' EXIT
+color_age() {
+  printf '\033[90m%s\033[0m' "$1"
+}
 
-while IFS= read -r git_marker; do
-  git_marker="${git_marker%/}"
-  repo="${git_marker%/.git}"
-  slug="$(remote_slug "$repo")" || continue
-  printf '%s\t%s\n' "$slug" "$repo"
-done < <(
-  fd -HI -t d \
-    -E node_modules \
-    -E .venv \
-    -E venv \
-    -E vendor \
-    -E target \
-    -E .cache \
-    '^\.git$' "$root"
-) >"$repos_file"
+rows_jq='
+def relage:
+  (.updatedAt // "") as $u
+  | if $u == "" then "?"
+    else
+      ($u | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601) as $t
+      | (now - $t) as $d
+      | if $d < 90 then "now"
+        elif $d < 3600 then "\((($d / 60) | floor))m"
+        elif $d < 86400 then "\((($d / 3600) | floor))h"
+        elif $d < 86400 * 14 then "\((($d / 86400) | floor))d"
+        else "\((($d / 86400 / 7) | floor))w"
+        end
+    end;
+.prs[] | [(.categories | join(" ")), .repo, (.number | tostring), (.path // ""), relage, .author, .title] | @tsv
+'
 
-if [[ ! -s "$repos_file" ]]; then
-  tmux display-message "No git repositories found under $root"
+color_cat() {
+  case "$1" in
+    inbox | review) printf '\033[33m%s\033[0m' "$1" ;;
+    ready) printf '\033[32m%s\033[0m' "$1" ;;
+    running) printf '\033[36m%s\033[0m' "$1" ;;
+    ci) printf '\033[31m%s\033[0m' "$1" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+color_cats() {
+  local out="" c
+  for c in $1; do
+    [[ -n "$out" ]] && out+=" "
+    out+="$(color_cat "$c")"
+  done
+  printf '%s' "$out"
+}
+
+filters="$(mktemp -d)"
+formatted_file="$filters/all.tsv"
+trap 'rm -rf "$filters"' EXIT
+
+cache_ready() {
+  [[ -f "$cache_json" ]] && jq -e '.prs != null' "$cache_json" >/dev/null 2>&1
+}
+
+if cache_ready; then
+  "$scripts_dir/pr-status" prefetch
+else
+  "$scripts_dir/pr-status" ensure || {
+    tmux display-message "Failed to load pull requests"
+    exit 1
+  }
+fi
+
+if ! cache_ready; then
+  tmux display-message "Failed to load pull requests"
   exit 1
 fi
 
-search_args=(search prs --state=open --limit=200 --json number,title,repository,author,updatedAt)
-if [[ "$review_all" == false ]]; then
-  search_args+=(--review-requested=@me)
-fi
-
-while IFS=$'\t' read -r updated_at repo_slug pr_number author title; do
-  repo_path="$(awk -F '\t' -v slug="$repo_slug" '$1 == slug { print $2; exit }' "$repos_file")"
-  [[ -n "$repo_path" ]] || continue
-  epoch="$(iso_to_epoch "$updated_at")"
-  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$epoch" "$repo_slug" "$pr_number" "$repo_path" "$author" "$title"
-done < <(gh "${search_args[@]}" --jq '.[] | [.updatedAt, .repository.nameWithOwner, (.number|tostring), .author.login, .title] | @tsv') \
-  | sort -t $'\t' -k1,1nr >"$rows_file"
-
-if [[ ! -s "$rows_file" ]]; then
-  if [[ "$review_all" == false ]]; then
-    tmux display-message "No open pull requests requesting your review in local repos"
-  else
-    tmux display-message "No open pull requests found in local repos"
-  fi
+if jq -e '.prs | length == 0' "$cache_json" >/dev/null; then
+  tmux display-message "No open pull requests in local repos"
   exit 0
 fi
 
-awk -F '\t' -v OFS='\t' '
-  {
-    epoch[NR] = $1
-    repo_slug[NR] = $2
-    pr_number[NR] = $3
-    repo_path[NR] = $4
-    author[NR] = $5
-    title[NR] = $6
-    display[NR] = sprintf("%s #%s  %s  %s", $2, $3, $5, $6)
-    if (length(display[NR]) > display_width) display_width = length(display[NR])
-  }
-  END {
-    for (i = 1; i <= NR; i++) {
-      print epoch[i], repo_slug[i], pr_number[i], repo_path[i], display[i]
-    }
-  }
-' "$rows_file" >"$formatted_file"
+label_width=0
+age_width=0
+while IFS=$'\t' read -r cats repo_slug pr_number repo_path age author title; do
+  if (( ${#cats} > label_width )); then
+    label_width=${#cats}
+  fi
+  if (( ${#age} > age_width )); then
+    age_width=${#age}
+  fi
+done < <(jq -r "$rows_jq" "$cache_json")
+
+while IFS=$'\t' read -r cats repo_slug pr_number repo_path age author title; do
+  pad=$((label_width - ${#cats}))
+  age_pad=$((age_width - ${#age}))
+  display="$(printf '%s%*s  %s%*s  %s #%s  %s  %s' "$(color_cats "$cats")" "$pad" "" "$(color_age "$age")" "$age_pad" "" "$repo_slug" "$pr_number" "$author" "$title")"
+  printf '%s\t%s\t%s\t%s\t%s\n' "$cats" "$repo_slug" "$pr_number" "$repo_path" "$display"
+done < <(jq -r "$rows_jq" "$cache_json") \
+  >"$formatted_file"
+
+if [[ ! -s "$formatted_file" ]]; then
+  tmux display-message "No open pull requests in local repos"
+  exit 0
+fi
+
+header='alt-a all  alt-i inbox  alt-m ready  alt-r review  alt-p running  alt-c ci'
+write_filter() {
+  local name="$1" needle="$2"
+  if [[ -z "$needle" ]]; then
+    printf '#!/bin/sh\ncat "%s"\n' "$formatted_file" >"$filters/$name"
+  else
+    printf '#!/bin/sh\nawk -F '\''\t'\'' '\''index(" " $1 " ", " %s ")'\'' "%s"\n' "$needle" "$formatted_file" >"$filters/$name"
+  fi
+  chmod +x "$filters/$name"
+}
+write_filter all ""
+write_filter inbox inbox
+write_filter ready ready
+write_filter review review
+write_filter running running
+write_filter ci ci
 
 selection="$(
   fzf \
+    --ansi \
     --delimiter=$'\t' \
     --with-nth=5 \
-    --prompt='pr-review> ' \
-    --preview='gh pr view {3} -R {2}; printf "\nFiles\n"; gh pr diff {3} -R {2} --name-only' \
+    --prompt='pr all> ' \
+    --header="$header" \
+    --bind "alt-a:change-prompt(pr all> )+reload:$filters/all" \
+    --bind "alt-i:change-prompt(pr inbox> )+reload:$filters/inbox" \
+    --bind "alt-m:change-prompt(pr ready> )+reload:$filters/ready" \
+    --bind "alt-r:change-prompt(pr review> )+reload:$filters/review" \
+    --bind "alt-p:change-prompt(pr running> )+reload:$filters/running" \
+    --bind "alt-c:change-prompt(pr ci> )+reload:$filters/ci" \
+    --preview='sleep 0.35; gh pr view {3} -R {2}; printf "\nFiles\n"; gh pr diff {3} -R {2} --name-only' \
     --preview-window='right,65%,wrap' \
     <"$formatted_file"
 )" || exit 0
@@ -254,9 +284,24 @@ selection="$(
 repo_slug="$(cut -f2 <<<"$selection")"
 pr_number="$(cut -f3 <<<"$selection")"
 repo_path="$(cut -f4 <<<"$selection")"
-[[ -n "$repo_slug" && -n "$pr_number" && -n "$repo_path" ]] || exit 0
+[[ -n "$repo_slug" && -n "$pr_number" ]] || exit 0
 
-worktree="$(ensure_pr_worktree "$repo_path" "$repo_slug" "$pr_number")"
+if [[ ! -d "$repo_path" ]]; then
+  repo_path="$("$scripts_dir/local-github-repos" | awk -F '\t' -v slug="$repo_slug" '$1 == slug { print $2; exit }')"
+fi
+[[ -n "$repo_path" && -d "$repo_path" ]] || {
+  tmux display-message "No local clone for ${repo_slug}"
+  exit 1
+}
+
+head_ref="$(
+  jq -r --arg slug "$repo_slug" --arg num "$pr_number" \
+    '.prs[] | select(.repo == $slug and (.number | tostring) == $num) | .headRefName // empty' \
+    "$cache_json"
+)"
+
+echo "Opening ${repo_slug}#${pr_number}..." >&2
+worktree="$(ensure_pr_worktree "$repo_path" "$repo_slug" "$pr_number" "$head_ref")"
 [[ -n "$worktree" && -d "$worktree" ]] || exit 1
 
 target="$(
@@ -280,4 +325,11 @@ fi
 tmux set-option -t "=$target:" @worktree_path "$worktree"
 tmux set-option -t "=$target:" @pr_number "$pr_number"
 tmux set-option -t "=$target:" @pr_repo "$repo_slug"
-tmux switch-client -t "=$target"
+
+# Popup teardown races with switch-client (especially after creating a new
+# session). Switch now and again after the popup client is gone.
+tmux switch-client -t "=$target" 2>/dev/null || true
+(
+  sleep 0.15
+  tmux switch-client -t "=$target"
+) >/dev/null 2>&1 &

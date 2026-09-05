@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+
+# Cached GitHub PR counts for the tmux status bar.
+# `show` prints the last formatted cache immediately and never blocks on the network.
+# `refresh` queries GitHub once via pr-data and rewrites the shared JSON + pill cache.
+# `ensure` blocks until the JSON cache exists (first run only).
+# `prefetch` kicks a background refresh when the cache is stale.
+
+set -euo pipefail
+
+ttl_seconds=120
+scripts_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tmux"
+cache_file="$cache_dir/pr-status"
+cache_json="$cache_dir/pr-status.json"
+lock_dir="$cache_dir/pr-status.lock"
+
+file_mtime() {
+  stat -f %m "$1" 2>/dev/null || stat -c %Y "$1"
+}
+
+cache_is_stale() {
+  local mtime now
+  [[ -f "$cache_json" ]] || return 0
+  jq -e '.prs != null' "$cache_json" >/dev/null 2>&1 || return 0
+  mtime="$(file_mtime "$cache_json")" || return 0
+  now="$(date +%s)"
+  (( now - mtime >= ttl_seconds ))
+}
+
+lock_held_by_live_process() {
+  local pid
+  [[ -d "$lock_dir" ]] || return 1
+  pid="$(cat "$lock_dir/pid" 2>/dev/null || true)"
+  [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null
+}
+
+acquire_lock() {
+  mkdir -p "$cache_dir"
+  if mkdir "$lock_dir" 2>/dev/null; then
+    echo "$$" >"$lock_dir/pid"
+    return 0
+  fi
+  if lock_held_by_live_process; then
+    return 1
+  fi
+  rm -rf "$lock_dir"
+  mkdir "$lock_dir" 2>/dev/null || return 1
+  echo "$$" >"$lock_dir/pid"
+}
+
+release_lock() {
+  rm -rf "$lock_dir"
+}
+
+format_pill() {
+  local inbox="$1" ready="$2" review="$3" running="$4" ci="$5"
+  local parts=()
+
+  (( inbox > 0 )) && parts+=("#[fg=yellow]󰌶 ${inbox}")
+  (( ready > 0 )) && parts+=("#[fg=green]✓${ready}")
+  (( review > 0 )) && parts+=("#[fg=yellow]󰸞${review}")
+  (( running > 0 )) && parts+=("#[fg=cyan]󰔟${running}")
+  (( ci > 0 )) && parts+=("#[fg=red]󰅙${ci}")
+
+  (( ${#parts[@]} == 0 )) && return 0
+
+  local inner=""
+  local i
+  for i in "${!parts[@]}"; do
+    (( i > 0 )) && inner+="  "
+    inner+="${parts[$i]}"
+  done
+
+  printf '#[fg=brightblack,bg=default]#[bg=brightblack]%s #[fg=brightblack,bg=default] ' "$inner"
+}
+
+write_cache() {
+  local formatted="$1" json="$2"
+  local tmp_fmt tmp_json
+  mkdir -p "$cache_dir"
+  tmp_fmt="$(mktemp "$cache_dir/pr-status.XXXXXX")"
+  tmp_json="$(mktemp "$cache_dir/pr-status-json.XXXXXX")"
+  printf '%s' "$formatted" >"$tmp_fmt"
+  printf '%s\n' "$json" >"$tmp_json"
+  mv "$tmp_json" "$cache_json"
+  mv "$tmp_fmt" "$cache_file"
+}
+
+kick_refresh() {
+  if [[ -n "${TMUX:-}" ]]; then
+    tmux run-shell -b "'$scripts_dir/pr-status' refresh"
+  else
+    "$scripts_dir/pr-status" refresh >/dev/null 2>&1 &
+  fi
+}
+
+cmd_show() {
+  [[ -f "$cache_file" ]] && cat "$cache_file"
+  if cache_is_stale; then
+    kick_refresh
+  fi
+}
+
+refresh_locked() {
+  local json formatted
+  json="$("$scripts_dir/pr-data")" || return 0
+  formatted="$(
+    format_pill \
+      "$(jq -r .inbox <<<"$json")" \
+      "$(jq -r .ready <<<"$json")" \
+      "$(jq -r .review <<<"$json")" \
+      "$(jq -r '.running // 0' <<<"$json")" \
+      "$(jq -r .ci <<<"$json")"
+  )"
+  write_cache "$formatted" "$json"
+}
+
+cmd_refresh() {
+  command -v gh >/dev/null || return 0
+  command -v jq >/dev/null || return 0
+  acquire_lock || return 0
+  trap release_lock EXIT
+  refresh_locked
+}
+
+cmd_ensure() {
+  command -v gh >/dev/null || return 1
+  command -v jq >/dev/null || return 1
+
+  local n=0
+  while cache_is_stale; do
+    if acquire_lock; then
+      trap release_lock EXIT
+      refresh_locked
+      return 0
+    fi
+    sleep 0.2
+    n=$((n + 1))
+    if (( n > 150 )); then
+      return 1
+    fi
+  done
+}
+
+cmd_prefetch() {
+  if cache_is_stale; then
+    kick_refresh
+  fi
+}
+
+case "${1:-show}" in
+  show) cmd_show ;;
+  refresh) cmd_refresh ;;
+  ensure) cmd_ensure ;;
+  prefetch) cmd_prefetch ;;
+  *)
+    echo "usage: pr-status {show|refresh|ensure|prefetch}" >&2
+    exit 1
+    ;;
+esac

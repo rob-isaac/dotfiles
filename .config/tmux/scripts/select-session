@@ -44,7 +44,7 @@ selection="$(
       --with-nth=3 \
       --prompt='session> ' \
       --preview='tmux capture-pane -ep -t {2}: -S -200' \
-      --preview-window='right,65%,wrap'
+      --preview-window='right,65%,nowrap'
 )" || exit 0
 
 target="$(cut -f2 <<<"$selection")"
