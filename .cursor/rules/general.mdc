@@ -24,9 +24,20 @@ When implementing features:
 - prefer using subagents when touching more than ~100 lines of code (ONLY if you are not already a subagent)
 - avoid multiple sources-of-truth/coupled-variables
 - avoid default values
+- prefer private functions/variables over public
+- never make blocking network requests while holding a mutex-lock or database-connection
 
 When choosing/using subagents:
 - NEVER use `fast` models
 - prefer the `composer-2.5` model
 - tell the subagent that it is a subagent
 - if the subagents are repeatedly screwing up step-in and implement the code yourself
+
+When working with git:
+- NEVER push changes to remote without the user's permission
+- don't commit changes unless the user says to
+- use a brief commit title of the form `scope: short description`
+- write detailed commit descriptions which describe why the change was made (background) and how the change was implemented
+
+When working on a PR:
+- NEVER respond to comments on the PR without the user's permission
