@@ -1,0 +1,360 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+root="${TMUX_WORKTREE_ROOT:-$HOME/Code}"
+worksesh="${WORKSESH_BIN:-$HOME/.local/bin/worksesh}"
+script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "$0")"
+# shellcheck source=pr-worktree.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/pr-worktree.sh"
+cache_json="$("$worksesh" ntf cache-path)"
+
+rows_jq='
+def relage:
+  (.updatedAt // "") as $u
+  | if $u == "" then "?"
+    else
+      ($u | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601) as $t
+      | (now - $t) as $d
+      | if $d < 90 then "now"
+        elif $d < 3600 then "\((($d / 60) | floor))m"
+        elif $d < 86400 then "\((($d / 3600) | floor))h"
+        elif $d < 86400 * 14 then "\((($d / 86400) | floor))d"
+        else "\((($d / 86400 / 7) | floor))w"
+        end
+    end;
+.notifications[] | [(.id | tostring), .reason, ((.activity // "") | if . == "" then "-" else . end), .type, .repo, ((.number // 0) | tostring), ((.path // "") | if . == "" then "-" else . end), ((.url // "") | if . == "" then "-" else . end), relage, .title] | @tsv
+'
+
+short_type() {
+  case "$1" in
+    PullRequest) printf 'pr' ;;
+    Issue) printf 'issue' ;;
+    Discussion) printf 'discuss' ;;
+    CheckSuite) printf 'ci' ;;
+    Release) printf 'release' ;;
+    *) printf '%s' "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" ;;
+  esac
+}
+
+color_reason() {
+  case "$1" in
+    comment | review) printf '\033[36m%s\033[0m' "$1" ;;
+    review_requested) printf '\033[33m%s\033[0m' "$1" ;;
+    mention | team_mention) printf '\033[35m%s\033[0m' "$1" ;;
+    assign | author | ci_activity) printf '\033[36m%s\033[0m' "$1" ;;
+    subscribed) printf '\033[90m%s\033[0m' "$1" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+color_type() {
+  case "$1" in
+    PullRequest) printf '\033[32m%s\033[0m' "$(short_type "$1")" ;;
+    Issue) printf '\033[34m%s\033[0m' "$(short_type "$1")" ;;
+    *) printf '%s' "$(short_type "$1")" ;;
+  esac
+}
+
+color_age() {
+  printf '\033[90m%s\033[0m' "$1"
+}
+
+matches_filter() {
+  local filter="$1" reason="$2" ntype="$3" activity="$4"
+  case "$filter" in
+    all) return 0 ;;
+    pr) [[ "$ntype" == "PullRequest" ]] ;;
+    issue) [[ "$ntype" == "Issue" ]] ;;
+    review) [[ "$reason" == "review_requested" ]] ;;
+    mention) [[ "$reason" == "mention" || "$reason" == "team_mention" ]] ;;
+    comment) [[ "$activity" == "comment" || "$activity" == "review" || "$reason" == "comment" ]] ;;
+    *) return 1 ;;
+  esac
+}
+
+row_label() {
+  local reason="$1" activity="$2"
+  if [[ -n "$activity" && "$activity" != "-" ]]; then
+    printf '%s' "$activity"
+  else
+    printf '%s' "$reason"
+  fi
+}
+
+list_rows() {
+  local filter="${1:-all}"
+  local label_width=0 type_width=0 age_width=0
+  local id reason activity ntype repo number repo_path url age title
+  local pad type_pad age_pad display short label
+
+  [[ -f "$cache_json" ]] || return 0
+
+  while IFS=$'\t' read -r id reason activity ntype repo number repo_path url age title; do
+    label="$(row_label "$reason" "$activity")"
+    short="$(short_type "$ntype")"
+    if (( ${#label} > label_width )); then
+      label_width=${#label}
+    fi
+    if (( ${#short} > type_width )); then
+      type_width=${#short}
+    fi
+    if (( ${#age} > age_width )); then
+      age_width=${#age}
+    fi
+  done < <(jq -r "$rows_jq" "$cache_json")
+
+  while IFS=$'\t' read -r id reason activity ntype repo number repo_path url age title; do
+    matches_filter "$filter" "$reason" "$ntype" "$activity" || continue
+    label="$(row_label "$reason" "$activity")"
+    short="$(short_type "$ntype")"
+    pad=$((label_width - ${#label}))
+    type_pad=$((type_width - ${#short}))
+    age_pad=$((age_width - ${#age}))
+    display="$(printf '%s%*s  %s%*s  %s%*s  %s  %s' "$(color_reason "$label")" "$pad" "" "$(color_type "$ntype")" "$type_pad" "" "$(color_age "$age")" "$age_pad" "" "$repo" "$title")"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$id" "$reason" "$activity" "$ntype" "$repo" "$number" "$repo_path" "$url" "$display"
+  done < <(jq -r "$rows_jq" "$cache_json")
+}
+
+json_array_or_empty() {
+  local raw="${1:-}"
+  if jq -e 'type == "array"' >/dev/null 2>&1 <<<"$raw"; then
+    printf '%s' "$raw"
+  else
+    printf '[]'
+  fi
+}
+
+preview_comments() {
+  local repo="$1" number="$2" ntype="$3"
+  local conv='[]' reviews='[]' inline='[]'
+
+  conv="$(json_array_or_empty "$(gh api "repos/${repo}/issues/${number}/comments?per_page=20" 2>/dev/null || true)")"
+  if [[ "$ntype" == "PullRequest" ]]; then
+    reviews="$(json_array_or_empty "$(gh api "repos/${repo}/pulls/${number}/reviews?per_page=20" 2>/dev/null || true)")"
+    inline="$(json_array_or_empty "$(gh api "repos/${repo}/pulls/${number}/comments?per_page=20" 2>/dev/null || true)")"
+  fi
+
+  jq -r -n --argjson conv "$conv" --argjson reviews "$reviews" --argjson inline "$inline" '
+    def rel($u):
+      if ($u // "") == "" then "?"
+      else
+        ($u | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601) as $t
+        | (now - $t) as $d
+        | if $d < 90 then "now"
+          elif $d < 3600 then "\((($d / 60) | floor))m"
+          elif $d < 86400 then "\((($d / 3600) | floor))h"
+          elif $d < 86400 * 14 then "\((($d / 86400) | floor))d"
+          else "\((($d / 86400 / 7) | floor))w"
+          end
+      end;
+    def indent:
+      split("\n") | map("  " + .) | join("\n");
+    [
+      ($conv[] | {
+        t: .created_at,
+        kind: "comment",
+        user: (.user.login // "unknown"),
+        body: (.body // ""),
+        path: ""
+      }),
+      ($reviews[] | {
+        t: (.submitted_at // .created_at),
+        kind: ("review " + (.state // "")),
+        user: (.user.login // "unknown"),
+        body: (.body // ""),
+        path: ""
+      }),
+      ($inline[] | {
+        t: .created_at,
+        kind: "review comment",
+        user: (.user.login // "unknown"),
+        body: (.body // ""),
+        path: (.path // "")
+      })
+    ]
+    | sort_by(.t)
+    | .[-12:]
+    | if length == 0 then "  (no comments)"
+      else
+        .[] |
+        "  \u001b[33m@\(.user)\u001b[39m  \u001b[90m\(.kind)  \(rel(.t))\u001b[39m"
+        + (if .path != "" then "\n  \u001b[90m\(.path)\u001b[39m" else "" end)
+        + (if (.body | length) > 0 then "\n" + (.body | indent) else "" end)
+        + "\n"
+      end
+    '
+}
+
+preview_notification() {
+  local id="${1:-}"
+  local ntype repo number title reason activity url label
+  sleep 0.35
+  [[ -n "$id" && -f "$cache_json" ]] || return 0
+
+  IFS=$'\t' read -r ntype repo number title reason activity url < <(
+    jq -r --arg id "$id" '
+      .notifications[] | select(.id == $id) |
+      [.type, .repo, ((.number // 0) | tostring), .title, .reason, ((.activity // "") | if . == "" then "-" else . end), .url] | @tsv
+    ' "$cache_json"
+  ) || return 0
+
+  label="$(row_label "$reason" "$activity")"
+  printf '  %s\n' "$title"
+  printf '  %s #%s\n' "$repo" "$number"
+  printf '  %s  %s\n' "$(color_reason "$label")" "$(short_type "$ntype")"
+  if [[ -n "$reason" && "$label" != "$reason" ]]; then
+    printf '  reason: %s\n' "$reason"
+  fi
+  printf '\n'
+
+  case "$ntype" in
+    PullRequest | Issue)
+      if [[ -n "$repo" && "$number" != "0" && -n "$number" ]]; then
+        preview_comments "$repo" "$number" "$ntype"
+      fi
+      ;;
+    *)
+      if [[ -n "$url" && "$url" != "-" ]]; then
+        printf '  %s\n' "$url"
+      fi
+      ;;
+  esac
+}
+
+open_selected() {
+  local ntype="$1" repo="$2" number="$3" repo_path="$4" url="$5"
+  if [[ "$repo_path" == "-" ]]; then
+    repo_path=""
+  fi
+  if [[ "$url" == "-" ]]; then
+    url=""
+  fi
+  if [[ "$ntype" == "PullRequest" && "$number" != "0" && -n "$number" ]]; then
+    if [[ ! -d "$repo_path" ]]; then
+      repo_path="$("$worksesh" repos list | awk -F '\t' -v slug="$repo" '$1 == slug { print $2; exit }')"
+    fi
+    if [[ -n "$repo_path" && -d "$repo_path" ]]; then
+      open_pr_in_worktree "$repo_path" "$repo" "$number" ""
+      return 0
+    fi
+  fi
+  if [[ -n "$url" ]]; then
+    open "$url"
+    return 0
+  fi
+  tmux display-message "No URL for notification"
+  return 1
+}
+
+cache_ready() {
+  [[ -f "$cache_json" ]] && jq -e '.notifications != null' "$cache_json" >/dev/null 2>&1
+}
+
+case "${1:-}" in
+  -h | --help)
+    cat <<'EOF'
+Select an unread GitHub notification.
+
+In the picker:
+  enter   open PR in a worktree (or the browser if not a local PR)
+  ctrl-o  open in the browser
+  ctrl-x  mark as done
+  alt-a   all          alt-p  pull requests
+  alt-i   issues       alt-r  review requested
+  alt-m   mentions     alt-c  comments
+
+Preview loads comments via the comments API and does not fetch the
+PR/issue itself, so hovering does not mark notifications as read.
+
+Environment:
+  TMUX_WORKTREE_ROOT  Root directory to search for git repositories (default: ~/Code)
+EOF
+    exit 0
+    ;;
+  list)
+    list_rows "${2:-all}"
+    exit 0
+    ;;
+  preview)
+    preview_notification "${2:-}"
+    exit 0
+    ;;
+  done)
+    "$worksesh" ntf done "${2:-}" || tmux display-message "Failed to mark notification done"
+    exit 0
+    ;;
+  "")
+    ;;
+  *)
+    tmux display-message "Unknown option: $1"
+    exit 1
+    ;;
+esac
+
+[[ -d "$root" ]] || {
+  tmux display-message "Worktree root does not exist: $root"
+  exit 1
+}
+
+command -v gh >/dev/null || {
+  tmux display-message "gh CLI is required"
+  exit 1
+}
+
+if cache_ready; then
+  "$worksesh" ntf prefetch
+else
+  "$worksesh" ntf ensure || {
+    tmux display-message "Failed to load GitHub notifications"
+    exit 1
+  }
+fi
+
+if ! cache_ready; then
+  tmux display-message "Failed to load GitHub notifications"
+  exit 1
+fi
+
+if jq -e '.notifications | length == 0' "$cache_json" >/dev/null; then
+  tmux display-message "No unread GitHub notifications"
+  exit 0
+fi
+
+header='enter: open  ctrl-o: web  ctrl-x: done  alt-a all  alt-p pr  alt-i issue  alt-r review  alt-m mention  alt-c comment'
+formatted_file="$(mktemp)"
+trap 'rm -f "$formatted_file"' EXIT
+list_rows all >"$formatted_file"
+
+if [[ ! -s "$formatted_file" ]]; then
+  tmux display-message "No unread GitHub notifications"
+  exit 0
+fi
+
+selection="$(
+  fzf \
+    --ansi \
+    --delimiter=$'\t' \
+    --with-nth=9 \
+    --prompt='ntf all> ' \
+    --header="$header" \
+    --bind "ctrl-x:execute-silent(\"$script\" done {1})+reload(\"$script\" list all)" \
+    --bind "ctrl-o:execute-silent(open {8})" \
+    --bind "alt-a:change-prompt(ntf all> )+reload(\"$script\" list all)" \
+    --bind "alt-p:change-prompt(ntf pr> )+reload(\"$script\" list pr)" \
+    --bind "alt-i:change-prompt(ntf issue> )+reload(\"$script\" list issue)" \
+    --bind "alt-r:change-prompt(ntf review> )+reload(\"$script\" list review)" \
+    --bind "alt-m:change-prompt(ntf mention> )+reload(\"$script\" list mention)" \
+    --bind "alt-c:change-prompt(ntf comment> )+reload(\"$script\" list comment)" \
+    --preview="\"$script\" preview {1}" \
+    --preview-window='right,65%,wrap' \
+    <"$formatted_file"
+)" || exit 0
+
+ntype="$(cut -f4 <<<"$selection")"
+repo="$(cut -f5 <<<"$selection")"
+number="$(cut -f6 <<<"$selection")"
+repo_path="$(cut -f7 <<<"$selection")"
+url="$(cut -f8 <<<"$selection")"
+[[ -n "$ntype" || -n "$url" ]] || exit 0
+open_selected "$ntype" "$repo" "$number" "$repo_path" "$url"

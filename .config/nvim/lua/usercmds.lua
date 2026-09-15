@@ -34,3 +34,20 @@ vim.api.nvim_create_user_command("PRDiff", function()
 
   vim.cmd(("G diff origin/%s...HEAD"):format(vim.trim(base.stdout)))
 end, {})
+
+vim.api.nvim_create_user_command("StackDiff", function()
+  local view = vim.system({ "gh", "stack", "view", "--json" }, { text = true }):wait()
+
+  if view.code ~= 0 then
+    vim.notify("Failed to determine stack base", vim.log.levels.ERROR)
+    return
+  end
+
+  local ok, data = pcall(vim.json.decode, view.stdout)
+  if not ok or type(data) ~= "table" or not data.trunk or data.trunk == "" then
+    vim.notify("Failed to determine stack base", vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd(("G diff %s"):format(data.trunk))
+end, { desc = "Diff against gh stack trunk" })

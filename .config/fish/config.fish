@@ -98,8 +98,8 @@ if status is-interactive
     end
     bind \eC copy_prev_command # Alt-c
 
-    # Set theme.
-    source ~/.config/fish/themes/nightfox.fish
+    # Set theme. Live-switches [dark]/[light] with fish_terminal_color_theme.
+    fish_config theme choose nightfox
 end
 
 # Source secrets.

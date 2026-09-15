@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+kind="${1:?usage: status-worksesh <ntf|pr>}"
+out="$("$HOME/.local/bin/worksesh" "$kind" show)" || exit 0
+
+if [[ "$(tmux display-message -p '#{client_theme}')" == light ]]; then
+  # Dayfox: worksesh uses yellow-on-brightblack, which is dark-on-dark.
+  printf '%s' "$out" | sed \
+    -e 's/brightblack/#3d2b5a/g' \
+    -e 's/fg=yellow/fg=#f6f2ee/g' \
+    -e 's/fg=green/fg=#81b29a/g' \
+    -e 's/fg=red/fg=#e07a86/g'
+else
+  printf '%s' "$out"
+fi

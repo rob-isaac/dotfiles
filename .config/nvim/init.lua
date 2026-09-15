@@ -265,7 +265,7 @@ require("nightfox").setup({
     },
   },
 })
-vim.cmd.colorscheme("nightfox")
+require("theme").setup()
 
 local navic = require("nvim-navic")
 require("lualine").setup({
@@ -770,14 +770,5 @@ end, { desc = "Quick Toggle Location List" })
 
 --  AI inline completion
 vim.keymap.set("n", "yoa", "<cmd>LlamaToggle<cr>", { desc = "Toggle AI Completion" })
-
--- Fugitive
--- I'm not sure why but fugitive files are mutable by default with this config.
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "fugitive",
-  callback = function(args)
-    vim.bo[args.buf].modifiable = false
-  end,
-})
 
 -- vim: ts=2 sts=2 sw=2 et
