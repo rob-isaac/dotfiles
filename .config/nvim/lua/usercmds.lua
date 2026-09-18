@@ -49,5 +49,17 @@ vim.api.nvim_create_user_command("StackDiff", function()
     return
   end
 
-  vim.cmd(("G diff %s"):format(data.trunk))
+  local base = nil
+  for _, branch in ipairs(data.branches) do
+    if branch.isCurrent then
+      base = branch.base
+      break
+    end
+  end
+  if not base then
+    vim.notify("Failed to determine stack base", vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd(("G diff %s"):format(base))
 end, { desc = "Diff against gh stack trunk" })
