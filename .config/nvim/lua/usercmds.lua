@@ -29,7 +29,7 @@ vim.api.nvim_create_user_command("PRDiff", function()
   local pr_head = vim
     .system({ "gh", "pr", "view", "--json", "headRefOid", "--jq", ".headRefOid" }, { text = true })
     :wait()
-  local cur_head = vim.system({ "git", "rev-parse", "HEAD" })
+  local cur_head = vim.system({ "git", "rev-parse", "HEAD" }):wait()
 
   if pr_base.code ~= 0 then
     vim.notify("Failed to determine PR base branch", vim.log.levels.ERROR)
@@ -39,12 +39,18 @@ vim.api.nvim_create_user_command("PRDiff", function()
     vim.notify("Failed to determine PR head branch", vim.log.levels.ERROR)
     return
   end
-  if pr_head.code ~= cur_head then
+  if cur_head.code ~= 0 then
+    vim.notify("Failed to determine current head branch", vim.log.levels.ERROR)
+    return
+  end
+  if pr_head.stdout ~= cur_head.stdout then
     vim.notify("HEAD commit does not match PR HEAD", vim.log.levels.ERROR)
     return
   end
 
-  vim.cmd(("G diff %s"):format(vim.trim(pr_base.stdout)))
+  local diff_base = vim.trim(pr_base.stdout)
+  vim.cmd(("G diff %s"):format(diff_base))
+  require("gitsigns").change_base(diff_base, true)
 end, {})
 
 vim.api.nvim_create_user_command("StackDiff", function()
@@ -74,4 +80,5 @@ vim.api.nvim_create_user_command("StackDiff", function()
   end
 
   vim.cmd(("G diff %s"):format(base))
+  require("gitsigns").change_base(base, true)
 end, { desc = "Diff against gh stack trunk" })
