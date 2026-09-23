@@ -36,8 +36,6 @@ vim.o.undofile = true
 vim.o.updatetime = 250
 vim.o.winborder = "rounded"
 
--- require("vim._core.ui2").enable({})
-
 vim.g.loaded_node_provider = 0
 vim.g.loaded_python3_provider = 0
 vim.g.loaded_perl_provider = 0
@@ -47,14 +45,18 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 vim.g.diffs = {
-  integrations = { fugitive = true },
-  keymaps = {
-    ours = "<leader>co",
-    theirs = "<leader>ct",
-    both = "<leader>cb",
-    none = "<leader>c0",
-    next = "]x",
-    prev = "[x",
+  integrations = { fugitive = true, gitsigns = true },
+  highlights = { treesitter = { max_lines = 1000 } },
+  conflict = {
+    enabled = true,
+    keymaps = {
+      ours = "<leader>co",
+      theirs = "<leader>ct",
+      both = "<leader>cb",
+      none = "<leader>c0",
+      next = "]x",
+      prev = "[x",
+    },
   },
 }
 vim.g.llama_config = { show_info = 1, enable_at_startup = false }
@@ -191,7 +193,7 @@ require("lazy").setup({
   { "nvim-treesitter/nvim-treesitter-textobjects", branch = "main" },
   { "nvim-treesitter/nvim-treesitter-context" },
   { "saghen/blink.cmp", version = "*" },
-  { "esmuellert/codediff.nvim" },
+  { "esmuellert/codediff.nvim", opts = { diff = { compute_moves = true, gutter_signs = true } } },
   {
     "olimorris/codecompanion.nvim",
     version = "^19.0.0",
@@ -205,6 +207,7 @@ require("lazy").setup({
   -- j-morano/buffer_manager.nvim
   -- "alexpasmantier/pymple.nvim",
   -- ahkohd/difft.nvim
+  -- https://github.com/emrearmagan/atlas.nvim
   install = { colorscheme = { "nightfox", "default" } },
   checker = { enabled = false },
   rocks = { enabled = false },
@@ -327,6 +330,7 @@ local tool_list = {
   -- "pyrefly",
   "basedpyright",
   -- "ty",
+  "typescript-language-server",
   -- Formatters.
   "stylua",
   "clang-format",
@@ -350,6 +354,7 @@ local ensure_installed_tool_list = {
   -- "pyrefly",
   "basedpyright",
   -- "ty",
+  "typescript-language-server",
   -- Formatters.
   "stylua",
   "clang-format",

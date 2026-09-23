@@ -23,16 +23,28 @@ vim.api.nvim_create_user_command("SwapWords", function(opts)
 end, { nargs = "*", range = true, desc = "Swap Two Words" })
 
 vim.api.nvim_create_user_command("PRDiff", function()
-  local base = vim
-    .system({ "gh", "pr", "view", "--json", "baseRefName", "--jq", ".baseRefName" }, { text = true })
+  local pr_base = vim
+    .system({ "gh", "pr", "view", "--json", "baseRefOid", "--jq", ".baseRefOid" }, { text = true })
     :wait()
+  local pr_head = vim
+    .system({ "gh", "pr", "view", "--json", "headRefOid", "--jq", ".headRefOid" }, { text = true })
+    :wait()
+  local cur_head = vim.system({ "git", "rev-parse", "HEAD" })
 
-  if base.code ~= 0 then
+  if pr_base.code ~= 0 then
     vim.notify("Failed to determine PR base branch", vim.log.levels.ERROR)
     return
   end
+  if pr_head.code ~= 0 then
+    vim.notify("Failed to determine PR head branch", vim.log.levels.ERROR)
+    return
+  end
+  if pr_head.code ~= cur_head then
+    vim.notify("HEAD commit does not match PR HEAD", vim.log.levels.ERROR)
+    return
+  end
 
-  vim.cmd(("G diff origin/%s...HEAD"):format(vim.trim(base.stdout)))
+  vim.cmd(("G diff %s"):format(vim.trim(pr_base.stdout)))
 end, {})
 
 vim.api.nvim_create_user_command("StackDiff", function()
