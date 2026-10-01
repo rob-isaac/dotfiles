@@ -12,19 +12,24 @@ When talking to the user:
 
 When implementing features:
 - prefer the "proper" change over the easiest change; don't weight the time-to-implement heavily when comparing solutions
+- get implementation-plan approval for all non-trivial (e.g. more than 50 lines of code) code changes with the *before* implementation
+- don't copy existing plans/git-branches/git-stashes; those were likely false-starts and the user is looking for new approach
 - don't over-engineer solutions; choose the simplest method of accomplishing the task
 - ensure backwards-compatibility; if this adds a lot of complexity report the trade-off to the user and let them make the call
-- get implementation-plan approval for all non-trivial (e.g. more than 50 lines of code) code changes with the *before* implementation
 - prefer to re-use existing code over writing new code
 - prefer using existing code-patterns unless otherwise directed
 - prefer fewer, larger functions with comments over small one-off functions
 - prefer fewer, larger files over many smaller files
 - prefer restructuring the code to have conditionals high-up in the control-flow rather than propagating conditionals to lower-levels of control-flow
-- prefer using subagents when touching more than ~100 lines of code (ONLY if you are not already a subagent)
 - avoid multiple sources-of-truth/coupled-variables
 - avoid default values
 - prefer private functions/variables over public
 - never make blocking network requests while holding a mutex-lock or database-connection
+- avoid regex; it is bug-prone and can be slow
+- push back on the implementation plan when discovering issues mid-implementation
+- add traces for code which is expected to take a relatively long/variable amount of time
+- add metrics for system information that would be useful for monitoring the feature
+- avoid writing slow tests
 
 When running tests/experiments:
 - always get user-approval before running any experiments which may cost money (e.g. runs cloud compute or makes paid API calls)
@@ -33,8 +38,7 @@ When running tests/experiments:
 
 When choosing/using subagents:
 - NEVER use `fast` models
-- prefer the `composer-2.5` model for implementation subagents
-- tell the subagent that it is a subagent
+- prefer cheaper models like `composer-2.5` for implementation subagents
 - if the subagents are repeatedly screwing up implementation step-in and implement the code yourself
 
 When working with git:
@@ -45,3 +49,6 @@ When working with git:
 
 When working on a PR:
 - NEVER post comments on the PR without the user's permission
+
+When writing text/comments:
+- don't use m-dashes
