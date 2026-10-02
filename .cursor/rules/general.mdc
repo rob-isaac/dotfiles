@@ -52,3 +52,8 @@ When working on a PR:
 
 When writing text/comments:
 - don't use m-dashes
+
+When Rebasing:
+- check the git log to look for any commits which may impact the current feature
+- re-run verification to ensure that there were not silent merge conflicts
+- give a summary of the merge-conflicts (both silent and explicit) which were resolved
